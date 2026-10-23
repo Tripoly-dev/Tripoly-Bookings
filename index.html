@@ -279,7 +279,20 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .mgmt-table .met{font-weight:600;color:var(--ink);}
 .mgmt-d-up{color:var(--green);font-weight:600;} .mgmt-d-down{color:var(--red);font-weight:600;}
 .mgmt-minis canvas,.mgmt-donuts canvas{width:100%!important;height:150px!important;}
-@media(max-width:820px){.mgmt-kpis{grid-template-columns:1fr;}.mgmt-charts{grid-template-columns:1fr;}}
+.mgmt-kpi-split{font-size:11px;font-weight:600;margin-bottom:8px;}
+.mgmt-kpi-split .fit{color:#185FA5;} .mgmt-kpi-split .git{color:#B87D00;}
+.mgmt-ret-title{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;color:var(--ink);margin:22px 0 12px;}
+.mgmt-ret-tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.mgmt-ret-tile{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px 18px;}
+.mgmt-ret-tile h4{font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:800;margin-bottom:10px;}
+.mgmt-ret-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--paper);}
+.mgmt-ret-row:last-child{border-bottom:none;}
+.mgmt-ret-row span:first-child{color:var(--ink-light);}
+.mgmt-ret-toggle button{border:1px solid var(--rule);background:var(--surface);font-size:11px;font-weight:600;padding:5px 11px;cursor:pointer;color:var(--ink-mid);font-family:'Inter',sans-serif;}
+.mgmt-ret-toggle button.on{background:var(--orange);color:#fff;border-color:var(--orange);}
+.mgmt-ret-toggle button:first-child{border-radius:6px 0 0 6px;} .mgmt-ret-toggle button:last-child{border-radius:0 6px 6px 0;} .mgmt-ret-toggle button:not(:first-child){border-left:none;}
+#mgmtRetChart{width:100%!important;height:240px!important;}
+@media(max-width:820px){.mgmt-kpis{grid-template-columns:1fr;}.mgmt-charts{grid-template-columns:1fr;}.mgmt-ret-tiles{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -531,6 +544,24 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         </div>
       </div>
       <div id="mgmtTableWrap"></div>
+
+      <!-- Retention Analysis (follows the month picker) -->
+      <div class="mgmt-ret-title">Retention Analysis — <span id="mgmtRetMonthLbl">—</span></div>
+      <div class="mgmt-msg" id="mgmtRetLoading" style="display:none;">Loading retention…</div>
+      <div class="mgmt-msg" id="mgmtRetError" style="display:none;"></div>
+      <div id="mgmtRet" style="display:none;">
+        <div class="mgmt-ret-tiles" id="mgmtRetTiles"></div>
+        <div class="mgmt-chart-card" style="margin-top:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
+            <div class="mgmt-chart-title" style="margin:0;">Monthly trend — last FY onwards</div>
+            <div class="mgmt-ret-toggle" id="mgmtRetToggle">
+              <button data-m="count" class="on">Bookings</button><button data-m="pax">PAX</button><button data-m="revenue">Revenue</button>
+            </div>
+          </div>
+          <canvas id="mgmtRetChart" height="240"></canvas>
+        </div>
+        <div id="mgmtRetTableWrap" style="margin-top:14px;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -793,18 +824,21 @@ function loadMgmtCompare(month){
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){mgmtLoaded=true;L.style.display='none';B.style.display='block';renderMgmt(d);})
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load comparison ('+err.message+').';});
+  loadMgmtRetention(month); // retention follows the same month picker (runs in parallel)
 }
 
 function renderMgmt(d){
   var t=d.thisMonth,lm=d.lastMonth,ly=d.lastYear;
   document.getElementById('mgmtSub').textContent=d.isCurrentMonth?('Same-day pace — day 1–'+d.mtdDay+' vs prior periods'):'Full month vs prior periods';
   var kpis=[
-    {lbl:'Bookings',cur:t.mtd.count,mom:lm.mtd.count,yoy:ly.mtd.count,f:function(v){return v;}},
-    {lbl:'PAX',cur:t.mtd.pax,mom:lm.mtd.pax,yoy:ly.mtd.pax,f:function(v){return fmtAmt(v);}},
-    {lbl:'Revenue',cur:t.mtd.revenue,mom:lm.mtd.revenue,yoy:ly.mtd.revenue,f:function(v){return fmtAmtShort(v);}}
+    {lbl:'Bookings',cur:t.mtd.count,mom:lm.mtd.count,yoy:ly.mtd.count,f:function(v){return v;},fit:t.mtd.fit.count,git:t.mtd.git.count},
+    {lbl:'PAX',cur:t.mtd.pax,mom:lm.mtd.pax,yoy:ly.mtd.pax,f:function(v){return fmtAmt(v);},fit:t.mtd.fit.pax,git:t.mtd.git.pax},
+    {lbl:'Revenue',cur:t.mtd.revenue,mom:lm.mtd.revenue,yoy:ly.mtd.revenue,f:function(v){return fmtAmtShort(v);},fit:t.mtd.fit.revenue,git:t.mtd.git.revenue}
   ];
   document.getElementById('mgmtKpis').innerHTML=kpis.map(function(k){
-    return '<div class="mgmt-kpi"><div class="mgmt-kpi-lbl">'+k.lbl+'</div><div class="mgmt-kpi-val">'+k.f(k.cur)+'</div><div class="mgmt-deltas">'+dBadge(k.cur,k.mom,'MoM')+dBadge(k.cur,k.yoy,'YoY')+'</div></div>';
+    return '<div class="mgmt-kpi"><div class="mgmt-kpi-lbl">'+k.lbl+'</div><div class="mgmt-kpi-val">'+k.f(k.cur)+'</div>'+
+      '<div class="mgmt-kpi-split"><span class="fit">FIT '+k.f(k.fit)+'</span> · <span class="git">GIT '+k.f(k.git)+'</span></div>'+
+      '<div class="mgmt-deltas">'+dBadge(k.cur,k.mom,'MoM')+dBadge(k.cur,k.yoy,'YoY')+'</div></div>';
   }).join('');
   var labels=['This','Last mo','Last yr'];
   mgmtBar('mgmtBarBookings',labels,[t.mtd.count,lm.mtd.count,ly.mtd.count],null);
@@ -856,6 +890,75 @@ function mgmtTable(d){
   var mtdSec=section('mtd',d.isCurrentMonth?('Same-day pace · day 1–'+d.mtdDay):'Full month');
   var fullSec=d.isCurrentMonth?section('full','This month so far vs full prior months'):'';
   return '<table class="mgmt-table">'+head+'<tbody>'+mtdSec+fullSec+'</tbody></table>';
+}
+
+// ── Retention Analysis ──
+var mgmtRetData=null, mgmtRetMetric='count', mgmtRetChart=null, mgmtRetWired=false;
+function retFmt(v){return mgmtRetMetric==='revenue'?fmtAmtShort(v):(mgmtRetMetric==='pax'?fmtAmt(v):v);}
+function retVal(entry,who){var o=entry[who];return mgmtRetMetric==='count'?o.count:(mgmtRetMetric==='pax'?o.pax:o.revenue);}
+function retShort(ym){var p=ym.split('-');return new Date(Number(p[0]),Number(p[1])-1,1).toLocaleDateString('en-IN',{month:'short',year:'2-digit'});}
+
+function loadMgmtRetention(month){
+  var L=document.getElementById('mgmtRetLoading'),E=document.getElementById('mgmtRetError'),R=document.getElementById('mgmtRet');
+  L.style.display='block';E.style.display='none';R.style.display='none';
+  fetch(PROXY_BASE+'/api/mgmt-retention?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){mgmtRetData=d;L.style.display='none';R.style.display='block';renderRetention();})
+    .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load retention ('+err.message+').';});
+}
+
+function renderRetention(){
+  var d=mgmtRetData;if(!d)return;
+  document.getElementById('mgmtRetMonthLbl').textContent=mgmtLabel(d.snapshot.month);
+  var snap=d.snapshot, yoy=d.snapshotYoY, total=snap.total||0;
+  function tile(name,cur,ly){
+    var share=total?((cur.count/total)*100).toFixed(1)+'%':'—';
+    return '<div class="mgmt-ret-tile"><h4>'+name+'</h4>'+
+      '<div class="mgmt-ret-row"><span>Bookings</span><span>'+cur.count+' &nbsp;'+dCell(cur.count,ly.count)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>PAX</span><span>'+fmtAmt(cur.pax)+' &nbsp;'+dCell(cur.pax,ly.pax)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>Revenue</span><span>'+fmtAmtShort(cur.revenue)+' &nbsp;'+dCell(cur.revenue,ly.revenue)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>Share of bookings</span><span>'+share+'</span></div></div>';
+  }
+  document.getElementById('mgmtRetTiles').innerHTML=tile('Existing Client',snap.existing,yoy.existing)+tile('Client Reference',snap.reference,yoy.reference);
+  renderRetChart();
+  document.getElementById('mgmtRetTableWrap').innerHTML=retTable();
+  if(!mgmtRetWired){
+    mgmtRetWired=true;
+    var btns=document.getElementById('mgmtRetToggle').querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      btns[i].addEventListener('click',function(){
+        mgmtRetMetric=this.getAttribute('data-m');
+        var bs=document.getElementById('mgmtRetToggle').querySelectorAll('button');
+        for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-m')===mgmtRetMetric);
+        renderRetChart();
+      });
+    }
+  }
+}
+
+function renderRetChart(){
+  var d=mgmtRetData;if(!d||!window.Chart)return;
+  var ctx=document.getElementById('mgmtRetChart');if(!ctx)return;
+  if(mgmtRetChart)mgmtRetChart.destroy();
+  var labels=d.series.map(function(s){return retShort(s.month);});
+  var selIdx=d.series.map(function(s){return s.month;}).indexOf(d.snapshot.month);
+  var existing=d.series.map(function(s){return retVal(s,'existing');});
+  var reference=d.series.map(function(s){return retVal(s,'reference');});
+  var pr=labels.map(function(_,i){return i===selIdx?5:2;});
+  mgmtRetChart=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
+    {label:'Existing Client',data:existing,borderColor:'#185FA5',backgroundColor:'#185FA5',tension:.3,pointRadius:pr,borderWidth:2},
+    {label:'Client Reference',data:reference,borderColor:'#E8613A',backgroundColor:'#E8613A',tension:.3,pointRadius:pr,borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+retFmt(c.parsed.y);}}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9},callback:function(v){return retFmt(v);}}},x:{ticks:{font:{size:9},maxRotation:0,autoSkip:true}}}}});
+}
+
+function retTable(){
+  var d=mgmtRetData;
+  var head='<thead><tr><th>Month</th><th>Existing</th><th>Exist. rev</th><th>Reference</th><th>Ref. rev</th></tr></thead>';
+  var body=d.series.map(function(s){
+    var hl=(s.month===d.snapshot.month)?' style="background:var(--bg);"':'';
+    return '<tr'+hl+'><td class="met">'+retShort(s.month)+'</td><td>'+s.existing.count+'</td><td>'+fmtAmtShort(s.existing.revenue)+'</td><td>'+s.reference.count+'</td><td>'+fmtAmtShort(s.reference.revenue)+'</td></tr>';
+  }).join('');
+  return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
 }
 
 // ── Countdown ──
