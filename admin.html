@@ -150,11 +150,12 @@ function loadDevices(){
           '<td>' + fmtDate(dev.approvedAt) + '</td>' +
           '<td>' + fmtDate(dev.expiresAt) + '</td>' +
           '<td style="text-align:center;"><input type="checkbox" class="mkt-toggle" data-email="' + escapeHtml(dev.email) + '"' + (dev.marketing ? ' checked' : '') + ' title="Marketing Analytics access"/></td>' +
+          '<td style="text-align:center;"><input type="checkbox" class="mgmt-toggle" data-email="' + escapeHtml(dev.email) + '"' + (dev.management ? ' checked' : '') + ' title="Management Dashboard access"/></td>' +
           '<td style="text-align:right;"><button class="revoke" data-id="' + escapeHtml(dev.deviceId) + '">Revoke</button></td>' +
         '</tr>';
       }).join('');
       wrap.innerHTML =
-        '<table><thead><tr><th>User</th><th>Status</th><th>Approved</th><th>Expires</th><th style="text-align:center;">Marketing</th><th></th></tr></thead><tbody>' +
+        '<table><thead><tr><th>User</th><th>Status</th><th>Approved</th><th>Expires</th><th style="text-align:center;">Marketing</th><th style="text-align:center;">Management</th><th></th></tr></thead><tbody>' +
         rows + '</tbody></table>';
       // Wire revoke buttons
       var btns = wrap.querySelectorAll('.revoke');
@@ -165,6 +166,10 @@ function loadDevices(){
       var toggles = wrap.querySelectorAll('.mkt-toggle');
       for(var j=0;j<toggles.length;j++){
         toggles[j].addEventListener('change', function(){ toggleMarketing(this.getAttribute('data-email'), this.checked, this); });
+      }
+      var mgmtToggles = wrap.querySelectorAll('.mgmt-toggle');
+      for(var k=0;k<mgmtToggles.length;k++){
+        mgmtToggles[k].addEventListener('change', function(){ toggleManagement(this.getAttribute('data-email'), this.checked, this); });
       }
     }).catch(function(){
       wrap.innerHTML = '<div class="empty">Could not load devices. Check your connection and try Refresh.</div>';
@@ -190,6 +195,19 @@ function toggleMarketing(email, allowed, el){
     .then(function(d){
       el.disabled = false;
       if(!d.ok){ el.checked = !allowed; alert('Could not update marketing access. Try again.'); return; }
+      loadDevices();
+    }).catch(function(){ el.disabled = false; el.checked = !allowed; alert('Network error. Try again.'); });
+}
+
+function toggleManagement(email, allowed, el){
+  el.disabled = true;
+  fetch(PROXY_BASE + '/api/admin/management', {
+    method:'POST', headers:{'Content-Type':'application/json','x-admin-password':adminPw},
+    body: JSON.stringify({ email: email, allowed: allowed })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      el.disabled = false;
+      if(!d.ok){ el.checked = !allowed; alert('Could not update management access. Try again.'); return; }
       loadDevices();
     }).catch(function(){ el.disabled = false; el.checked = !allowed; alert('Network error. Try again.'); });
 }
