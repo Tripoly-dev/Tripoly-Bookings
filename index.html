@@ -285,6 +285,12 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .mgmt-kpi-split .fit{color:#185FA5;} .mgmt-kpi-split .git{color:#B87D00;}
 .mgmt-kpi-split small{font-size:10px;margin-left:2px;}
 .mgmt-split-note{font-size:9px;color:var(--ink-light);margin-bottom:8px;letter-spacing:.3px;}
+.mgmt-fg{margin-bottom:10px;}
+.mgmt-fg-row{display:grid;grid-template-columns:1fr 54px 54px;gap:6px;align-items:center;font-size:11px;font-weight:600;padding:2px 0;}
+.mgmt-fg-row.hdr{font-size:9px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.4px;}
+.mgmt-fg-row .fit{color:#185FA5;} .mgmt-fg-row .git{color:#B87D00;}
+.mgmt-fg-row>span:nth-child(2),.mgmt-fg-row>span:nth-child(3){text-align:right;}
+.mgmt-ret-dd{font-size:10px;color:var(--ink-light);margin-left:4px;white-space:nowrap;}
 .mgmt-table td.mgmt-sub{padding-left:28px;font-weight:600;font-size:11px;}
 .mgmt-table td.mgmt-sub.fit{color:#185FA5;} .mgmt-table td.mgmt-sub.git{color:#B87D00;}
 .mgmt-ret-title{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;color:var(--ink);margin:22px 0 12px;}
@@ -1057,15 +1063,18 @@ function renderMgmt(d){
   var t=d.thisMonth,lm=d.lastMonth,ly=d.lastYear;
   document.getElementById('mgmtSub').textContent=d.isCurrentMonth?('Same-day pace — day 1–'+d.mtdDay+' vs prior periods'):'Full month vs prior periods';
   var kpis=[
-    {lbl:'Bookings',cur:t.mtd.count,mom:lm.mtd.count,yoy:ly.mtd.count,f:function(v){return v;},fit:t.mtd.fit.count,git:t.mtd.git.count,fitLY:ly.mtd.fit.count,gitLY:ly.mtd.git.count},
-    {lbl:'PAX',cur:t.mtd.pax,mom:lm.mtd.pax,yoy:ly.mtd.pax,f:function(v){return fmtAmt(v);},fit:t.mtd.fit.pax,git:t.mtd.git.pax,fitLY:ly.mtd.fit.pax,gitLY:ly.mtd.git.pax},
-    {lbl:'Revenue',cur:t.mtd.revenue,mom:lm.mtd.revenue,yoy:ly.mtd.revenue,f:function(v){return fmtAmtShort(v);},fit:t.mtd.fit.revenue,git:t.mtd.git.revenue,fitLY:ly.mtd.fit.revenue,gitLY:ly.mtd.git.revenue}
+    {lbl:'Bookings',cur:t.mtd.count,mom:lm.mtd.count,yoy:ly.mtd.count,f:function(v){return v;},fit:t.mtd.fit.count,git:t.mtd.git.count,fitLM:lm.mtd.fit.count,gitLM:lm.mtd.git.count,fitLY:ly.mtd.fit.count,gitLY:ly.mtd.git.count},
+    {lbl:'PAX',cur:t.mtd.pax,mom:lm.mtd.pax,yoy:ly.mtd.pax,f:function(v){return fmtAmt(v);},fit:t.mtd.fit.pax,git:t.mtd.git.pax,fitLM:lm.mtd.fit.pax,gitLM:lm.mtd.git.pax,fitLY:ly.mtd.fit.pax,gitLY:ly.mtd.git.pax},
+    {lbl:'Revenue',cur:t.mtd.revenue,mom:lm.mtd.revenue,yoy:ly.mtd.revenue,f:function(v){return fmtAmtShort(v);},fit:t.mtd.fit.revenue,git:t.mtd.git.revenue,fitLM:lm.mtd.fit.revenue,gitLM:lm.mtd.git.revenue,fitLY:ly.mtd.fit.revenue,gitLY:ly.mtd.git.revenue}
   ];
   document.getElementById('mgmtKpis').innerHTML=kpis.map(function(k){
     return '<div class="mgmt-kpi"><div class="mgmt-kpi-lbl">'+k.lbl+'</div><div class="mgmt-kpi-val">'+k.f(k.cur)+'</div>'+
-      '<div class="mgmt-kpi-split"><span class="fit">FIT '+k.f(k.fit)+' '+miniDelta(k.fit,k.fitLY)+'</span><span class="git">GIT '+k.f(k.git)+' '+miniDelta(k.git,k.gitLY)+'</span></div>'+
-      '<div class="mgmt-split-note">FIT/GIT arrows = YoY</div>'+
-      '<div class="mgmt-deltas">'+dBadge(k.cur,k.mom,'MoM')+dBadge(k.cur,k.yoy,'YoY')+'</div></div>';
+      '<div class="mgmt-fg">'+
+        '<div class="mgmt-fg-row hdr"><span></span><span>MoM</span><span>YoY</span></div>'+
+        '<div class="mgmt-fg-row"><span class="fit">FIT '+k.f(k.fit)+'</span>'+miniCell(k.fit,k.fitLM)+miniCell(k.fit,k.fitLY)+'</div>'+
+        '<div class="mgmt-fg-row"><span class="git">GIT '+k.f(k.git)+'</span>'+miniCell(k.git,k.gitLM)+miniCell(k.git,k.gitLY)+'</div>'+
+      '</div>'+
+      '<div class="mgmt-deltas"><span class="mgmt-delta" style="background:transparent;padding-left:0;">Total</span>'+dBadge(k.cur,k.mom,'MoM')+dBadge(k.cur,k.yoy,'YoY')+'</div></div>';
   }).join('');
   var labels=['This','Last mo','Last yr'];
   mgmtBar('mgmtBarBookings',labels,[t.mtd.count,lm.mtd.count,ly.mtd.count],null);
@@ -1093,6 +1102,11 @@ function miniDelta(cur,prev){
   var p=pctDelta(cur,prev);
   if(p===null)return cur>0?'<small class="mgmt-d-up">▲new</small>':'';
   var up=p>=0;return '<small class="'+(up?'mgmt-d-up':'mgmt-d-down')+'">'+(up?'▲':'▼')+Math.abs(p).toFixed(0)+'%</small>';
+}
+function miniCell(cur,prev){
+  var p=pctDelta(cur,prev);
+  if(p===null)return '<span>'+(cur>0?'<span class="mgmt-d-up">▲new</span>':'—')+'</span>';
+  var up=p>=0;return '<span class="'+(up?'mgmt-d-up':'mgmt-d-down')+'">'+(up?'▲':'▼')+Math.abs(p).toFixed(0)+'%</span>';
 }
 var dlRegistered=false;
 function ensureDatalabels(){ if(!dlRegistered && window.Chart && window.ChartDataLabels){ try{ Chart.register(window.ChartDataLabels); }catch(e){} dlRegistered=true; } }
@@ -1156,15 +1170,22 @@ function renderRetention(){
   var d=mgmtRetData;if(!d)return;
   document.getElementById('mgmtRetMonthLbl').textContent=mgmtLabel(d.snapshot.month);
   var snap=d.snapshot, yoy=d.snapshotYoY, total=snap.total||0;
-  function tile(name,cur,ly){
+  var selIdx=d.series.map(function(s){return s.month;}).indexOf(snap.month);
+  var prevEntry=(selIdx>0)?d.series[selIdx-1]:null;
+  function ddPair(c,m,y){
+    return '<small class="mgmt-ret-dd">MoM '+(m!==null&&m!==undefined?dCell(c,m):'—')+' · YoY '+dCell(c,y)+'</small>';
+  }
+  function tile(name,cur,mom,ly){
     var share=total?((cur.count/total)*100).toFixed(1)+'%':'—';
     return '<div class="mgmt-ret-tile"><h4>'+name+'</h4>'+
-      '<div class="mgmt-ret-row"><span>Bookings</span><span>'+cur.count+' &nbsp;'+dCell(cur.count,ly.count)+'</span></div>'+
-      '<div class="mgmt-ret-row"><span>PAX</span><span>'+fmtAmt(cur.pax)+' &nbsp;'+dCell(cur.pax,ly.pax)+'</span></div>'+
-      '<div class="mgmt-ret-row"><span>Revenue</span><span>'+fmtAmtShort(cur.revenue)+' &nbsp;'+dCell(cur.revenue,ly.revenue)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>Bookings</span><span>'+cur.count+' '+ddPair(cur.count,mom?mom.count:null,ly.count)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>PAX</span><span>'+fmtAmt(cur.pax)+' '+ddPair(cur.pax,mom?mom.pax:null,ly.pax)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>Revenue</span><span>'+fmtAmtShort(cur.revenue)+' '+ddPair(cur.revenue,mom?mom.revenue:null,ly.revenue)+'</span></div>'+
       '<div class="mgmt-ret-row"><span>Share of bookings</span><span>'+share+'</span></div></div>';
   }
-  document.getElementById('mgmtRetTiles').innerHTML=tile('Existing Client',snap.existing,yoy.existing)+tile('Client Reference',snap.reference,yoy.reference);
+  document.getElementById('mgmtRetTiles').innerHTML=
+    tile('Existing Client',snap.existing,prevEntry?prevEntry.existing:null,yoy.existing)+
+    tile('Client Reference',snap.reference,prevEntry?prevEntry.reference:null,yoy.reference);
   renderRetChart();
   document.getElementById('mgmtRetTableWrap').innerHTML=retTable();
   if(!mgmtRetWired){
