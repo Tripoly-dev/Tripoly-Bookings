@@ -847,8 +847,8 @@ function switchTab(period){
 var mgmtMonth=null, mgmtLoaded=false, mgmtWired=false, mgmtCharts={};
 function mgmtCurMonth(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function mgmtShift(ym,delta){var p=ym.split('-');var d=new Date(Number(p[0]),Number(p[1])-1+delta,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
-// ── Marketing Analytics (reads /api/marketing; month picker, Sept 2026 is the first month with data) ──
-var mkMonth=null,mkWired=false,MK_FIRST='2026-09';
+// ── Marketing Analytics (reads /api/marketing; month picker, April 2026 is the first month of FY 2026-27) ──
+var mkMonth=null,mkWired=false,MK_FIRST='2026-04';
 function mkCur(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
 function mkShift(ym,d){var p=ym.split('-');var dt=new Date(Number(p[0]),Number(p[1])-1+d,1);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');}
 function mkLabel(ym){var p=ym.split('-');return new Date(Number(p[0]),Number(p[1])-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});}
