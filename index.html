@@ -280,9 +280,13 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .mgmt-table .met{font-weight:600;color:var(--ink);}
 .mgmt-d-up{color:var(--green);font-weight:600;} .mgmt-d-down{color:var(--red);font-weight:600;}
 .mgmt-minis canvas,.mgmt-donuts canvas{width:100%!important;height:150px!important;}
-.mgmt-kpi-split{display:flex;gap:6px;margin-bottom:8px;}
+.mgmt-kpi-split{display:flex;gap:6px;margin-bottom:3px;flex-wrap:wrap;}
 .mgmt-kpi-split span{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--paper);}
 .mgmt-kpi-split .fit{color:#185FA5;} .mgmt-kpi-split .git{color:#B87D00;}
+.mgmt-kpi-split small{font-size:10px;margin-left:2px;}
+.mgmt-split-note{font-size:9px;color:var(--ink-light);margin-bottom:8px;letter-spacing:.3px;}
+.mgmt-table td.mgmt-sub{padding-left:28px;font-weight:600;font-size:11px;}
+.mgmt-table td.mgmt-sub.fit{color:#185FA5;} .mgmt-table td.mgmt-sub.git{color:#B87D00;}
 .mgmt-ret-title{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;color:var(--ink);margin:22px 0 12px;}
 .mgmt-ret-tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .mgmt-ret-tile{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px 18px;}
@@ -1053,13 +1057,14 @@ function renderMgmt(d){
   var t=d.thisMonth,lm=d.lastMonth,ly=d.lastYear;
   document.getElementById('mgmtSub').textContent=d.isCurrentMonth?('Same-day pace — day 1–'+d.mtdDay+' vs prior periods'):'Full month vs prior periods';
   var kpis=[
-    {lbl:'Bookings',cur:t.mtd.count,mom:lm.mtd.count,yoy:ly.mtd.count,f:function(v){return v;},fit:t.mtd.fit.count,git:t.mtd.git.count},
-    {lbl:'PAX',cur:t.mtd.pax,mom:lm.mtd.pax,yoy:ly.mtd.pax,f:function(v){return fmtAmt(v);},fit:t.mtd.fit.pax,git:t.mtd.git.pax},
-    {lbl:'Revenue',cur:t.mtd.revenue,mom:lm.mtd.revenue,yoy:ly.mtd.revenue,f:function(v){return fmtAmtShort(v);},fit:t.mtd.fit.revenue,git:t.mtd.git.revenue}
+    {lbl:'Bookings',cur:t.mtd.count,mom:lm.mtd.count,yoy:ly.mtd.count,f:function(v){return v;},fit:t.mtd.fit.count,git:t.mtd.git.count,fitLY:ly.mtd.fit.count,gitLY:ly.mtd.git.count},
+    {lbl:'PAX',cur:t.mtd.pax,mom:lm.mtd.pax,yoy:ly.mtd.pax,f:function(v){return fmtAmt(v);},fit:t.mtd.fit.pax,git:t.mtd.git.pax,fitLY:ly.mtd.fit.pax,gitLY:ly.mtd.git.pax},
+    {lbl:'Revenue',cur:t.mtd.revenue,mom:lm.mtd.revenue,yoy:ly.mtd.revenue,f:function(v){return fmtAmtShort(v);},fit:t.mtd.fit.revenue,git:t.mtd.git.revenue,fitLY:ly.mtd.fit.revenue,gitLY:ly.mtd.git.revenue}
   ];
   document.getElementById('mgmtKpis').innerHTML=kpis.map(function(k){
     return '<div class="mgmt-kpi"><div class="mgmt-kpi-lbl">'+k.lbl+'</div><div class="mgmt-kpi-val">'+k.f(k.cur)+'</div>'+
-      '<div class="mgmt-kpi-split"><span class="fit">FIT '+k.f(k.fit)+'</span><span class="git">GIT '+k.f(k.git)+'</span></div>'+
+      '<div class="mgmt-kpi-split"><span class="fit">FIT '+k.f(k.fit)+' '+miniDelta(k.fit,k.fitLY)+'</span><span class="git">GIT '+k.f(k.git)+' '+miniDelta(k.git,k.gitLY)+'</span></div>'+
+      '<div class="mgmt-split-note">FIT/GIT arrows = YoY</div>'+
       '<div class="mgmt-deltas">'+dBadge(k.cur,k.mom,'MoM')+dBadge(k.cur,k.yoy,'YoY')+'</div></div>';
   }).join('');
   var labels=['This','Last mo','Last yr'];
@@ -1084,6 +1089,11 @@ function dCell(cur,prev){
   if(p===null)return '—';
   var up=p>=0;return '<span class="'+(up?'mgmt-d-up':'mgmt-d-down')+'">'+(up?'▲':'▼')+Math.abs(p).toFixed(1)+'%</span>';
 }
+function miniDelta(cur,prev){
+  var p=pctDelta(cur,prev);
+  if(p===null)return cur>0?'<small class="mgmt-d-up">▲new</small>':'';
+  var up=p>=0;return '<small class="'+(up?'mgmt-d-up':'mgmt-d-down')+'">'+(up?'▲':'▼')+Math.abs(p).toFixed(0)+'%</small>';
+}
 var dlRegistered=false;
 function ensureDatalabels(){ if(!dlRegistered && window.Chart && window.ChartDataLabels){ try{ Chart.register(window.ChartDataLabels); }catch(e){} dlRegistered=true; } }
 function mgmtBar(id,labels,data,fmt){
@@ -1101,15 +1111,24 @@ function mgmtDonut(id,fit,git){
 function mgmtTable(d){
   function section(key,title){
     var t=d.thisMonth[key],lm=d.lastMonth[key],ly=d.lastYear[key];
-    var rows=[
-      {m:'Bookings',c:t.count,l:lm.count,y:ly.count,f:function(v){return v;}},
-      {m:'PAX',c:t.pax,l:lm.pax,y:ly.pax,f:fmtAmt},
-      {m:'Revenue',c:t.revenue,l:lm.revenue,y:ly.revenue,f:fmtAmtShort},
-      {m:'FIT revenue',c:t.fit.revenue,l:lm.fit.revenue,y:ly.fit.revenue,f:fmtAmtShort},
-      {m:'GIT revenue',c:t.git.revenue,l:lm.git.revenue,y:ly.git.revenue,f:fmtAmtShort},
-      {m:'Avg booking value',c:t.count?t.revenue/t.count:0,l:lm.count?lm.revenue/lm.count:0,y:ly.count?ly.revenue/ly.count:0,f:fmtAmtShort}
-    ];
-    var body=rows.map(function(r){return '<tr><td class="met">'+r.m+'</td><td>'+r.f(r.c)+'</td><td>'+r.f(r.l)+'</td><td>'+dCell(r.c,r.l)+'</td><td>'+r.f(r.y)+'</td><td>'+dCell(r.c,r.y)+'</td></tr>';}).join('');
+    var intF=function(v){return v;};
+    function metric(name,pick,f){
+      return [
+        {m:name,c:pick(t),l:pick(lm),y:pick(ly),f:f},
+        {m:'FIT',c:pick(t.fit),l:pick(lm.fit),y:pick(ly.fit),f:f,tone:'fit'},
+        {m:'GIT',c:pick(t.git),l:pick(lm.git),y:pick(ly.git),f:f,tone:'git'}
+      ];
+    }
+    var rows=[].concat(
+      metric('Bookings',function(o){return o.count;},intF),
+      metric('PAX',function(o){return o.pax;},fmtAmt),
+      metric('Revenue',function(o){return o.revenue;},fmtAmtShort),
+      [{m:'Avg booking value',c:t.count?t.revenue/t.count:0,l:lm.count?lm.revenue/lm.count:0,y:ly.count?ly.revenue/ly.count:0,f:fmtAmtShort}]
+    );
+    var body=rows.map(function(r){
+      var mcls=r.tone?('mgmt-sub '+r.tone):'met';
+      return '<tr><td class="'+mcls+'">'+r.m+'</td><td>'+r.f(r.c)+'</td><td>'+r.f(r.l)+'</td><td>'+dCell(r.c,r.l)+'</td><td>'+r.f(r.y)+'</td><td>'+dCell(r.c,r.y)+'</td></tr>';
+    }).join('');
     return '<tr><td class="sec" colspan="6">'+title+'</td></tr>'+body;
   }
   var head='<thead><tr><th>Metric</th><th>This</th><th>Last mo</th><th>MoM</th><th>Last yr</th><th>YoY</th></tr></thead>';
