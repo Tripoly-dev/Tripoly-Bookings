@@ -306,6 +306,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .mgmt-ret-toggle button.on{background:var(--orange);color:#fff;border-color:var(--orange);}
 .mgmt-ret-toggle button:first-child{border-radius:6px 0 0 6px;} .mgmt-ret-toggle button:last-child{border-radius:0 6px 6px 0;} .mgmt-ret-toggle button:not(:first-child){border-left:none;}
 #mgmtRetChart{width:100%!important;height:240px!important;}
+#mgmtFcChart{width:100%!important;height:300px!important;}
 @media(max-width:820px){.mgmt-kpis{grid-template-columns:1fr;}.mgmt-charts{grid-template-columns:1fr;}.mgmt-ret-tiles{grid-template-columns:1fr;}}
 /* ── Marketing Analytics tab ── */
 .mk-wrap{flex:1;overflow:auto;padding:20px 24px 28px;}
@@ -666,6 +667,26 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <canvas id="mgmtRetChart" height="240"></canvas>
         </div>
         <div id="mgmtRetTableWrap" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- Hot-selling FIT Countries (follows the month picker) -->
+      <div class="mgmt-ret-title">Hot-selling FIT Countries — <span id="mgmtFcMonthLbl">—</span></div>
+      <div class="mgmt-msg" id="mgmtFcLoading" style="display:none;">Loading countries…</div>
+      <div class="mgmt-msg" id="mgmtFcError" style="display:none;"></div>
+      <div id="mgmtFc" style="display:none;">
+        <div class="mgmt-chart-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
+            <div class="mgmt-chart-title" style="margin:0;">By destination — unique country combinations <span id="mgmtFcTotals" style="font-weight:400;opacity:.7;"></span></div>
+            <div class="mgmt-ret-toggle" id="mgmtFcToggle">
+              <button data-s="revenue" class="on">Revenue</button><button data-s="pax">PAX</button>
+            </div>
+          </div>
+          <div style="position:relative;height:300px;margin-bottom:12px;"><canvas id="mgmtFcChart"></canvas></div>
+          <div style="max-height:360px;overflow:auto;">
+            <div id="mgmtFcTableWrap"></div>
+          </div>
+          <small style="display:block;margin-top:8px;opacity:.65;">FIT holiday packages only. Multi-country trips are shown as their own combination (no double-counting).</small>
+        </div>
       </div>
     </div>
   </div>
@@ -1059,6 +1080,7 @@ function loadMgmtCompare(month){
     .then(function(d){mgmtLoaded=true;L.style.display='none';B.style.display='block';renderMgmt(d);})
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load comparison ('+err.message+').';});
   loadMgmtRetention(month); // retention follows the same month picker (runs in parallel)
+  loadMgmtFitCountries(month); // hot-selling FIT countries follow the same month picker
 }
 
 function renderMgmt(d){
@@ -1225,6 +1247,60 @@ function retTable(){
   var body=d.series.map(function(s){
     var hl=(s.month===d.snapshot.month)?' style="background:var(--bg);"':'';
     return '<tr'+hl+'><td class="met">'+retShort(s.month)+'</td><td>'+s.existing.count+'</td><td>'+fmtAmtShort(s.existing.revenue)+'</td><td>'+s.reference.count+'</td><td>'+fmtAmtShort(s.reference.revenue)+'</td></tr>';
+  }).join('');
+  return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
+}
+
+// ── Hot-selling FIT Countries ──
+var mgmtFcData=null, mgmtFcSort='revenue', mgmtFcWired=false, mgmtFcChart=null;
+function loadMgmtFitCountries(month){
+  var L=document.getElementById('mgmtFcLoading'),E=document.getElementById('mgmtFcError'),C=document.getElementById('mgmtFc');
+  L.style.display='block';E.style.display='none';C.style.display='none';
+  fetch(PROXY_BASE+'/api/mgmt-fit-countries?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){mgmtFcData=d;L.style.display='none';C.style.display='block';renderFitCountries();})
+    .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load countries ('+err.message+').';});
+}
+function renderFitCountries(){
+  var d=mgmtFcData;if(!d)return;
+  document.getElementById('mgmtFcMonthLbl').textContent=mgmtLabel(d.month);
+  var t=d.totals||{count:0,pax:0,revenue:0};
+  document.getElementById('mgmtFcTotals').textContent='· '+t.count+' bookings · '+fmtAmt(t.pax)+' PAX · '+fmtAmtShort(t.revenue);
+  document.getElementById('mgmtFcTableWrap').innerHTML=fcTable();
+  renderFcChart();
+  if(!mgmtFcWired){
+    mgmtFcWired=true;
+    var btns=document.getElementById('mgmtFcToggle').querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      btns[i].addEventListener('click',function(){
+        mgmtFcSort=this.getAttribute('data-s');
+        var bs=document.getElementById('mgmtFcToggle').querySelectorAll('button');
+        for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-s')===mgmtFcSort);
+        document.getElementById('mgmtFcTableWrap').innerHTML=fcTable();
+        renderFcChart();
+      });
+    }
+  }
+}
+function renderFcChart(){
+  var ctx=document.getElementById('mgmtFcChart');if(!ctx||!window.Chart)return;
+  if(typeof ensureDatalabels==='function')ensureDatalabels();
+  if(mgmtFcChart)mgmtFcChart.destroy();
+  var rows=(mgmtFcData&&mgmtFcData.rows)?mgmtFcData.rows.slice():[];
+  rows.sort(function(a,b){return mgmtFcSort==='pax'?(b.pax-a.pax):(b.revenue-a.revenue);});
+  var top=rows.slice(0,12);
+  var labels=top.map(function(r){return r.combo;});
+  var data=top.map(function(r){return mgmtFcSort==='pax'?r.pax:r.revenue;});
+  var fmt=mgmtFcSort==='pax'?function(v){return fmtAmt(v);}:function(v){return fmtAmtShort(v);};
+  mgmtFcChart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:'#185FA5',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:46}},plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:2,font:{size:9,weight:'700'},color:'#4A3F32',formatter:function(v){return fmt(v);}},tooltip:{callbacks:{label:function(c){return fmt(c.parsed.x);}}}},scales:{x:{beginAtZero:true,ticks:{font:{size:9},callback:function(v){return fmt(v);}}},y:{ticks:{font:{size:10}}}}}});
+}
+function fcTable(){
+  var rows=(mgmtFcData&&mgmtFcData.rows)?mgmtFcData.rows.slice():[];
+  rows.sort(function(a,b){return mgmtFcSort==='pax'?(b.pax-a.pax):(b.revenue-a.revenue);});
+  if(!rows.length)return '<div class="mgmt-msg">No FIT bookings this month.</div>';
+  var head='<thead><tr><th>#</th><th>Destination</th><th>Bookings</th><th>PAX</th><th>Revenue</th></tr></thead>';
+  var body=rows.map(function(r,i){
+    return '<tr><td class="met">'+(i+1)+'</td><td class="met">'+r.combo+'</td><td>'+r.count+'</td><td>'+fmtAmt(r.pax)+'</td><td>'+fmtAmtShort(r.revenue)+'</td></tr>';
   }).join('');
   return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
 }
