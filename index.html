@@ -622,7 +622,10 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 <div class="view" id="viewManagement">
   <div class="mgmt-wrap">
     <div class="mgmt-head">
-      <div class="mgmt-picker">
+      <div class="mgmt-ret-toggle" id="mgmtPeriodSel" style="flex-wrap:wrap;">
+        <button data-p="month" class="on">This Month</button><button data-p="currentQ">Current Quarter</button><button data-p="prevQ">Previous Quarter</button><button data-p="currentFY">Current FY</button>
+      </div>
+      <div class="mgmt-picker" id="mgmtMonthNav">
         <button id="mgmtPrev" title="Previous month">◀</button>
         <span class="mgmt-month" id="mgmtMonthLabel">—</span>
         <button id="mgmtNext" title="Next month">▶</button>
@@ -943,7 +946,7 @@ function switchTab(period){
 }
 
 // ══ MANAGEMENT DASHBOARD (YoY / MoM comparison) ══
-var mgmtMonth=null, mgmtLoaded=false, mgmtWired=false, mgmtCharts={};
+var mgmtMonth=null, mgmtPeriod='month', mgmtLoaded=false, mgmtWired=false, mgmtCharts={};
 function mgmtCurMonth(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function mgmtShift(ym,delta){var p=ym.split('-');var d=new Date(Number(p[0]),Number(p[1])-1+delta,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 // ── Marketing Analytics (reads /api/marketing; month picker, April 2026 is the first month of FY 2026-27) ──
@@ -1081,53 +1084,85 @@ function pctDelta(cur,prev){if(!prev)return null;return ((cur-prev)/prev)*100;}
 function openManagement(){
   if(!mgmtWired){
     mgmtWired=true;
-    document.getElementById('mgmtPrev').addEventListener('click',function(){loadMgmtCompare(mgmtShift(mgmtMonth,-1));});
-    document.getElementById('mgmtNext').addEventListener('click',function(){if(mgmtMonth<mgmtCurMonth())loadMgmtCompare(mgmtShift(mgmtMonth,1));});
+    document.getElementById('mgmtPrev').addEventListener('click',function(){if(mgmtPeriod==='month')loadMgmtCompare(mgmtShift(mgmtMonth,-1));});
+    document.getElementById('mgmtNext').addEventListener('click',function(){if(mgmtPeriod==='month'&&mgmtMonth<mgmtCurMonth())loadMgmtCompare(mgmtShift(mgmtMonth,1));});
+    var pbtns=document.getElementById('mgmtPeriodSel').querySelectorAll('button');
+    for(var i=0;i<pbtns.length;i++){
+      pbtns[i].addEventListener('click',function(){
+        mgmtPeriod=this.getAttribute('data-p');
+        var bs=document.getElementById('mgmtPeriodSel').querySelectorAll('button');
+        for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-p')===mgmtPeriod);
+        document.getElementById('mgmtMonthNav').style.display=(mgmtPeriod==='month')?'flex':'none';
+        loadMgmtCompare(mgmtMonth);
+      });
+    }
   }
   if(mgmtMonth===null) mgmtMonth=mgmtCurMonth();
   if(!mgmtLoaded) loadMgmtCompare(mgmtMonth);
 }
 
+// Which month the detail sections (retention/countries/branch) use in Step A
+function mgmtRefMonth(){
+  if(mgmtPeriod==='month') return mgmtMonth;
+  if(mgmtPeriod==='prevQ'){
+    var now=new Date(),m=now.getMonth(),y=now.getFullYear();
+    var qs=(m>=3&&m<=5)?3:(m>=6&&m<=8)?6:(m>=9&&m<=11)?9:0;
+    var d=new Date(y,qs-1,1); // month just before current quarter start = prev quarter's last month
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+  return mgmtCurMonth(); // currentQ / currentFY
+}
+
 function loadMgmtCompare(month){
-  mgmtMonth=month;
-  document.getElementById('mgmtMonthLabel').textContent=mgmtLabel(month);
-  document.getElementById('mgmtNext').disabled=(month>=mgmtCurMonth());
+  if(mgmtPeriod==='month'){
+    mgmtMonth=month;
+    document.getElementById('mgmtMonthLabel').textContent=mgmtLabel(month);
+    document.getElementById('mgmtNext').disabled=(month>=mgmtCurMonth());
+  }
   var L=document.getElementById('mgmtLoading'),E=document.getElementById('mgmtError'),B=document.getElementById('mgmtBody');
   L.style.display='block';E.style.display='none';B.style.display='none';
-  fetch(PROXY_BASE+'/api/mgmt-compare?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
+  var q='period='+encodeURIComponent(mgmtPeriod)+(mgmtPeriod==='month'?('&month='+encodeURIComponent(month)):'')+'&deviceId='+encodeURIComponent(getDeviceId());
+  fetch(PROXY_BASE+'/api/mgmt-compare?'+q)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){mgmtLoaded=true;L.style.display='none';B.style.display='block';renderMgmt(d);})
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load comparison ('+err.message+').';});
-  loadMgmtRetention(month); // retention follows the same month picker (runs in parallel)
-  loadMgmtFitCountries(month); // hot-selling FIT countries follow the same month picker
-  loadMgmtBranches(month); // branch breakup follows the same month picker
+  var rm=mgmtRefMonth();
+  loadMgmtRetention(rm);   // Step A: detail sections follow the period's reference month (full-period in Steps B/C)
+  loadMgmtFitCountries(rm);
+  loadMgmtBranches(rm);
 }
 
 function renderMgmt(d){
-  var t=d.thisMonth,lm=d.lastMonth,ly=d.lastYear;
-  document.getElementById('mgmtSub').textContent=d.isCurrentMonth?('Same-day pace — day 1–'+d.mtdDay+' vs prior periods'):'Full month vs prior periods';
+  var sel=d.sel, prev=d.prev, yoy=d.yoy, showPrev=(!d.showYoyOnly && !!prev);
+  document.getElementById('mgmtSub').textContent=d.periodLabel+' · '+(d.inProgress?d.ptdNote:'Full period');
+  var mt=document.getElementById('mgmtMiniTitle'); if(mt) mt.textContent='Bookings · PAX · Revenue — '+d.selColLabel+(showPrev?(' vs '+d.prevColLabel):'')+' vs '+d.yoyColLabel;
   var kpis=[
-    {lbl:'Bookings',cur:t.mtd.count,mom:lm.mtd.count,yoy:ly.mtd.count,f:function(v){return v;},fit:t.mtd.fit.count,git:t.mtd.git.count,fitLM:lm.mtd.fit.count,gitLM:lm.mtd.git.count,fitLY:ly.mtd.fit.count,gitLY:ly.mtd.git.count},
-    {lbl:'PAX',cur:t.mtd.pax,mom:lm.mtd.pax,yoy:ly.mtd.pax,f:function(v){return fmtAmt(v);},fit:t.mtd.fit.pax,git:t.mtd.git.pax,fitLM:lm.mtd.fit.pax,gitLM:lm.mtd.git.pax,fitLY:ly.mtd.fit.pax,gitLY:ly.mtd.git.pax},
-    {lbl:'Revenue',cur:t.mtd.revenue,mom:lm.mtd.revenue,yoy:ly.mtd.revenue,f:function(v){return fmtAmtShort(v);},fit:t.mtd.fit.revenue,git:t.mtd.git.revenue,fitLM:lm.mtd.fit.revenue,gitLM:lm.mtd.git.revenue,fitLY:ly.mtd.fit.revenue,gitLY:ly.mtd.git.revenue}
+    {lbl:'Bookings',pick:function(o){return o.count;},f:function(v){return v;}},
+    {lbl:'PAX',pick:function(o){return o.pax;},f:function(v){return fmtAmt(v);}},
+    {lbl:'Revenue',pick:function(o){return o.revenue;},f:function(v){return fmtAmtShort(v);}}
   ];
+  var gridStyle=showPrev?'':' style="grid-template-columns:1fr 54px;"';
   document.getElementById('mgmtKpis').innerHTML=kpis.map(function(k){
-    return '<div class="mgmt-kpi"><div class="mgmt-kpi-lbl">'+k.lbl+'</div><div class="mgmt-kpi-val">'+k.f(k.cur)+'</div>'+
+    var cur=k.pick(sel.ptd), curFit=k.pick(sel.ptd.fit), curGit=k.pick(sel.ptd.git);
+    var pf=prev?k.pick(prev.ptd.fit):null, pg=prev?k.pick(prev.ptd.git):null, pt=prev?k.pick(prev.ptd):null;
+    var yf=k.pick(yoy.ptd.fit), yg=k.pick(yoy.ptd.git), yt=k.pick(yoy.ptd);
+    return '<div class="mgmt-kpi"><div class="mgmt-kpi-lbl">'+k.lbl+'</div><div class="mgmt-kpi-val">'+k.f(cur)+'</div>'+
       '<div class="mgmt-fg">'+
-        '<div class="mgmt-fg-row hdr"><span></span><span>MoM</span><span>YoY</span></div>'+
-        '<div class="mgmt-fg-row"><span class="fit">FIT '+k.f(k.fit)+'</span>'+miniCell(k.fit,k.fitLM)+miniCell(k.fit,k.fitLY)+'</div>'+
-        '<div class="mgmt-fg-row"><span class="git">GIT '+k.f(k.git)+'</span>'+miniCell(k.git,k.gitLM)+miniCell(k.git,k.gitLY)+'</div>'+
+        '<div class="mgmt-fg-row hdr"'+gridStyle+'><span></span>'+(showPrev?('<span>'+d.deltaPrev+'</span>'):'')+'<span>'+d.deltaYoy+'</span></div>'+
+        '<div class="mgmt-fg-row"'+gridStyle+'><span class="fit">FIT '+k.f(curFit)+'</span>'+(showPrev?miniCell(curFit,pf):'')+miniCell(curFit,yf)+'</div>'+
+        '<div class="mgmt-fg-row"'+gridStyle+'><span class="git">GIT '+k.f(curGit)+'</span>'+(showPrev?miniCell(curGit,pg):'')+miniCell(curGit,yg)+'</div>'+
       '</div>'+
-      '<div class="mgmt-deltas"><span class="mgmt-delta" style="background:transparent;padding-left:0;">Total</span>'+dBadge(k.cur,k.mom,'MoM')+dBadge(k.cur,k.yoy,'YoY')+'</div></div>';
+      '<div class="mgmt-deltas"><span class="mgmt-delta" style="background:transparent;padding-left:0;">Total</span>'+(showPrev?dBadge(cur,pt,d.deltaPrev):'')+dBadge(cur,yt,d.deltaYoy)+'</div></div>';
   }).join('');
-  var labels=['This','Last mo','Last yr'];
+  var labels=showPrev?[d.selColLabel,d.prevColLabel,d.yoyColLabel]:[d.selColLabel,d.yoyColLabel];
   var FIT='#185FA5', GIT='#B87D00';
-  mgmtBar('mgmtBarBookingsFit',labels,[t.mtd.fit.count,lm.mtd.fit.count,ly.mtd.fit.count],null,FIT);
-  mgmtBar('mgmtBarPaxFit',labels,[t.mtd.fit.pax,lm.mtd.fit.pax,ly.mtd.fit.pax],null,FIT);
-  mgmtBar('mgmtBarRevenueFit',labels,[t.mtd.fit.revenue,lm.mtd.fit.revenue,ly.mtd.fit.revenue],fmtAmtShort,FIT);
-  mgmtBar('mgmtBarBookingsGit',labels,[t.mtd.git.count,lm.mtd.git.count,ly.mtd.git.count],null,GIT);
-  mgmtBar('mgmtBarPaxGit',labels,[t.mtd.git.pax,lm.mtd.git.pax,ly.mtd.git.pax],null,GIT);
-  mgmtBar('mgmtBarRevenueGit',labels,[t.mtd.git.revenue,lm.mtd.git.revenue,ly.mtd.git.revenue],fmtAmtShort,GIT);
+  function arr(get){return showPrev?[get(sel.ptd),get(prev.ptd),get(yoy.ptd)]:[get(sel.ptd),get(yoy.ptd)];}
+  mgmtBar('mgmtBarBookingsFit',labels,arr(function(o){return o.fit.count;}),null,FIT);
+  mgmtBar('mgmtBarPaxFit',labels,arr(function(o){return o.fit.pax;}),null,FIT);
+  mgmtBar('mgmtBarRevenueFit',labels,arr(function(o){return o.fit.revenue;}),fmtAmtShort,FIT);
+  mgmtBar('mgmtBarBookingsGit',labels,arr(function(o){return o.git.count;}),null,GIT);
+  mgmtBar('mgmtBarPaxGit',labels,arr(function(o){return o.git.pax;}),null,GIT);
+  mgmtBar('mgmtBarRevenueGit',labels,arr(function(o){return o.git.revenue;}),fmtAmtShort,GIT);
   document.getElementById('mgmtTableWrap').innerHTML=mgmtTable(d);
 }
 
@@ -1167,32 +1202,37 @@ function mgmtDonut(id,fit,git){
   mgmtCharts[id]=new Chart(ctx,{type:'doughnut',data:{labels:['FIT','GIT'],datasets:[{data:[fit,git],backgroundColor:['#185FA5','#B87D00'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10},boxWidth:10}},datalabels:{color:'#fff',font:{size:10,weight:'700'},formatter:function(v){return v>0?fmtAmtShort(v):'';}},tooltip:{callbacks:{label:function(c){return c.label+': '+fmtAmtShort(c.parsed);}}}}}});
 }
 function mgmtTable(d){
+  var showPrev=(!d.showYoyOnly && !!d.prev);
   function section(key,title){
-    var t=d.thisMonth[key],lm=d.lastMonth[key],ly=d.lastYear[key];
+    var t=d.sel[key],pv=d.prev?d.prev[key]:null,ly=d.yoy[key];
     var intF=function(v){return v;};
-    function metric(name,pick,f){
+    function trio(name,pick,f){
       return [
-        {m:name,c:pick(t),l:pick(lm),y:pick(ly),f:f},
-        {m:'FIT',c:pick(t.fit),l:pick(lm.fit),y:pick(ly.fit),f:f,tone:'fit'},
-        {m:'GIT',c:pick(t.git),l:pick(lm.git),y:pick(ly.git),f:f,tone:'git'}
+        {m:name,c:pick(t),p:pv?pick(pv):null,y:pick(ly),f:f},
+        {m:'FIT',c:pick(t.fit),p:pv?pick(pv.fit):null,y:pick(ly.fit),f:f,tone:'fit'},
+        {m:'GIT',c:pick(t.git),p:pv?pick(pv.git):null,y:pick(ly.git),f:f,tone:'git'}
       ];
     }
     var rows=[].concat(
-      metric('Bookings',function(o){return o.count;},intF),
-      metric('PAX',function(o){return o.pax;},fmtAmt),
-      metric('Revenue',function(o){return o.revenue;},fmtAmtShort),
-      [{m:'Avg booking value',c:t.count?t.revenue/t.count:0,l:lm.count?lm.revenue/lm.count:0,y:ly.count?ly.revenue/ly.count:0,f:fmtAmtShort}]
+      trio('Bookings',function(o){return o.count;},intF),
+      trio('PAX',function(o){return o.pax;},fmtAmt),
+      trio('Revenue',function(o){return o.revenue;},fmtAmtShort),
+      [{m:'Avg booking value',c:t.count?t.revenue/t.count:0,p:pv?(pv.count?pv.revenue/pv.count:0):null,y:ly.count?ly.revenue/ly.count:0,f:fmtAmtShort}]
     );
     var body=rows.map(function(r){
       var mcls=r.tone?('mgmt-sub '+r.tone):'met';
-      return '<tr><td class="'+mcls+'">'+r.m+'</td><td>'+r.f(r.c)+'</td><td>'+r.f(r.l)+'</td><td>'+dCell(r.c,r.l)+'</td><td>'+r.f(r.y)+'</td><td>'+dCell(r.c,r.y)+'</td></tr>';
+      var cells='<td class="'+mcls+'">'+r.m+'</td><td>'+r.f(r.c)+'</td>';
+      if(showPrev) cells+='<td>'+r.f(r.p)+'</td><td>'+dCell(r.c,r.p)+'</td>';
+      cells+='<td>'+r.f(r.y)+'</td><td>'+dCell(r.c,r.y)+'</td>';
+      return '<tr>'+cells+'</tr>';
     }).join('');
-    return '<tr><td class="sec" colspan="6">'+title+'</td></tr>'+body;
+    var cols=showPrev?6:4;
+    return '<tr><td class="sec" colspan="'+cols+'">'+title+'</td></tr>'+body;
   }
-  var head='<thead><tr><th>Metric</th><th>This</th><th>Last mo</th><th>MoM</th><th>Last yr</th><th>YoY</th></tr></thead>';
-  var mtdSec=section('mtd',d.isCurrentMonth?('Same-day pace · day 1–'+d.mtdDay):'Full month');
-  var fullSec=d.isCurrentMonth?section('full','This month so far vs full prior months'):'';
-  return '<table class="mgmt-table">'+head+'<tbody>'+mtdSec+fullSec+'</tbody></table>';
+  var head='<thead><tr><th>Metric</th><th>'+d.selColLabel+'</th>'+(showPrev?('<th>'+d.prevColLabel+'</th><th>'+d.deltaPrev+'</th>'):'')+'<th>'+d.yoyColLabel+'</th><th>'+d.deltaYoy+'</th></tr></thead>';
+  var ptdSec=section('ptd',d.inProgress?('Period to date · '+d.ptdNote):'Full period');
+  var fullSec=d.inProgress?section('full',d.periodLabel+' so far vs full comparison periods'):'';
+  return '<table class="mgmt-table">'+head+'<tbody>'+ptdSec+fullSec+'</tbody></table>';
 }
 
 // ── Retention Analysis ──
