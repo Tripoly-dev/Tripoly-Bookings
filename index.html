@@ -307,6 +307,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .mgmt-ret-toggle button:first-child{border-radius:6px 0 0 6px;} .mgmt-ret-toggle button:last-child{border-radius:0 6px 6px 0;} .mgmt-ret-toggle button:not(:first-child){border-left:none;}
 #mgmtRetChart{width:100%!important;height:240px!important;}
 #mgmtFcChart{width:100%!important;height:300px!important;}
+#mgmtBrChart{width:100%!important;height:280px!important;}
 @media(max-width:820px){.mgmt-kpis{grid-template-columns:1fr;}.mgmt-charts{grid-template-columns:1fr;}.mgmt-ret-tiles{grid-template-columns:1fr;}}
 /* ── Marketing Analytics tab ── */
 .mk-wrap{flex:1;overflow:auto;padding:20px 24px 28px;}
@@ -686,6 +687,24 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
             <div id="mgmtFcTableWrap"></div>
           </div>
           <small style="display:block;margin-top:8px;opacity:.65;">FIT holiday packages only. Multi-country trips are shown as their own combination (no double-counting).</small>
+        </div>
+      </div>
+
+      <!-- Branch Breakup (follows the month picker) -->
+      <div class="mgmt-ret-title">Branch Breakup — <span id="mgmtBrMonthLbl">—</span></div>
+      <div class="mgmt-msg" id="mgmtBrLoading" style="display:none;">Loading branches…</div>
+      <div class="mgmt-msg" id="mgmtBrError" style="display:none;"></div>
+      <div id="mgmtBr" style="display:none;">
+        <div class="mgmt-chart-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
+            <div class="mgmt-chart-title" style="margin:0;">FIT vs GIT by branch</div>
+            <div class="mgmt-ret-toggle" id="mgmtBrToggle">
+              <button data-s="revenue" class="on">Revenue</button><button data-s="pax">PAX</button>
+            </div>
+          </div>
+          <div style="position:relative;height:280px;margin-bottom:12px;"><canvas id="mgmtBrChart"></canvas></div>
+          <div style="overflow:auto;"><div id="mgmtBrTableWrap"></div></div>
+          <small style="display:block;margin-top:8px;opacity:.65;">Qualifying FIT &amp; GIT bookings; excludes the 4 internal owners. All branches shown.</small>
         </div>
       </div>
     </div>
@@ -1081,6 +1100,7 @@ function loadMgmtCompare(month){
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load comparison ('+err.message+').';});
   loadMgmtRetention(month); // retention follows the same month picker (runs in parallel)
   loadMgmtFitCountries(month); // hot-selling FIT countries follow the same month picker
+  loadMgmtBranches(month); // branch breakup follows the same month picker
 }
 
 function renderMgmt(d){
@@ -1303,6 +1323,67 @@ function fcTable(){
     return '<tr><td class="met">'+(i+1)+'</td><td class="met">'+r.combo+'</td><td>'+r.count+'</td><td>'+fmtAmt(r.pax)+'</td><td>'+fmtAmtShort(r.revenue)+'</td></tr>';
   }).join('');
   return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
+}
+
+// ── Branch Breakup ──
+var mgmtBrData=null, mgmtBrSort='revenue', mgmtBrWired=false, mgmtBrChart=null;
+function loadMgmtBranches(month){
+  var L=document.getElementById('mgmtBrLoading'),E=document.getElementById('mgmtBrError'),C=document.getElementById('mgmtBr');
+  L.style.display='block';E.style.display='none';C.style.display='none';
+  fetch(PROXY_BASE+'/api/mgmt-branches?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){mgmtBrData=d;L.style.display='none';C.style.display='block';renderBranches();})
+    .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load branches ('+err.message+').';});
+}
+function renderBranches(){
+  var d=mgmtBrData;if(!d)return;
+  document.getElementById('mgmtBrMonthLbl').textContent=mgmtLabel(d.month);
+  document.getElementById('mgmtBrTableWrap').innerHTML=brTable();
+  renderBrChart();
+  if(!mgmtBrWired){
+    mgmtBrWired=true;
+    var btns=document.getElementById('mgmtBrToggle').querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){
+      btns[i].addEventListener('click',function(){
+        mgmtBrSort=this.getAttribute('data-s');
+        var bs=document.getElementById('mgmtBrToggle').querySelectorAll('button');
+        for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-s')===mgmtBrSort);
+        renderBrChart();
+      });
+    }
+  }
+}
+function brTable(){
+  var d=mgmtBrData;if(!d)return '';
+  var head='<thead><tr><th>Branch</th><th>FIT Bkg</th><th>FIT PAX</th><th>FIT Rev</th><th>GIT Bkg</th><th>GIT PAX</th><th>GIT Rev</th><th>Total Rev</th></tr></thead>';
+  var body=d.rows.map(function(r){
+    var tot=r.fit.revenue+r.git.revenue;
+    return '<tr><td class="met">'+r.branch+'</td>'+
+      '<td>'+r.fit.count+'</td><td>'+fmtAmt(r.fit.pax)+'</td><td>'+fmtAmtShort(r.fit.revenue)+'</td>'+
+      '<td>'+r.git.count+'</td><td>'+fmtAmt(r.git.pax)+'</td><td>'+fmtAmtShort(r.git.revenue)+'</td>'+
+      '<td class="met">'+fmtAmtShort(tot)+'</td></tr>';
+  }).join('');
+  var g=d.grand,gt=g.fit.revenue+g.git.revenue;
+  var foot='<tr style="background:var(--bg);font-weight:700;"><td class="met">All</td>'+
+    '<td>'+g.fit.count+'</td><td>'+fmtAmt(g.fit.pax)+'</td><td>'+fmtAmtShort(g.fit.revenue)+'</td>'+
+    '<td>'+g.git.count+'</td><td>'+fmtAmt(g.git.pax)+'</td><td>'+fmtAmtShort(g.git.revenue)+'</td>'+
+    '<td class="met">'+fmtAmtShort(gt)+'</td></tr>';
+  return '<table class="mgmt-table">'+head+'<tbody>'+body+foot+'</tbody></table>';
+}
+function renderBrChart(){
+  var ctx=document.getElementById('mgmtBrChart');if(!ctx||!window.Chart)return;
+  if(typeof ensureDatalabels==='function')ensureDatalabels();
+  if(mgmtBrChart)mgmtBrChart.destroy();
+  var d=mgmtBrData;if(!d)return;
+  var labels=d.rows.map(function(r){return r.branch;});
+  var pick=function(o){return mgmtBrSort==='pax'?o.pax:o.revenue;};
+  var fitD=d.rows.map(function(r){return pick(r.fit);});
+  var gitD=d.rows.map(function(r){return pick(r.git);});
+  var fmt=mgmtBrSort==='pax'?function(v){return fmtAmt(v);}:function(v){return fmtAmtShort(v);};
+  mgmtBrChart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
+    {label:'FIT',data:fitD,backgroundColor:'#185FA5',borderRadius:4},
+    {label:'GIT',data:gitD,backgroundColor:'#B87D00',borderRadius:4}
+  ]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},datalabels:{anchor:'end',align:'end',offset:2,font:{size:9,weight:'700'},color:'#4A3F32',formatter:function(v){return v>0?fmt(v):'';}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.parsed.y);}}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9},callback:function(v){return fmt(v);}}},x:{ticks:{font:{size:10}}}}}});
 }
 
 // ── Countdown ──
