@@ -279,7 +279,10 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .mgmt-table .sec{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:11px;color:var(--orange);background:var(--bg);text-transform:uppercase;letter-spacing:.5px;}
 .mgmt-table .met{font-weight:600;color:var(--ink);}
 .mgmt-d-up{color:var(--green);font-weight:600;} .mgmt-d-down{color:var(--red);font-weight:600;}
-.mgmt-minis canvas,.mgmt-donuts canvas{width:100%!important;height:150px!important;}
+.mgmt-minis canvas{width:100%!important;height:120px!important;}
+.mgmt-donuts canvas{width:100%!important;height:150px!important;}
+.mgmt-fg-lbl{font-family:'Inter Tight',sans-serif;font-size:11px;font-weight:800;letter-spacing:.5px;margin:8px 0 4px;}
+.mgmt-fg-lbl.fit{color:#185FA5;} .mgmt-fg-lbl.git{color:#B87D00;}
 .mgmt-kpi-split{display:flex;gap:6px;margin-bottom:3px;flex-wrap:wrap;}
 .mgmt-kpi-split span{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--paper);}
 .mgmt-kpi-split .fit{color:#185FA5;} .mgmt-kpi-split .git{color:#B87D00;}
@@ -631,11 +634,18 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
       <div class="mgmt-kpis" id="mgmtKpis"></div>
       <div class="mgmt-charts">
         <div class="mgmt-chart-card">
-          <div class="mgmt-chart-title" id="mgmtMiniTitle">Bookings · PAX · Revenue — MTD pace</div>
+          <div class="mgmt-chart-title" id="mgmtMiniTitle">Bookings · PAX · Revenue — This vs Last mo vs Last yr</div>
+          <div class="mgmt-fg-lbl fit">FIT</div>
           <div class="mgmt-minis">
-            <div><div class="mgmt-mini-title">Bookings</div><canvas id="mgmtBarBookings" height="150"></canvas></div>
-            <div><div class="mgmt-mini-title">PAX</div><canvas id="mgmtBarPax" height="150"></canvas></div>
-            <div><div class="mgmt-mini-title">Revenue</div><canvas id="mgmtBarRevenue" height="150"></canvas></div>
+            <div><div class="mgmt-mini-title">Bookings</div><canvas id="mgmtBarBookingsFit" height="130"></canvas></div>
+            <div><div class="mgmt-mini-title">PAX</div><canvas id="mgmtBarPaxFit" height="130"></canvas></div>
+            <div><div class="mgmt-mini-title">Revenue</div><canvas id="mgmtBarRevenueFit" height="130"></canvas></div>
+          </div>
+          <div class="mgmt-fg-lbl git">GIT</div>
+          <div class="mgmt-minis">
+            <div><div class="mgmt-mini-title">Bookings</div><canvas id="mgmtBarBookingsGit" height="130"></canvas></div>
+            <div><div class="mgmt-mini-title">PAX</div><canvas id="mgmtBarPaxGit" height="130"></canvas></div>
+            <div><div class="mgmt-mini-title">Revenue</div><canvas id="mgmtBarRevenueGit" height="130"></canvas></div>
           </div>
         </div>
         <div class="mgmt-chart-card">
@@ -1077,9 +1087,13 @@ function renderMgmt(d){
       '<div class="mgmt-deltas"><span class="mgmt-delta" style="background:transparent;padding-left:0;">Total</span>'+dBadge(k.cur,k.mom,'MoM')+dBadge(k.cur,k.yoy,'YoY')+'</div></div>';
   }).join('');
   var labels=['This','Last mo','Last yr'];
-  mgmtBar('mgmtBarBookings',labels,[t.mtd.count,lm.mtd.count,ly.mtd.count],null);
-  mgmtBar('mgmtBarPax',labels,[t.mtd.pax,lm.mtd.pax,ly.mtd.pax],null);
-  mgmtBar('mgmtBarRevenue',labels,[t.mtd.revenue,lm.mtd.revenue,ly.mtd.revenue],fmtAmtShort);
+  var FIT='#185FA5', GIT='#B87D00';
+  mgmtBar('mgmtBarBookingsFit',labels,[t.mtd.fit.count,lm.mtd.fit.count,ly.mtd.fit.count],null,FIT);
+  mgmtBar('mgmtBarPaxFit',labels,[t.mtd.fit.pax,lm.mtd.fit.pax,ly.mtd.fit.pax],null,FIT);
+  mgmtBar('mgmtBarRevenueFit',labels,[t.mtd.fit.revenue,lm.mtd.fit.revenue,ly.mtd.fit.revenue],fmtAmtShort,FIT);
+  mgmtBar('mgmtBarBookingsGit',labels,[t.mtd.git.count,lm.mtd.git.count,ly.mtd.git.count],null,GIT);
+  mgmtBar('mgmtBarPaxGit',labels,[t.mtd.git.pax,lm.mtd.git.pax,ly.mtd.git.pax],null,GIT);
+  mgmtBar('mgmtBarRevenueGit',labels,[t.mtd.git.revenue,lm.mtd.git.revenue,ly.mtd.git.revenue],fmtAmtShort,GIT);
   mgmtDonut('mgmtDonutThis',t.mtd.fit.revenue,t.mtd.git.revenue);
   mgmtDonut('mgmtDonutLY',ly.mtd.fit.revenue,ly.mtd.git.revenue);
   var mtd=d.isCurrentMonth?' (MTD)':'';
@@ -1110,11 +1124,12 @@ function miniCell(cur,prev){
 }
 var dlRegistered=false;
 function ensureDatalabels(){ if(!dlRegistered && window.Chart && window.ChartDataLabels){ try{ Chart.register(window.ChartDataLabels); }catch(e){} dlRegistered=true; } }
-function mgmtBar(id,labels,data,fmt){
+function mgmtBar(id,labels,data,fmt,color){
   var ctx=document.getElementById(id);if(!ctx||!window.Chart)return;
   ensureDatalabels();
   if(mgmtCharts[id])mgmtCharts[id].destroy();
-  mgmtCharts[id]=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:['#E8613A','#C9A227','#9B8E80'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:2,font:{size:9,weight:'700'},color:'#4A3F32',formatter:function(v){return fmt?fmt(v):v;}},tooltip:{callbacks:{label:function(c){return fmt?fmt(c.parsed.y):String(c.parsed.y);}}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9},callback:function(v){return fmt?fmt(v):v;}}},x:{ticks:{font:{size:9}}}}}});
+  var bg=color?[color,color,color]:['#E8613A','#C9A227','#9B8E80'];
+  mgmtCharts[id]=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:bg,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',offset:2,font:{size:9,weight:'700'},color:'#4A3F32',formatter:function(v){return fmt?fmt(v):v;}},tooltip:{callbacks:{label:function(c){return fmt?fmt(c.parsed.y):String(c.parsed.y);}}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9},callback:function(v){return fmt?fmt(v):v;}}},x:{ticks:{font:{size:9}}}}}});
 }
 function mgmtDonut(id,fit,git){
   var ctx=document.getElementById(id);if(!ctx||!window.Chart)return;
