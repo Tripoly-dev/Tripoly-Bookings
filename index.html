@@ -297,6 +297,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .mgmt-table td.mgmt-sub.fit{color:#185FA5;} .mgmt-table td.mgmt-sub.git{color:#B87D00;}
 .mgmt-ret-title{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;color:var(--ink);margin:22px 0 12px;}
 .mgmt-ret-tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.mgmt-ret-health{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:10px 16px;margin-bottom:14px;font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .mgmt-ret-tile{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px 18px;}
 .mgmt-ret-tile h4{font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:800;margin-bottom:10px;}
 .mgmt-ret-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--paper);}
@@ -660,17 +661,18 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
       <div class="mgmt-msg" id="mgmtRetLoading" style="display:none;">Loading retention…</div>
       <div class="mgmt-msg" id="mgmtRetError" style="display:none;"></div>
       <div id="mgmtRet" style="display:none;">
+        <div class="mgmt-ret-health" id="mgmtRetHealth"></div>
         <div class="mgmt-ret-tiles" id="mgmtRetTiles"></div>
+        <div id="mgmtRetTableWrap" style="margin-top:14px;"></div>
         <div class="mgmt-chart-card" style="margin-top:14px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
-            <div class="mgmt-chart-title" style="margin:0;">Monthly trend — last FY onwards</div>
+            <div class="mgmt-chart-title" style="margin:0;">Monthly trend — last FY onwards (selected period highlighted)</div>
             <div class="mgmt-ret-toggle" id="mgmtRetToggle">
               <button data-m="count" class="on">Bookings</button><button data-m="pax">PAX</button><button data-m="revenue">Revenue</button>
             </div>
           </div>
           <canvas id="mgmtRetChart" height="240"></canvas>
         </div>
-        <div id="mgmtRetTableWrap" style="margin-top:14px;"></div>
       </div>
 
       <!-- Hot-selling FIT Countries (follows the month picker) -->
@@ -1101,17 +1103,6 @@ function openManagement(){
   if(!mgmtLoaded) loadMgmtCompare(mgmtMonth);
 }
 
-// Which month the detail sections (retention/countries/branch) use in Step A
-function mgmtRefMonth(){
-  if(mgmtPeriod==='month') return mgmtMonth;
-  if(mgmtPeriod==='prevQ'){
-    var now=new Date(),m=now.getMonth(),y=now.getFullYear();
-    var qs=(m>=3&&m<=5)?3:(m>=6&&m<=8)?6:(m>=9&&m<=11)?9:0;
-    var d=new Date(y,qs-1,1); // month just before current quarter start = prev quarter's last month
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  }
-  return mgmtCurMonth(); // currentQ / currentFY
-}
 function mgmtPeriodQuery(){
   return 'period='+encodeURIComponent(mgmtPeriod)+(mgmtPeriod==='month'?('&month='+encodeURIComponent(mgmtMonth)):'')+'&deviceId='+encodeURIComponent(getDeviceId());
 }
@@ -1130,7 +1121,7 @@ function loadMgmtCompare(month){
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load comparison ('+err.message+').';});
   loadMgmtFitCountries();  // Step B: follows the full selected period
   loadMgmtBranches();      // Step B: follows the full selected period
-  loadMgmtRetention(mgmtRefMonth()); // Step C will move retention onto the period; month-based for now
+  loadMgmtRetention(); // follows the full selected period
 }
 
 function renderMgmt(d){
@@ -1242,10 +1233,10 @@ function retFmt(v){return mgmtRetMetric==='revenue'?fmtAmtShort(v):(mgmtRetMetri
 function retVal(entry,who){var o=entry[who];return mgmtRetMetric==='count'?o.count:(mgmtRetMetric==='pax'?o.pax:o.revenue);}
 function retShort(ym){var p=ym.split('-');return new Date(Number(p[0]),Number(p[1])-1,1).toLocaleDateString('en-IN',{month:'short',year:'2-digit'});}
 
-function loadMgmtRetention(month){
+function loadMgmtRetention(){
   var L=document.getElementById('mgmtRetLoading'),E=document.getElementById('mgmtRetError'),R=document.getElementById('mgmtRet');
   L.style.display='block';E.style.display='none';R.style.display='none';
-  fetch(PROXY_BASE+'/api/mgmt-retention?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
+  fetch(PROXY_BASE+'/api/mgmt-retention?'+mgmtPeriodQuery())
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){mgmtRetData=d;L.style.display='none';R.style.display='block';renderRetention();})
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load retention ('+err.message+').';});
@@ -1253,26 +1244,30 @@ function loadMgmtRetention(month){
 
 function renderRetention(){
   var d=mgmtRetData;if(!d)return;
-  document.getElementById('mgmtRetMonthLbl').textContent=mgmtLabel(d.snapshot.month);
-  var snap=d.snapshot, yoy=d.snapshotYoY, total=snap.total||0;
-  var selIdx=d.series.map(function(s){return s.month;}).indexOf(snap.month);
-  var prevEntry=(selIdx>0)?d.series[selIdx-1]:null;
-  function ddPair(c,m,y){
-    return '<small class="mgmt-ret-dd">MoM '+(m!==null&&m!==undefined?dCell(c,m):'—')+' · YoY '+dCell(c,y)+'</small>';
+  document.getElementById('mgmtRetMonthLbl').textContent=(d.periodLabel||'')+(d.inProgress&&d.ptdNote?(' · '+d.ptdNote):'');
+  var snap=d.snapshot, prev=d.prev, yoy=d.yoy, total=snap.total||0;
+  var showPrev=(!d.showYoyOnly && !!prev);
+  function ddPair(c,p,y){
+    return '<small class="mgmt-ret-dd">'+(showPrev?(d.deltaPrev+' '+(p!=null?dCell(c,p):'—')+' · '):'')+d.deltaYoy+' '+dCell(c,y)+'</small>';
   }
-  function tile(name,cur,mom,ly){
+  function tile(name,cur,pc,yc){
     var share=total?((cur.count/total)*100).toFixed(1)+'%':'—';
     return '<div class="mgmt-ret-tile"><h4>'+name+'</h4>'+
-      '<div class="mgmt-ret-row"><span>Bookings</span><span>'+cur.count+' '+ddPair(cur.count,mom?mom.count:null,ly.count)+'</span></div>'+
-      '<div class="mgmt-ret-row"><span>PAX</span><span>'+fmtAmt(cur.pax)+' '+ddPair(cur.pax,mom?mom.pax:null,ly.pax)+'</span></div>'+
-      '<div class="mgmt-ret-row"><span>Revenue</span><span>'+fmtAmtShort(cur.revenue)+' '+ddPair(cur.revenue,mom?mom.revenue:null,ly.revenue)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>Bookings</span><span>'+cur.count+' '+ddPair(cur.count,pc?pc.count:null,yc.count)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>PAX</span><span>'+fmtAmt(cur.pax)+' '+ddPair(cur.pax,pc?pc.pax:null,yc.pax)+'</span></div>'+
+      '<div class="mgmt-ret-row"><span>Revenue</span><span>'+fmtAmtShort(cur.revenue)+' '+ddPair(cur.revenue,pc?pc.revenue:null,yc.revenue)+'</span></div>'+
       '<div class="mgmt-ret-row"><span>Share of bookings</span><span>'+share+'</span></div></div>';
   }
   document.getElementById('mgmtRetTiles').innerHTML=
-    tile('Existing Client',snap.existing,prevEntry?prevEntry.existing:null,yoy.existing)+
-    tile('Client Reference',snap.reference,prevEntry?prevEntry.reference:null,yoy.reference);
-  renderRetChart();
+    tile('Existing Client',snap.existing,prev?prev.existing:null,yoy.existing)+
+    tile('Client Reference',snap.reference,prev?prev.reference:null,yoy.reference);
+  var h=d.health||{};
+  function ppCell(cur,p){ if(cur==null||p==null)return '—'; var dd=cur-p; var up=dd>=0; return '<span class="'+(up?'mgmt-d-up':'mgmt-d-down')+'">'+(up?'▲':'▼')+Math.abs(dd).toFixed(1)+'pp</span>'; }
+  var hb='<span>Repeat + referral share: '+(h.cur!=null?h.cur.toFixed(1)+'%':'—')+'</span>';
+  hb+='<small class="mgmt-ret-dd">'+(showPrev?(d.deltaPrev+' '+ppCell(h.cur,h.prev)+' · '):'')+d.deltaYoy+' '+ppCell(h.cur,h.yoy)+'</small>';
+  document.getElementById('mgmtRetHealth').innerHTML=hb;
   document.getElementById('mgmtRetTableWrap').innerHTML=retTable();
+  renderRetChart();
   if(!mgmtRetWired){
     mgmtRetWired=true;
     var btns=document.getElementById('mgmtRetToggle').querySelectorAll('button');
@@ -1292,10 +1287,9 @@ function renderRetChart(){
   var ctx=document.getElementById('mgmtRetChart');if(!ctx)return;
   if(mgmtRetChart)mgmtRetChart.destroy();
   var labels=d.series.map(function(s){return retShort(s.month);});
-  var selIdx=d.series.map(function(s){return s.month;}).indexOf(d.snapshot.month);
   var existing=d.series.map(function(s){return retVal(s,'existing');});
   var reference=d.series.map(function(s){return retVal(s,'reference');});
-  var pr=labels.map(function(_,i){return i===selIdx?5:2;});
+  var pr=d.series.map(function(s){return s.inSel?5:2;});
   mgmtRetChart=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
     {label:'Existing Client',data:existing,borderColor:'#185FA5',backgroundColor:'#185FA5',tension:.3,pointRadius:pr,borderWidth:2},
     {label:'Client Reference',data:reference,borderColor:'#E8613A',backgroundColor:'#E8613A',tension:.3,pointRadius:pr,borderWidth:2}
@@ -1306,7 +1300,7 @@ function retTable(){
   var d=mgmtRetData;
   var head='<thead><tr><th>Month</th><th>Existing</th><th>Exist. rev</th><th>Reference</th><th>Ref. rev</th></tr></thead>';
   var body=d.series.map(function(s){
-    var hl=(s.month===d.snapshot.month)?' style="background:var(--bg);"':'';
+    var hl=s.inSel?' style="background:var(--bg);"':'';
     return '<tr'+hl+'><td class="met">'+retShort(s.month)+'</td><td>'+s.existing.count+'</td><td>'+fmtAmtShort(s.existing.revenue)+'</td><td>'+s.reference.count+'</td><td>'+fmtAmtShort(s.reference.revenue)+'</td></tr>';
   }).join('');
   return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
