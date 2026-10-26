@@ -1112,6 +1112,9 @@ function mgmtRefMonth(){
   }
   return mgmtCurMonth(); // currentQ / currentFY
 }
+function mgmtPeriodQuery(){
+  return 'period='+encodeURIComponent(mgmtPeriod)+(mgmtPeriod==='month'?('&month='+encodeURIComponent(mgmtMonth)):'')+'&deviceId='+encodeURIComponent(getDeviceId());
+}
 
 function loadMgmtCompare(month){
   if(mgmtPeriod==='month'){
@@ -1121,15 +1124,13 @@ function loadMgmtCompare(month){
   }
   var L=document.getElementById('mgmtLoading'),E=document.getElementById('mgmtError'),B=document.getElementById('mgmtBody');
   L.style.display='block';E.style.display='none';B.style.display='none';
-  var q='period='+encodeURIComponent(mgmtPeriod)+(mgmtPeriod==='month'?('&month='+encodeURIComponent(month)):'')+'&deviceId='+encodeURIComponent(getDeviceId());
-  fetch(PROXY_BASE+'/api/mgmt-compare?'+q)
+  fetch(PROXY_BASE+'/api/mgmt-compare?'+mgmtPeriodQuery())
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){mgmtLoaded=true;L.style.display='none';B.style.display='block';renderMgmt(d);})
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load comparison ('+err.message+').';});
-  var rm=mgmtRefMonth();
-  loadMgmtRetention(rm);   // Step A: detail sections follow the period's reference month (full-period in Steps B/C)
-  loadMgmtFitCountries(rm);
-  loadMgmtBranches(rm);
+  loadMgmtFitCountries();  // Step B: follows the full selected period
+  loadMgmtBranches();      // Step B: follows the full selected period
+  loadMgmtRetention(mgmtRefMonth()); // Step C will move retention onto the period; month-based for now
 }
 
 function renderMgmt(d){
@@ -1313,17 +1314,17 @@ function retTable(){
 
 // ── Hot-selling FIT Countries ──
 var mgmtFcData=null, mgmtFcSort='revenue', mgmtFcWired=false, mgmtFcChart=null;
-function loadMgmtFitCountries(month){
+function loadMgmtFitCountries(){
   var L=document.getElementById('mgmtFcLoading'),E=document.getElementById('mgmtFcError'),C=document.getElementById('mgmtFc');
   L.style.display='block';E.style.display='none';C.style.display='none';
-  fetch(PROXY_BASE+'/api/mgmt-fit-countries?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
+  fetch(PROXY_BASE+'/api/mgmt-fit-countries?'+mgmtPeriodQuery())
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){mgmtFcData=d;L.style.display='none';C.style.display='block';renderFitCountries();})
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load countries ('+err.message+').';});
 }
 function renderFitCountries(){
   var d=mgmtFcData;if(!d)return;
-  document.getElementById('mgmtFcMonthLbl').textContent=mgmtLabel(d.month);
+  document.getElementById('mgmtFcMonthLbl').textContent=(d.periodLabel||'')+(d.inProgress&&d.ptdNote?(' · '+d.ptdNote):'');
   var t=d.totals||{count:0,pax:0,revenue:0};
   document.getElementById('mgmtFcTotals').textContent='· '+t.count+' bookings · '+fmtAmt(t.pax)+' PAX · '+fmtAmtShort(t.revenue);
   document.getElementById('mgmtFcTableWrap').innerHTML=fcTable();
@@ -1367,17 +1368,17 @@ function fcTable(){
 
 // ── Branch Breakup ──
 var mgmtBrData=null, mgmtBrSort='revenue', mgmtBrWired=false, mgmtBrChart=null;
-function loadMgmtBranches(month){
+function loadMgmtBranches(){
   var L=document.getElementById('mgmtBrLoading'),E=document.getElementById('mgmtBrError'),C=document.getElementById('mgmtBr');
   L.style.display='block';E.style.display='none';C.style.display='none';
-  fetch(PROXY_BASE+'/api/mgmt-branches?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
+  fetch(PROXY_BASE+'/api/mgmt-branches?'+mgmtPeriodQuery())
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(d){mgmtBrData=d;L.style.display='none';C.style.display='block';renderBranches();})
     .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load branches ('+err.message+').';});
 }
 function renderBranches(){
   var d=mgmtBrData;if(!d)return;
-  document.getElementById('mgmtBrMonthLbl').textContent=mgmtLabel(d.month);
+  document.getElementById('mgmtBrMonthLbl').textContent=(d.periodLabel||'')+(d.inProgress&&d.ptdNote?(' · '+d.ptdNote):'');
   document.getElementById('mgmtBrTableWrap').innerHTML=brTable();
   renderBrChart();
   if(!mgmtBrWired){
