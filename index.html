@@ -350,7 +350,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mkx-to{color:var(--mx-muted);font-size:11px;}
 #viewMarketing .mkx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:26px 0 13px;}
 #viewMarketing .mkx-head h2{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;border-left:4px solid var(--hc,var(--ink));padding-left:10px;}
-#viewMarketing .mkx-head[data-c=green]{--hc:#1A7A4A;}#viewMarketing .mkx-head[data-c=blue]{--hc:#185FA5;}#viewMarketing .mkx-head[data-c=red]{--hc:#C0392B;}#viewMarketing .mkx-head[data-c=orange]{--hc:#E8613A;}#viewMarketing .mkx-head[data-c=grey]{--hc:#9B8E80;}#viewMarketing .mkx-head[data-c=ink]{--hc:#1A1208;}
+#viewMarketing .mkx-head[data-c=green]{--hc:#1A7A4A;}#viewMarketing .mkx-head[data-c=blue]{--hc:#185FA5;}#viewMarketing .mkx-head[data-c=red]{--hc:#C0392B;}#viewMarketing .mkx-head[data-c=orange]{--hc:#E8613A;}#viewMarketing .mkx-head[data-c=grey]{--hc:#9B8E80;}#viewMarketing .mkx-head[data-c=ink]{--hc:#1A1208;}#viewMarketing .mkx-head[data-c=gold]{--hc:#C9A227;}
 #viewMarketing .mkx-head p{padding-left:14px;}
 #viewMarketing .mkx-head p{font-size:11px;color:var(--mx-muted);margin-top:5px;}
 #viewMarketing .mk-msg{padding:40px;text-align:center;color:var(--mx-muted);font-size:14px;}
@@ -444,6 +444,14 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mkx-source{display:grid;grid-template-columns:130px 1fr minmax(150px,auto);align-items:center;gap:10px;font-size:11px;color:var(--ink-mid);margin-bottom:13px;}
 #viewMarketing .mkx-source em{font-style:normal;color:var(--mx-muted);font-size:10px;margin-left:6px;font-weight:500;}
 #viewMarketing .mkx-rk{font-weight:800;color:var(--mx-muted);width:26px;}
+#viewMarketing .mkx-table tr[data-k]{cursor:pointer;}
+#viewMarketing .mkx-table tr[data-k]:hover td{background:var(--paper);}
+#viewMarketing .mkx-table tr.mkx-sub td{background:var(--paper);white-space:normal;padding:10px 14px 14px 36px;}
+#viewMarketing .mkx-kid{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;padding:4px 0;font-size:11px;color:var(--ink-mid);}
+#viewMarketing .mkx-kid b{color:var(--green);font-variant-numeric:tabular-nums;}
+#viewMarketing .mkx-kid em{font-style:normal;color:var(--mx-muted);}
+#viewMarketing .mkx-chev{display:inline-block;width:14px;color:var(--mx-muted);}
+#viewMarketing .mkx-deepbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
 #viewMarketing .mkx-source span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #viewMarketing .mkx-source strong{text-align:right;color:var(--ink-mid);}
 #viewMarketing .mkx-insight{background:linear-gradient(135deg,#2A1F14,#4A3F32);color:#fff;border-radius:16px;padding:20px;position:relative;overflow:hidden;margin-bottom:14px;}
@@ -741,6 +749,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         <button data-t="mkxAttention"><i>!</i>Attention</button>
         <button data-t="mkxTrends"><i>↗</i>Trends</button>
         <button data-t="mkxSources"><i>◎</i>Lead sources</button>
+        <button data-t="mkxDeep"><i>◧</i>Deeper analysis</button>
         <button data-t="mkxCampaigns"><i>◈</i>Campaigns</button>
         <button data-t="mkxInsights"><i>✧</i>Insights</button>
         <button data-t="mkxMonthly"><i>▤</i>Campaign summary</button>
@@ -836,6 +845,14 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxSrcTitle"></div></div>
             <div class="mkx-seg" id="mkxSrcTabs"><button data-m="revenue" class="on">Revenue</button><button data-m="pax">PAX</button><button data-m="bookings">Bookings</button></div></div>
           <div id="mkxSourceList"></div>
+        </section>
+
+        <div class="mkx-head" data-c="gold" id="mkxDeep"><div><h2>Deeper analysis</h2><p>Which departures sell, how leads pay back over the following months, and how individual ads perform. Follows the period and GIT / FIT view; ignores the campaign filter.</p></div></div>
+        <section class="mkx-panel">
+          <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxDeepTitle"></div><div class="mkx-psub" id="mkxDeepDesc"></div></div>
+            <div class="mkx-seg" id="mkxDeepTabs"><button data-d="dep" class="on">Departures</button><button data-d="lead">Lead month</button><button data-d="ads">Ads</button></div></div>
+          <div id="mkxDeepBody"></div>
+          <div class="mkx-note" id="mkxDeepNote"></div>
         </section>
 
         <div class="mkx-head" data-c="orange" id="mkxCampaigns"><div><h2>Campaign command center</h2><p>Find campaigns that deserve more budget, or a closer look.</p></div></div>
@@ -1584,6 +1601,7 @@ function renderMkOverview(d,pd,trend){
   mkxInsights(d,mkxRows,t);
   mkxRenderOpt(d);
   mkxWireRank();mkxRenderRank(d);mkxSetTrend();
+  mkxWireDeep();mkxLoadDeep(mkOvSeq);
   mkxRenderAttention(d);
 
   // campaign dropdown follows the filters
@@ -1602,7 +1620,7 @@ function renderMkOverview(d,pd,trend){
   renderMarketing(mkMonthlyShape(d,mkPeriodText(per),dvn));
 }
 function mkShort2(v){v=Number(v);if(v>=10000000)return (v/10000000).toFixed(1)+'Cr';if(v>=100000)return (v/100000).toFixed(1)+'L';if(v>=1000)return (v/1000).toFixed(0)+'K';return String(v);}
-function mkRefresh(){ mkCache={};mkUnCache={}; if(mkOvWired)loadMkOverview(); }
+function mkRefresh(){ mkCache={};mkUnCache={};mkAn={}; if(mkOvWired)loadMkOverview(); }
 
 // ── Campaign optimisation: zero-booking spend, unmatched records, campaigns requiring attention ──
 var mkxFilter=null,mkxLast=null,mkxAttnAll=false,mkUnCache={},mkUnData=null,mkUnTab='leads';
@@ -1718,6 +1736,140 @@ function mkxWireRank(){
   document.getElementById('mkxRankTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;mkxRankTab=b.getAttribute('data-r');mkxRankAll=false;mkxRenderRank();});
   document.getElementById('mkxRankMore').addEventListener('click',function(){mkxRankAll=!mkxRankAll;mkxRenderRank();});
   document.getElementById('mkxSrcTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;mkxSrcMode=b.getAttribute('data-m');mkxRenderSources();});
+}
+// ── Deeper analysis: departures, lead month, ads. A separate read, so the rest of the page never waits for it. ──
+var mkAn={},mkxDeepTab='dep',mkxDeepSub='dep',mkxDeepD=null,mkxDeepErr=null,mkxDeepAll=false,mkxDeepOpen=null,mkxDeepWired=false;
+function mkFetchAnalysis(fd,td,division){
+  var key=mkKey(fd,td,division,''),hit=mkAn[key];
+  if(hit){
+    if(hit.d&&(Date.now()-hit.t)<MK_TTL)return Promise.resolve(hit.d);
+    if(hit.p)return hit.p;
+  }
+  var q='fromDate='+encodeURIComponent(fd)+'&toDate='+encodeURIComponent(td)+'&division='+encodeURIComponent(division)+'&deviceId='+encodeURIComponent(getDeviceId());
+  var p=fetch(PROXY_BASE+'/api/marketing-analysis?'+q)
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){mkAn[key]={t:Date.now(),d:d,p:null};return d;});
+  mkAn[key]={t:0,d:null,p:p};
+  p.catch(function(){if(mkAn[key]&&mkAn[key].p===p)delete mkAn[key];});
+  return p;
+}
+// The selected period feeds departures and ads; lead month needs every month since April, like the trend charts.
+function mkxLoadDeep(seq){
+  var per=mkOv.per,dv=mkOv.division;
+  var a=mkFetchAnalysis(per.fd,per.td,dv),b=per.fd===MK_FIRST_DAY?a:mkFetchAnalysis(MK_FIRST_DAY,per.td,dv);
+  if(!mkxDeepD)mkxRenderDeep();
+  Promise.all([a,b]).then(function(r){if(seq!==mkOvSeq)return;mkxDeepD={sel:r[0],trend:r[1]};mkxDeepErr=null;mkxRenderDeep();})
+    .catch(function(e){if(seq!==mkOvSeq)return;mkxDeepD=null;mkxDeepErr=e.message;mkxRenderDeep();});
+}
+// Groups departure rows by departure (or by campaign) and keeps what sits behind each group.
+function mkxDeepGroup(rows,byDep){
+  var m={},list=[];
+  rows.forEach(function(r){
+    var camp=r.name||'No linked campaign',k=byDep?r.departure:camp,o=byDep?camp:r.departure,g=m[k];
+    if(!g){g=m[k]={key:k,bookings:0,pax:0,revenue:0,kids:{}};list.push(g);}
+    g.bookings+=r.bookings;g.pax+=r.pax;g.revenue+=r.revenue;
+    var c=g.kids[o];if(!c)c=g.kids[o]={key:o,bookings:0,pax:0,revenue:0};
+    c.bookings+=r.bookings;c.pax+=r.pax;c.revenue+=r.revenue;
+  });
+  list.forEach(function(g){g.kidList=Object.keys(g.kids).map(function(k){return g.kids[k];}).sort(function(a,b){return b.revenue-a.revenue;});});
+  return list.sort(function(a,b){return b.revenue-a.revenue;});
+}
+function mkxDeepShort(l){var p=l.split(' ');return p[0].slice(0,3)+' '+p[1].slice(-2);}
+function mkxDeepChart(cfg){
+  cfg.options=cfg.options||{};cfg.options.animation=false;cfg.options.responsive=true;cfg.options.maintainAspectRatio=false;
+  mkChart('mkChDeep',cfg);
+}
+function mkxDeepBars(labels,values,color,name,tip){
+  var trunc=function(x){x=String(x);return x.length>34?x.slice(0,33)+'…':x;};
+  mkxDeepChart({type:'bar',data:{labels:labels.map(trunc),datasets:[{label:name,data:values,backgroundColor:color,borderRadius:5,maxBarThickness:22}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{title:function(it){return labels[it[0].dataIndex];},label:function(it){return tip(it.dataIndex);}}}},
+      scales:{x:{beginAtZero:true,grid:{color:'#EFEBE4'},ticks:{color:'#9B8E80',font:{size:10},callback:function(v){return mkBig(v);}}},y:{grid:{display:false},ticks:{color:'#4A3F32',font:{size:10}}}}}});
+}
+function mkxRenderDeep(){
+  var body=document.getElementById('mkxDeepBody');if(!body)return;
+  var tab=mkxDeepTab,dv=mkOv.division,note=document.getElementById('mkxDeepNote'),LIM=15;
+  document.querySelectorAll('#mkxDeepTabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-d')===tab);});
+  var T={dep:['Which GIT departures the money comes from','Confirmed Social Media bookings by group departure, with the campaign each lead came from. Revenue is Quote Value.'],
+    lead:['Return by the month the lead arrived','Each month’s ad spend against all revenue from leads created that month, whenever they booked.'],
+    ads:['Individual ads: spend and traffic','The biggest ads by spend, with impressions, clicks, click-through rate and cost per click.']}[tab];
+  document.getElementById('mkxDeepTitle').textContent=T[0];document.getElementById('mkxDeepDesc').textContent=T[1];
+  if(mkCharts.mkChDeep){mkCharts.mkChDeep.destroy();delete mkCharts.mkChDeep;}
+  var msg=function(t){return '<div class="mk-dim" style="font-size:12px;padding:18px 0;">'+t+'</div>';};
+  if(!mkxDeepD){body.innerHTML=mkxDeepErr?msg('Deeper analysis could not load ('+mkEsc(mkxDeepErr)+'). It needs the updated server.'):msg('Loading…');note.textContent='';return;}
+  var html='',after=null,nt='';
+  if(tab==='dep'){
+    var rows=mkxDeepD.sel.departures||[],byDep=mkxDeepSub==='dep';
+    var bar='<div class="mkx-deepbar"><div class="mkx-seg"><button data-s="dep"'+(byDep?' class="on"':'')+'>By departure</button><button data-s="camp"'+(byDep?'':' class="on"')+'>By campaign</button></div></div>';
+    if(dv==='fit'){html=msg('Departures exist only on GIT bookings, so there is nothing to show for FIT. Switch to GIT or All.');}
+    else if(!rows.length){html=msg('No confirmed GIT bookings with a group departure in this period.');}
+    else{
+      var g=mkxDeepGroup(rows,byDep),shown=mkxDeepAll?g:g.slice(0,LIM),tb=0,tp=0,tr=0;
+      g.forEach(function(x){tb+=x.bookings;tp+=x.pax;tr+=x.revenue;});
+      var head=['#',byDep?'Departure':'Campaign','Bookings','PAX','Revenue','Revenue / PAX',byDep?'Campaigns behind it':'Departures it sold'],nums={2:1,3:1,4:1,5:1};
+      html=bar+'<div class="mkx-canvas" style="height:330px;"><canvas id="mkChDeep"></canvas></div>'+
+        '<div class="mkx-twrap" style="margin-top:14px;"><table class="mkx-table" style="cursor:default;"><thead><tr>'+head.map(function(h,i){return '<th'+(nums[i]?' class="num"':'')+' style="cursor:default;">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+
+        shown.map(function(x,i){
+          var open=mkxDeepOpen===x.key,k=x.kidList[0];
+          var r='<tr data-k="'+mkEsc(x.key)+'"><td class="mkx-rk">'+(i+1)+'</td><td class="name" title="'+mkEsc(x.key)+'"><span class="mkx-chev">'+(open?'▾':'▸')+'</span>'+mkEsc(x.key)+'</td><td class="num">'+mkNum(x.bookings)+'</td><td class="num">'+mkNum(x.pax)+'</td><td class="num mkx-pos">'+mkInr(x.revenue)+'</td><td class="num">'+(x.pax>0?mkInr(x.revenue/x.pax):'—')+'</td><td class="name" style="max-width:260px;">'+mkEsc(k.key)+(x.kidList.length>1?' <span class="mk-dim">+'+(x.kidList.length-1)+' more</span>':'')+'</td></tr>';
+          if(open)r+='<tr class="mkx-sub"><td colspan="7">'+x.kidList.map(function(c){return '<div class="mkx-kid"><span>'+mkEsc(c.key)+'</span><em>'+mkNum(c.bookings)+(c.bookings===1?' booking':' bookings')+' · '+mkNum(c.pax)+' PAX</em><b>'+mkInr(c.revenue)+'</b></div>';}).join('')+'</td></tr>';
+          return r;
+        }).join('')+'</tbody></table></div>'+
+        (g.length>LIM?'<button class="mkx-btn mkx-more" data-more="1">'+(mkxDeepAll?'Show top '+LIM+' only':'Show all '+mkNum(g.length)+(byDep?' departures':' campaigns'))+'</button>':'');
+      nt=mkNum(g.length)+(byDep?' departures':' campaigns')+' · '+mkNum(tb)+(tb===1?' booking':' bookings')+' · '+mkNum(tp)+' PAX · '+mkInr(tr)+' revenue. Click a row to see what is behind it. ';
+      var top=g.slice(0,10);
+      after=function(){mkxDeepBars(top.map(function(x){return x.key;}),top.map(function(x){return x.revenue;}),'#1A7A4A','Revenue',function(i){var x=top[i];return [ 'Revenue: '+mkInr(x.revenue),mkNum(x.bookings)+(x.bookings===1?' booking':' bookings')+' · '+mkNum(x.pax)+' PAX'];});};
+    }
+    nt+='GIT bookings only. No ad spend is split per departure, because one campaign can sell many departures. Bookings with no linked campaign appear as “No linked campaign”. Follows the selected period; the campaign filter is ignored.';
+  }
+  else if(tab==='lead'){
+    var c=((mkxDeepD.trend||{}).cohort||[]).filter(function(r){return r.spend>0||r.leads>0||r.revenue>0||r.bookedRevenue>0;});
+    if(!c.length){html=msg('No data yet.');}
+    else{
+      var sp=0,rv=0;c.forEach(function(r){if(!r.maturing){sp+=r.spend;rv+=r.revenue;}});
+      var avg=sp>0?rv/sp:null;
+      var head=['Lead month','Ad spend','Leads','Bookings','PAX','Revenue','ROAS','Revenue / lead','Booked that month'],nums={1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1};
+      html='<div class="mkx-legend" style="margin-bottom:10px;"><span><i class="mkx-sw" style="background:#E8613A"></i>Ad spend</span><span><i class="mkx-sw" style="background:#1A7A4A"></i>Revenue from that month’s leads</span><span><i class="mkx-sw" style="background:rgba(26,122,74,.4)"></i>Still maturing</span><span><i class="mkx-sw" style="background:#9B8E80"></i>Revenue booked that month</span></div>'+
+        '<div class="mkx-canvas" style="height:300px;"><canvas id="mkChDeep"></canvas></div>'+
+        '<div class="mkx-twrap" style="margin-top:14px;"><table class="mkx-table" style="cursor:default;"><thead><tr>'+head.map(function(h,i){return '<th'+(nums[i]?' class="num"':'')+' style="cursor:default;">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+
+        c.slice().reverse().map(function(r){
+          return '<tr><td class="name">'+mkEsc(mkLabel(r.month))+(r.maturing?' <span class="mkx-tag warn">Still maturing</span>':'')+'</td><td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkNum(r.bookings)+'</td><td class="num">'+mkNum(r.pax)+'</td><td class="num '+(r.revenue>0?'mkx-pos':'')+'">'+mkInr(r.revenue)+'</td><td class="num '+mkxRoasCls(r.roas,avg)+'">'+(r.roas==null?'—':mkxX(r.roas))+'</td><td class="num">'+(r.revenuePerLead==null?'—':mkInr(r.revenuePerLead))+'</td><td class="num">'+mkInr(r.bookedRevenue)+'</td></tr>';
+        }).join('')+'</tbody></table></div>';
+      after=function(){
+        mkxDeepChart({type:'bar',data:{labels:c.map(function(r){return mkxDeepShort(mkLabel(r.month));}),datasets:[
+          {label:'Ad spend',data:c.map(function(r){return r.spend;}),backgroundColor:'#E8613A',borderRadius:4,maxBarThickness:28},
+          {label:'Revenue from that month’s leads',data:c.map(function(r){return r.revenue;}),backgroundColor:c.map(function(r){return r.maturing?'rgba(26,122,74,.4)':'#1A7A4A';}),borderRadius:4,maxBarThickness:28},
+          {type:'line',label:'Revenue booked that month',data:c.map(function(r){return r.bookedRevenue;}),borderColor:'#9B8E80',backgroundColor:'#9B8E80',borderDash:[5,4],pointRadius:3,tension:.25,fill:false}]},
+          options:{interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(it){return it.dataset.label+': '+mkInr(it.parsed.y);}}}},
+            scales:{x:{grid:{display:false},ticks:{color:'#4A3F32',font:{size:10}}},y:{beginAtZero:true,grid:{color:'#EFEBE4'},ticks:{color:'#9B8E80',font:{size:10},callback:function(v){return mkBig(v);}}}}}});
+      };
+    }
+    nt='Shows every month from April 2026 to the end of the selected period. Revenue counts every booking from leads created in that month, whenever it was made, so a lead can pay back months later; “Still maturing” means the month ended less than 30 days ago and its revenue will keep growing. “Booked that month” is the usual view: bookings made in that month, from any lead. Leads created before April 2026 are not included. Follows the GIT / FIT view; the campaign filter is ignored.';
+  }
+  else{
+    var ads=mkxDeepD.sel.ads||[];
+    if(!ads.length){html=msg('No ad spend in this period.');}
+    else{
+      var shown2=mkxDeepAll?ads:ads.slice(0,LIM),head2=['#','Ad','Campaign','Ad spend','Impressions','Clicks','CTR','CPC'],n2={3:1,4:1,5:1,6:1,7:1};
+      html='<div class="mkx-canvas" style="height:330px;"><canvas id="mkChDeep"></canvas></div>'+
+        '<div class="mkx-twrap" style="margin-top:14px;"><table class="mkx-table" style="cursor:default;"><thead><tr>'+head2.map(function(h,i){return '<th'+(n2[i]?' class="num"':'')+' style="cursor:default;">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+
+        shown2.map(function(a,i){return '<tr><td class="mkx-rk">'+(i+1)+'</td><td class="name" title="'+mkEsc(a.name)+'">'+mkEsc(a.name)+'</td><td class="name" title="'+mkEsc(a.campaign)+'">'+mkEsc(a.campaign)+'</td><td class="num">'+mkInr(a.spend)+'</td><td class="num">'+mkNum(Math.round(a.impressions))+'</td><td class="num">'+mkNum(Math.round(a.clicks))+'</td><td class="num">'+(a.ctr==null?'—':mkxPct(a.ctr))+'</td><td class="num">'+(a.cpc==null?'—':mkInr(a.cpc))+'</td></tr>';}).join('')+'</tbody></table></div>'+
+        (ads.length>LIM?'<button class="mkx-btn mkx-more" data-more="1">'+(mkxDeepAll?'Show top '+LIM+' only':'Show all '+mkNum(ads.length)+' ads')+'</button>':'');
+      var t10=ads.slice(0,10);
+      after=function(){mkxDeepBars(t10.map(function(a){return a.name;}),t10.map(function(a){return a.spend;}),'#E8613A','Ad spend',function(i){var a=t10[i];return ['Ad spend: '+mkInr(a.spend),mkNum(Math.round(a.clicks))+' clicks · CTR '+(a.ctr==null?'—':mkxPct(a.ctr))+' · CPC '+(a.cpc==null?'—':mkInr(a.cpc))];});};
+    }
+    nt=(ads.length?mkNum(ads.length)+' ads with spend'+(ads.length>=200?' (the biggest 200)':'')+'. ':'')+'Leads and revenue are not shown per ad: recent leads carry the campaign name, not the ad, so only spend, impressions and clicks can be tied to a single ad. Figures are the share that belongs to the selected GIT / FIT view. Follows the selected period; the campaign filter is ignored.';
+  }
+  body.innerHTML=html;note.textContent=nt;
+  if(after)after();
+}
+function mkxWireDeep(){
+  if(mkxDeepWired)return;mkxDeepWired=true;
+  document.getElementById('mkxDeepTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;mkxDeepTab=b.getAttribute('data-d');mkxDeepOpen=null;mkxDeepAll=false;mkxRenderDeep();});
+  document.getElementById('mkxDeepBody').addEventListener('click',function(e){
+    var s=e.target.closest('[data-s]');if(s){mkxDeepSub=s.getAttribute('data-s');mkxDeepOpen=null;mkxDeepAll=false;mkxRenderDeep();return;}
+    if(e.target.closest('[data-more]')){mkxDeepAll=!mkxDeepAll;mkxRenderDeep();return;}
+    var r=e.target.closest('tr[data-k]');if(r){var k=r.getAttribute('data-k');mkxDeepOpen=mkxDeepOpen===k?null:k;mkxRenderDeep();}
+  });
 }
 function mkxRenderOpt(d){
   mkxLast=d;
