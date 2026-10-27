@@ -432,7 +432,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mkx-table td.name{font-weight:700;color:var(--ink-mid);max-width:280px;overflow:hidden;text-overflow:ellipsis;}
 #viewMarketing .mkx-table .num{text-align:right;font-variant-numeric:tabular-nums;}
 #viewMarketing .mkx-more{display:block;margin:12px auto 0;}
-#viewMarketing .mkx-source{display:grid;grid-template-columns:120px 1fr 44px;align-items:center;gap:10px;font-size:11px;color:var(--ink-mid);margin-bottom:13px;}
+#viewMarketing .mkx-source{display:grid;grid-template-columns:130px 1fr minmax(150px,auto);align-items:center;gap:10px;font-size:11px;color:var(--ink-mid);margin-bottom:13px;}
+#viewMarketing .mkx-source em{font-style:normal;color:var(--mx-muted);font-size:10px;margin-left:6px;font-weight:500;}
+#viewMarketing .mkx-rk{font-weight:800;color:var(--mx-muted);width:26px;}
 #viewMarketing .mkx-source span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #viewMarketing .mkx-source strong{text-align:right;color:var(--ink-mid);}
 #viewMarketing .mkx-insight{background:linear-gradient(135deg,#2A1F14,#4A3F32);color:#fff;border-radius:16px;padding:20px;position:relative;overflow:hidden;margin-bottom:14px;}
@@ -492,7 +494,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   #viewMarketing .mkx-spacer{display:none;}
   #viewMarketing .mk-select,#viewMarketing .mk-camp{flex:1;min-width:100px;max-width:none;}
   #viewMarketing .mkx-table{min-width:760px;}
-  #viewMarketing .mkx-source{grid-template-columns:90px 1fr 40px;}
+  #viewMarketing .mkx-source{grid-template-columns:90px 1fr minmax(110px,auto);}
   #viewMarketing .mkx-canvas{height:200px;}
 }
 /* period selector (same look as the Management tab: pill row, orange when selected, month arrows) */
@@ -771,6 +773,16 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         <section class="mkx-mini" id="mkxMini"></section>
         <div class="mkx-opt" id="mkxOpt"></div>
 
+        <div class="mkx-head" id="mkxRank"><div><h2>Campaign rankings</h2><p>Best and worst campaigns, and where ad spend is not producing bookings, for the selected period. Ignores the campaign filter.</p></div></div>
+        <section class="mkx-panel">
+          <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxRankTitle"></div><div class="mkx-psub" id="mkxRankDesc"></div></div>
+            <div class="mkx-seg" id="mkxRankTabs"><button data-r="top" class="on">Top 10</button><button data-r="worst">Worst 10</button><button data-r="zero">Zero-booking spend</button></div></div>
+          <div class="mkx-canvas" style="height:330px;"><canvas id="mkChRank"></canvas></div>
+          <div class="mkx-twrap" style="margin-top:14px;"><table class="mkx-table" style="cursor:default;"><thead id="mkxRankHead"></thead><tbody id="mkxRankRows"></tbody></table></div>
+          <button class="mkx-btn mkx-more" id="mkxRankMore" style="display:none;"></button>
+          <div class="mkx-note" id="mkxRankNote"></div>
+        </section>
+
         <div class="mkx-head" id="mkxTrends"><div><h2>Performance trends</h2><p id="mkxTrendSub">Spot movement over time, not just totals.</p></div></div>
         <div class="mkx-grid">
           <section class="mkx-panel">
@@ -831,8 +843,12 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <button class="mkx-btn mkx-more" id="mkxMore" style="display:none;"></button>
         </section>
 
-        <div class="mkx-head" id="mkxSources"><div><h2>Where bookings come from</h2><p>Share of confirmed bookings by lead source (ignores the campaign filter)</p></div></div>
-        <section class="mkx-panel"><div id="mkxSourceList"></div></section>
+        <div class="mkx-head" id="mkxSources"><div><h2>Where bookings come from</h2><p>Confirmed bookings and revenue (Quote Value) by lead source for the selected period. All lead sources, GIT/FIT by layout, ignores the campaign filter.</p></div></div>
+        <section class="mkx-panel">
+          <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxSrcTitle"></div></div>
+            <div class="mkx-seg" id="mkxSrcTabs"><button data-m="bookings" class="on">Bookings</button><button data-m="revenue">Revenue</button></div></div>
+          <div id="mkxSourceList"></div>
+        </section>
 
         <div class="mkx-head" id="mkxInsights"><div><h2>Marketing insights</h2><p>Top performers and campaigns that need attention, from the data above.</p></div></div>
         <div class="mkx-grid even">
@@ -1397,8 +1413,10 @@ function mkxDelta(t,pt,k,good,per){
   var x=t[k],y=pt[k];
   if(x==null||y==null||y===0)return '<span class="mkx-flat">—</span><span>no prior period data</span>';
   var p=(x-y)/Math.abs(y)*100,up=p>=0;
-  var cls=good==null?'mkx-flat':((up===(good==='up'))?'mkx-up':'mkx-down');
-  return '<span class="'+cls+'">'+(up?'↑ ':'↓ ')+Math.abs(p).toFixed(1)+'%</span><span>'+mkEsc(per.cmpText)+'</span>';
+  var cls=good==null?'mkx-flat':((up===(good==='up'))?'mkx-up':'mkx-down'),tip='';
+  // Ad spend is neither good nor bad by itself, so it takes the colour of what it bought: ROAS up or level = green, ROAS down = red.
+  if(k==='spend'&&t.roas!=null&&pt.roas!=null){cls=t.roas>=pt.roas-1e-9?'mkx-up':'mkx-down';tip=' title="Coloured by return on ad spend: green if ROAS held or rose, red if it fell (ROAS '+mkxX(pt.roas)+' to '+mkxX(t.roas)+')"';}
+  return '<span class="'+cls+'"'+tip+'>'+(up?'↑ ':'↓ ')+Math.abs(p).toFixed(1)+'%</span><span>'+mkEsc(per.cmpText)+'</span>';
 }
 function mkxBase(){
   return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1546,13 +1564,8 @@ function renderMkOverview(d,pd,trend){
   }).join('');
   document.getElementById('mkxFunnelNote').innerHTML='<strong>Reading the funnel:</strong> bar lengths use a log scale so every stage stays visible. '+(t.conversionRate!=null?'Only '+t.conversionRate.toFixed(2)+'% of leads become confirmed bookings, so lead qualification and follow-up speed are the biggest lever.':'');
 
-  // sources (share of bookings)
-  var srcs=(d.sources||[]),tot=srcs.reduce(function(a,s){return a+s.bookings;},0),top7=srcs.slice(0,7),rest=srcs.slice(7).reduce(function(a,s){return a+s.bookings;},0);
-  if(rest>0)top7=top7.concat([{source:'Other sources',bookings:rest}]);
-  document.getElementById('mkxSourceList').innerHTML=tot>0?top7.map(function(s,i){
-    var p=s.bookings*100/tot;
-    return '<div class="mkx-source"><span title="'+mkEsc(s.source)+'">'+mkEsc(s.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+MKX_PAL[i%MKX_PAL.length]+'"></div></div><strong>'+p.toFixed(0)+'%</strong></div>';
-  }).join(''):'<div class="mk-dim" style="font-size:12px;">No bookings in this period.</div>';
+  // sources (bookings and revenue)
+  mkxSrcData=d.sources||[];mkxRenderSources();
 
   // campaign table + insights
   mkxTotals=t;mkxRows=mkxBuildRows(d,t);
@@ -1561,6 +1574,7 @@ function renderMkOverview(d,pd,trend){
   mkxRenderTable();
   mkxInsights(d,mkxRows,t);
   mkxRenderOpt(d);
+  mkxWireRank();mkxRenderRank(d);
   mkxRenderAttention(d);
 
   // campaign dropdown follows the filters
@@ -1607,6 +1621,72 @@ function mkxTopWorst(d){
   }
   return card('mkxTopTile','Top campaign','★','#1A7A4A','#EAF5EE',top,'No confirmed bookings in this period','Highest booking revenue in this period. Ignores the campaign filter. <b>Click to view only this campaign.</b>')+
     card('mkxWorstTile','Worst campaign','▼','#C0392B','#FDECEA',worst,'No campaign above the minimum spend','Lowest ROAS among campaigns that spent at least '+mkInr(min)+' (no bookings ranks worst, biggest spend first). Minimum is set under Thresholds. <b>Click to view only this campaign.</b>');
+}
+// ── Rankings (top / worst / zero-booking) and lead-source panel ──
+var mkxRankTab='top',mkxRankAll=false,mkxRankD=null,mkxSrcMode='bookings',mkxSrcData=[],mkxRankWired=false;
+function mkxRankRows(d,tab){
+  var all=(d&&d.campaignPerf)||[],min=mkxCfg.minSpend;
+  var ro=function(r){return r.spend>0?r.revenue/r.spend:0;};
+  if(tab==='top')return all.filter(function(r){return r.revenue>0;}).sort(function(a,b){return b.revenue-a.revenue;});
+  if(tab==='worst')return all.filter(function(r){return r.spend>=min;}).sort(function(a,b){return ro(a)-ro(b)||b.spend-a.spend;});
+  return all.filter(function(r){return r.spend>0&&r.bookings===0;}).sort(function(a,b){return b.spend-a.spend;});
+}
+function mkxRenderRank(d){
+  if(d)mkxRankD=d;d=mkxRankD;
+  var body=document.getElementById('mkxRankRows');if(!body||!d)return;
+  var tab=mkxRankTab,perf=d.campaignPerf&&d.campaignPerf.length,rows=perf?mkxRankRows(d,tab):[],LIM=10;
+  document.querySelectorAll('#mkxRankTabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-r')===tab);});
+  var meta={
+    top:['Top 10 campaigns by booking revenue','Highest Quote Value from confirmed bookings linked to the campaign. A single large booking can put a campaign at the top.','#1A7A4A','Revenue',function(r){return r.revenue;},mkBig],
+    worst:['Worst 10 campaigns by return on ad spend','Lowest revenue for each rupee spent, among campaigns that spent at least '+mkInr(mkxCfg.minSpend)+'. No bookings ranks worst, biggest spend first. Minimum is set under Thresholds.','#C0392B','Ad spend',function(r){return r.spend;},mkBig],
+    zero:['Zero-booking ad spend','Campaigns that spent money in this period with no confirmed booking linked to them. Bookings are linked through the lead’s ad name, so older renamed ads can show here even if they sold.','#C0392B','Ad spend',function(r){return r.spend;},mkBig]
+  }[tab];
+  document.getElementById('mkxRankTitle').textContent=meta[0];document.getElementById('mkxRankDesc').textContent=meta[1];
+  var shown=tab==='zero'&&mkxRankAll?rows:rows.slice(0,LIM),chartRows=rows.slice(0,LIM);
+  var head=tab==='zero'?['Campaign','Ad account','Status','Ad spend','Leads','Cost / lead','Last spend']:['#','Campaign','Ad account','Ad spend','Leads','Bookings','Revenue','ROAS'];
+  var nums=tab==='zero'?{3:1,4:1,5:1}:{3:1,4:1,5:1,6:1,7:1};
+  document.getElementById('mkxRankHead').innerHTML='<tr>'+head.map(function(h,i){return '<th'+(nums[i]?' class="num"':'')+' style="cursor:default;">'+h+'</th>';}).join('')+'</tr>';
+  var seg=function(r){return '<span class="mkx-tag '+(r.segment==='Mixed'?'grey':'blue')+'">'+mkEsc(r.segment||'—')+'</span>';};
+  var nm=function(r){return '<td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td>';};
+  var status=function(r){var a=r.lastSpendDate&&((Date.now()-new Date(r.lastSpendDate+'T00:00:00').getTime())/864e5)<=3;return '<span class="mkx-tag '+(a?'warn':'grey')+'">'+(a?'Still spending':'Inactive')+'</span>';};
+  body.innerHTML=!perf?'<tr><td colspan="8" class="mk-dim" style="text-align:center;padding:22px;">Campaign-level results are not available yet (needs the updated server).</td></tr>'
+    :shown.length?shown.map(function(r,i){
+      return tab==='zero'
+        ?'<tr>'+nm(r)+'<td>'+seg(r)+'</td><td>'+status(r)+'</td><td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkInr(r.costPerLead)+'</td><td>'+mkEsc(r.lastSpendDate||'—')+'</td></tr>'
+        :'<tr><td class="mkx-rk">'+(i+1)+'</td>'+nm(r)+'<td>'+seg(r)+'</td><td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkNum(r.bookings)+'</td><td class="num">'+mkInr(r.revenue)+'</td><td class="num">'+(r.spend>0?mkxX(r.revenue/r.spend):'—')+'</td></tr>';
+    }).join(''):'<tr><td colspan="8" class="mk-dim" style="text-align:center;padding:22px;">'+(tab==='top'?'No confirmed bookings linked to a campaign in this period.':tab==='worst'?'No campaign has spent '+mkInr(mkxCfg.minSpend)+' or more in this period.':'Every campaign with spend has at least one booking in this period.')+'</td></tr>';
+  var more=document.getElementById('mkxRankMore');
+  if(tab==='zero'&&rows.length>LIM){more.style.display='';more.textContent=mkxRankAll?'Show top 10 only':'Show all '+mkNum(rows.length)+' campaigns';}else more.style.display='none';
+  var tot=0;rows.forEach(function(r){tot+=tab==='zero'?r.spend:0;});
+  document.getElementById('mkxRankNote').textContent=tab==='zero'&&rows.length?mkNum(rows.length)+' campaigns, '+mkInr(tot)+' of spend in this period. The chart shows the 10 biggest.':'';
+  var trunc=function(x){x=String(x);return x.length>34?x.slice(0,33)+'…':x;};
+  if(!chartRows.length){if(mkCharts.mkChRank){mkCharts.mkChRank.destroy();delete mkCharts.mkChRank;}return;}
+  mkChart('mkChRank',{type:'bar',data:{labels:chartRows.map(function(r){return trunc(r.name);}),datasets:[{label:meta[3],data:chartRows.map(meta[4]),backgroundColor:meta[2],borderRadius:5,maxBarThickness:22}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{
+      title:function(it){return chartRows[it[0].dataIndex].name;},
+      label:function(it){var r=chartRows[it.dataIndex];return [meta[3]+': '+mkInr(meta[4](r)),'Spend '+mkInr(r.spend)+' · Revenue '+mkInr(r.revenue)+' · Bookings '+mkNum(r.bookings),'ROAS '+(r.spend>0?mkxX(r.revenue/r.spend):'—')];}}}},
+      scales:{x:{beginAtZero:true,grid:{color:'#EFEBE4'},ticks:{color:'#9B8E80',font:{size:10},callback:function(v){return mkBig(v);}}},y:{grid:{display:false},ticks:{color:'#4A3F32',font:{size:10}}}}}});
+}
+function mkxRenderSources(){
+  var el=document.getElementById('mkxSourceList');if(!el)return;
+  var mode=mkxSrcMode,key=mode==='revenue'?'revenue':'bookings';
+  document.querySelectorAll('#mkxSrcTabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-m')===mode);});
+  var srcs=(mkxSrcData||[]).slice().sort(function(a,b){return b[key]-a[key];});
+  var totB=0,totR=0;srcs.forEach(function(x){totB+=x.bookings;totR+=x.revenue;});
+  var top7=srcs.slice(0,7),rest=srcs.slice(7);
+  if(rest.length)top7=top7.concat([{source:'Other sources',bookings:rest.reduce(function(a,x){return a+x.bookings;},0),revenue:rest.reduce(function(a,x){return a+x.revenue;},0)}]);
+  var tot=mode==='revenue'?totR:totB;
+  document.getElementById('mkxSrcTitle').textContent=totB>0?mkNum(totB)+(totB===1?' booking':' bookings')+' · '+mkInr(totR)+' revenue':'';
+  el.innerHTML=tot>0?top7.map(function(x,i){
+    var p=x[key]*100/tot;
+    return '<div class="mkx-source"><span title="'+mkEsc(x.source)+'">'+mkEsc(x.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+MKX_PAL[i%MKX_PAL.length]+'"></div></div><strong style="text-align:right;">'+p.toFixed(0)+'%<em>'+mkInr(x.revenue)+' · '+mkNum(x.bookings)+(x.bookings===1?' booking':' bookings')+'</em></strong></div>';
+  }).join(''):'<div class="mk-dim" style="font-size:12px;">No bookings in this period.</div>';
+}
+function mkxWireRank(){
+  if(mkxRankWired)return;mkxRankWired=true;
+  document.getElementById('mkxRankTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;mkxRankTab=b.getAttribute('data-r');mkxRankAll=false;mkxRenderRank();});
+  document.getElementById('mkxRankMore').addEventListener('click',function(){mkxRankAll=!mkxRankAll;mkxRenderRank();});
+  document.getElementById('mkxSrcTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;mkxSrcMode=b.getAttribute('data-m');mkxRenderSources();});
 }
 function mkxRenderOpt(d){
   mkxLast=d;
@@ -1719,9 +1799,9 @@ function mkxWireOpt(){
   document.getElementById('mkxModalCsv').addEventListener('click',mkxModalCsv);
   document.getElementById('mkxFilterClear').addEventListener('click',function(){mkxFilter=null;mkxRenderTable();});
   document.getElementById('mkxThrBtn').addEventListener('click',function(){var t=document.getElementById('mkxThr');t.style.display=t.style.display==='grid'?'none':'grid';});
-  document.querySelectorAll('#mkxThr input[data-c]').forEach(function(i){i.addEventListener('change',function(){var v=Number(this.value);if(isFinite(v)&&v>=0){mkxCfg[this.getAttribute('data-c')]=v;mkxSaveCfg();}if(mkxLast){mkxRenderAttention(mkxLast);mkxRenderOpt(mkxLast);}});});
-  document.getElementById('mkxThrReset').addEventListener('click',function(){Object.keys(MKX_DEF).forEach(function(k){mkxCfg[k]=MKX_DEF[k];});mkxSaveCfg();if(mkxLast){mkxRenderAttention(mkxLast);mkxRenderOpt(mkxLast);}});
-  document.getElementById('mkxAttnMore').addEventListener('click',function(){mkxAttnAll=!mkxAttnAll;if(mkxLast){mkxRenderAttention(mkxLast);mkxRenderOpt(mkxLast);}});
+  document.querySelectorAll('#mkxThr input[data-c]').forEach(function(i){i.addEventListener('change',function(){var v=Number(this.value);if(isFinite(v)&&v>=0){mkxCfg[this.getAttribute('data-c')]=v;mkxSaveCfg();}if(mkxLast){mkxRenderAttention(mkxLast);mkxRenderOpt(mkxLast);mkxRenderRank();}});});
+  document.getElementById('mkxThrReset').addEventListener('click',function(){Object.keys(MKX_DEF).forEach(function(k){mkxCfg[k]=MKX_DEF[k];});mkxSaveCfg();if(mkxLast){mkxRenderAttention(mkxLast);mkxRenderOpt(mkxLast);mkxRenderRank();}});
+  document.getElementById('mkxAttnMore').addEventListener('click',function(){mkxAttnAll=!mkxAttnAll;if(mkxLast){mkxRenderAttention(mkxLast);mkxRenderOpt(mkxLast);mkxRenderRank();}});
 }
 function mkxWire(){
   if(mkxWired)return;mkxWired=true;
