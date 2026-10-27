@@ -808,7 +808,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
             <button class="mkx-btn" id="mkxThrReset">Reset to defaults</button>
           </div>
           <div class="mkx-twrap"><table class="mkx-table" id="mkxAttnTable" style="cursor:default;">
-            <thead><tr><th>Campaign</th><th>Segment</th><th class="num">Ad spend</th><th class="num">Leads</th><th class="num">Cost / lead</th><th class="num">Confirmed bookings</th><th class="num">ROAS</th><th>Recommended action</th></tr></thead>
+            <thead><tr><th>Campaign</th><th>Ad account</th><th class="num">Ad spend</th><th class="num">Leads</th><th class="num">Cost / lead</th><th class="num">Confirmed bookings</th><th class="num">ROAS</th><th>Recommended action</th></tr></thead>
             <tbody id="mkxAttnRows"></tbody>
           </table></div>
           <button class="mkx-btn mkx-more" id="mkxAttnMore" style="display:none;"></button>
@@ -1285,10 +1285,10 @@ function renderMarketing(d){
   var fmt=function(x){return x?new Date(x).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'—';};
   var notes=['Leads are Social Media leads created in the selected period, matched to Meta campaigns by the name stored in the CRM. Confirmations are bookings made in the period that count as confirmations on the live tabs, linked to the ad through the lead.'];
   var u=d.unmatched||{};
-  if(d._division==='all'&&(u.leads>0||u.bookings>0)) notes.push(mkNum(u.leads)+' Social Media '+(u.leads===1?'lead':'leads')+' and '+mkNum(u.bookings)+(u.bookings===1?' confirmation':' confirmations')+' cannot be linked to a GIT or FIT campaign. They are in the totals above but not in any campaign row (see Unmatched records).');
+  if(d._division==='all'&&(u.leads>0||u.bookings>0)) notes.push(mkNum(u.leads)+' Social Media '+(u.leads===1?'lead':'leads')+' and '+mkNum(u.bookings)+(u.bookings===1?' confirmation':' confirmations')+' cannot be linked to a Meta campaign. They are in the GIT or FIT totals above (by CRM layout) but not in any campaign row, and no ad spend is attached to them (see Unmatched records).');
   var sy=d.syncedAt||{};
   if(sy.meta){document.getElementById('mkSyncMeta').textContent=fmt(sy.meta);document.getElementById('mkSyncCrm').textContent=fmt(sy.crm);}
-  if(d._division&&d._division!=='all') notes.push('Showing '+d._division.toUpperCase()+' only, split by Meta ad account (the same rule as the figures above). Leads that cannot be linked to an ad account are not counted here.');
+  if(d._division&&d._division!=='all') notes.push('Showing '+d._division.toUpperCase()+': leads, bookings and revenue are the CRM '+d._division.toUpperCase()+' layout, and spend, impressions and clicks are those of the campaigns they came from, in either ad account. A campaign with both GIT and FIT leads in a month is split by its lead share for that month.');
   if(sy.meta) notes.push('Meta spend updated '+fmt(sy.meta)+' · CRM updated '+fmt(sy.crm)+' (refreshed nightly).');
   document.getElementById('mkNote').innerHTML=notes.map(mkEsc).join('<br>');
 }
@@ -1567,10 +1567,10 @@ function renderMkOverview(d,pd,trend){
   sel.innerHTML='';var o=document.createElement('option');o.value='';o.textContent='All campaigns';sel.appendChild(o);
   (d.campaigns||[]).forEach(function(c){var x=document.createElement('option');x.value=c.key;x.textContent=c.name;sel.appendChild(x);});
   sel.value=cur;if(sel.value!==cur){mkOv.campaign='';sel.value='';}
-  var notes=['GIT and FIT use the Meta ad account (GIT = account 1399…, FIT = account 2886…) for spend and for matching leads, so lead counts per division are approximate. Leads are Social Media leads matched to an ad or campaign by the name stored in the CRM; unmatched leads appear only under All.',
+  var notes=['GIT and FIT follow the CRM layout: GIT leads and bookings have the GIT layout, FIT is everything else, so GIT + FIT = All. Ad spend, impressions and clicks belong to the campaign the leads came from, wherever it runs. A campaign with both GIT and FIT leads in a month is split by its share of leads that month; a month with no leads stays with the campaign\'s own ad account.',
     'Bookings are counted in the month they were made and linked to an ad through the lead. Revenue is the Quote Value of those bookings. Trend arrows compare the selected period with the previous period of the same length (the same number of days while the period is still running); with nothing earlier to compare with, no arrow is shown. The small trend lines leave out the current month so a part-month never looks like a drop. The lead-source list shows all bookings (GIT/FIT by layout) and ignores the campaign filter.'];
   var lm=d.leadMatch||{};
-  if(lm.total>0&&lm.unmatched>0){notes.unshift(mkNum(lm.unmatched)+' of '+mkNum(lm.total)+' Social Media leads ('+Math.round(lm.unmatched*100/lm.total)+'%) could not be linked to a Meta ad or campaign, mostly April to August when the CRM stored ad names that have since been renamed in Meta. They count in the lead totals for All but not for GIT, FIT or a single campaign.');}
+  if(lm.total>0&&lm.unmatched>0){notes.unshift(mkNum(lm.unmatched)+' of '+mkNum(lm.total)+' Social Media leads ('+Math.round(lm.unmatched*100/lm.total)+'%) could not be linked to a Meta ad or campaign, mostly April to August when the CRM stored ad names that have since been renamed in Meta. They count in the GIT or FIT lead totals by layout, but have no ad spend and are not in a single campaign view.');}
   document.getElementById('mkOvNote').innerHTML=notes.map(mkEsc).join('<br>');
   // campaign summary (paged table) follows the same period, division and campaign filter
   var dvn=d.division||mkOv.division;
@@ -1604,7 +1604,7 @@ function mkxRenderOpt(d){
       '<div class="mkx-kpi-top"><span class="mkx-kpi-label">Unmatched records</span><span class="mkx-kpi-icon">⛓</span></div>'+
       '<div class="mkx-kpi-value">'+(u?mkNum(u.leads)+' leads':'—')+'</div>'+
       '<div class="mkx-kpi-foot">'+(u?'<b>'+mkNum(u.bookings)+'</b>&nbsp;bookings · '+mkBig(u.revenue)+' attributed revenue':'Needs the updated server')+'</div>'+
-      '<div class="mkx-kpi-note">Not tied to a GIT or FIT ad account, so they are in All but not in GIT or FIT. Not affected by the campaign filter. <b>Click to inspect records.</b></div></button>';
+      '<div class="mkx-kpi-note">Not tied to a Meta campaign, so they have no ad spend. They still count in GIT or FIT by CRM layout. Not affected by the division or campaign filter. <b>Click to inspect records.</b></div></button>';
   document.getElementById('mkxZeroTile').addEventListener('click',function(){mkxFilter='zero';mkxShowAll=false;mkxRenderTable();var t=document.getElementById('mkxCampaigns');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});});
   document.getElementById('mkxUnTile').addEventListener('click',mkxOpenUnmatched);
 }
@@ -1658,7 +1658,7 @@ function mkxOpenUnmatched(){
   var m=document.getElementById('mkxModal');m.style.display='flex';
   document.getElementById('mkxModalClose').focus();
   var per=mkOv.per,key=per.fd+'|'+per.td,body=document.getElementById('mkxModalBody');
-  document.getElementById('mkxModalSub').textContent=mkPeriodText(per)+' · Social Media leads and confirmed bookings that cannot be tied to the GIT or FIT ad account';
+  document.getElementById('mkxModalSub').textContent=mkPeriodText(per)+' · Social Media leads and confirmed bookings that cannot be tied to a Meta campaign';
   if(mkUnCache[key]){mkUnData=mkUnCache[key];mkxRenderModal();return;}
   body.innerHTML='<div class="mk-msg">Loading records…</div>';document.getElementById('mkxModalNote').textContent='';
   fetch(PROXY_BASE+'/api/marketing-unmatched?fromDate='+encodeURIComponent(per.fd)+'&toDate='+encodeURIComponent(per.td)+'&deviceId='+encodeURIComponent(getDeviceId()))
