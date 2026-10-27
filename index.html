@@ -1021,7 +1021,7 @@ function playSound(){try{
   a.muted=false;a.currentTime=0;a.volume=1;a.play();
   if(soundStopTimer)clearTimeout(soundStopTimer);
   if(soundFadeTimer)clearInterval(soundFadeTimer);
-  // Fade out over last 2 seconds (starts at 14s, stops at 16s)
+  // Fade out over last 2 seconds (starts at 18s, stops at 20s)
   soundStopTimer=setTimeout(function(){
     var fadeAudio=document.getElementById('celebAudio');
     var vol=fadeAudio.volume;
@@ -1030,7 +1030,7 @@ function playSound(){try{
       fadeAudio.volume=vol;
       if(vol<=0){clearInterval(soundFadeTimer);stopSound();}
     },200);
-  },13000);
+  },18000);
 }catch(e){}}
 function stopSound(){try{if(soundFadeTimer)clearInterval(soundFadeTimer);if(soundStopTimer)clearTimeout(soundStopTimer);var a=document.getElementById('celebAudio');a.volume=1;a.pause();a.currentTime=0;}catch(e){}}
 primeAudio();
