@@ -375,6 +375,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mkx-opt button.mkx-kpi{display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;}
 #viewMarketing button.mkx-kpi{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%;}
 #viewMarketing button.mkx-kpi:hover{border-color:#D4CCC0;box-shadow:0 8px 24px rgba(26,18,8,.1);}
+#viewMarketing .mkx-kpis.sub{margin-top:13px;}
+#viewMarketing .mkx-kpis.sub .mkx-kpi{padding:12px 14px 10px;}
+#viewMarketing .mkx-kpis.sub .mkx-kpi-value{font-size:20px;margin:8px 0 7px;}
 #viewMarketing .mkx-kpi-note{position:relative;z-index:1;font-size:10px;color:var(--mx-muted);line-height:1.5;margin-top:2px;}
 #viewMarketing .mkx-kpi-note b{color:var(--ink-mid);}
 #viewMarketing .mkx-chip{display:none;align-items:center;gap:8px;margin:0 0 12px;padding:8px 12px;border-radius:10px;background:var(--amber-lt);color:var(--amber);font-size:11px;font-weight:700;}
@@ -728,11 +731,14 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
       <div class="mkx-navlabel">ANALYTICS</div>
       <nav class="mkx-nav" id="mkxNav">
         <button class="active" data-t="mkxOverview"><i>▦</i>Overview</button>
+        <button data-t="mkxRank"><i>★</i>Rankings</button>
         <button data-t="mkxTrends"><i>↗</i>Trends</button>
-        <button data-t="mkxCampaigns"><i>◈</i>Campaigns</button>
         <button data-t="mkxSources"><i>◎</i>Lead sources</button>
+        <button data-t="mkxAttention"><i>!</i>Attention</button>
+        <button data-t="mkxCampaigns"><i>◈</i>Campaigns</button>
         <button data-t="mkxInsights"><i>✧</i>Insights</button>
         <button data-t="mkxMonthly"><i>▤</i>Campaign summary</button>
+        <button data-t="mkxData"><i>⛓</i>Data quality</button>
       </nav>
       <div class="mkx-sidefoot"><strong>Data freshness</strong>Meta spend<span id="mkSyncMeta">—</span>CRM<span id="mkSyncCrm">—</span></div>
     </aside>
@@ -770,10 +776,10 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
       <div id="mkOvBody" style="display:none;">
         <div class="mkx-head"><div><h2>Performance at a glance</h2><p id="mkxPeriod"></p></div></div>
         <section class="mkx-kpis" id="mkOvKpis"></section>
+        <section class="mkx-kpis sub" id="mkOvKpis2"></section>
         <section class="mkx-mini" id="mkxMini"></section>
-        <div class="mkx-opt" id="mkxOpt"></div>
-
         <div class="mkx-head" id="mkxRank"><div><h2>Campaign rankings</h2><p>Best and worst campaigns, and where ad spend is not producing bookings, for the selected period. Ignores the campaign filter.</p></div></div>
+        <div class="mkx-opt" id="mkxOpt"></div>
         <section class="mkx-panel">
           <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxRankTitle"></div><div class="mkx-psub" id="mkxRankDesc"></div></div>
             <div class="mkx-seg" id="mkxRankTabs"><button data-r="top" class="on">Top 10</button><button data-r="worst">Worst 10</button><button data-r="zero">Zero-booking spend</button></div></div>
@@ -809,6 +815,13 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           </section>
         </div>
 
+        <div class="mkx-head" id="mkxSources"><div><h2>Where bookings and revenue come from</h2><p>Confirmed bookings and revenue (Quote Value) by lead source for the selected period. All lead sources, GIT/FIT by layout, ignores the campaign filter.</p></div></div>
+        <section class="mkx-panel">
+          <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxSrcTitle"></div></div>
+            <div class="mkx-seg" id="mkxSrcTabs"><button data-m="bookings" class="on">Bookings</button><button data-m="revenue">Revenue</button></div></div>
+          <div id="mkxSourceList"></div>
+        </section>
+
         <div class="mkx-head" id="mkxAttention"><div><h2>Campaigns requiring attention</h2><p>Suggestions only. Nothing is paused or changed automatically.</p></div><button class="mkx-btn" id="mkxThrBtn">⚙ &nbsp;Thresholds</button></div>
         <section class="mkx-panel">
           <div class="mkx-thr" id="mkxThr">
@@ -843,13 +856,6 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <button class="mkx-btn mkx-more" id="mkxMore" style="display:none;"></button>
         </section>
 
-        <div class="mkx-head" id="mkxSources"><div><h2>Where bookings come from</h2><p>Confirmed bookings and revenue (Quote Value) by lead source for the selected period. All lead sources, GIT/FIT by layout, ignores the campaign filter.</p></div></div>
-        <section class="mkx-panel">
-          <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxSrcTitle"></div></div>
-            <div class="mkx-seg" id="mkxSrcTabs"><button data-m="bookings" class="on">Bookings</button><button data-m="revenue">Revenue</button></div></div>
-          <div id="mkxSourceList"></div>
-        </section>
-
         <div class="mkx-head" id="mkxInsights"><div><h2>Marketing insights</h2><p>Top performers and campaigns that need attention, from the data above.</p></div></div>
         <div class="mkx-grid even">
           <div id="mkxTop"></div>
@@ -880,6 +886,8 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         </div>
         <div class="mk-note" id="mkNote"></div>
       </div>
+        <div class="mkx-head" id="mkxData"><div><h2>Data quality</h2><p>Records that cannot be tied to a Meta campaign, and how the numbers are built.</p></div></div>
+        <div class="mkx-opt" id="mkxData2" style="grid-template-columns:minmax(240px,360px);"></div>
         <div class="mkx-note" id="mkOvNote"></div>
       </div>
 
@@ -1509,18 +1517,22 @@ function renderMkOverview(d,pd,trend){
   var per=mkOv.per,t=d.totals,m=(trend&&trend.monthly)||d.monthly,labels=m.map(function(x){return mkShort(x.month);});
   var defs=[
     ['spend','Ad spend','↗','#E8613A','#FDF1EC',mkBig,null],
-    ['revenue','Booking revenue','₹','#185FA5','#E8F0F8',mkBig,'up'],
+    ['revenue','Booking revenue','₹','#1A7A4A','#EAF5EE',mkBig,'up'],
     ['leads','Leads generated','♧','#B87D00','#FEF3C7',mkNum,'up'],
     ['bookings','Confirmed bookings','✓','#1A7A4A','#EAF5EE',mkNum,'up'],
     ['costPerLead','Cost per lead','◎','#E8613A','#FDF1EC',mkInr,'down'],
-    ['costPerBooking','Cost per booking','◉','#185FA5','#E8F0F8',mkInr,'down'],
+    ['costPerBooking','Cost per booking','◉','#E8613A','#FDF1EC',mkInr,'down'],
     ['roas','Return on ad spend','↗','#1A7A4A','#EAF5EE',mkxX,'up'],
-    ['ctr','Click-through rate','％','#B87D00','#FEF3C7',mkxPct,'up']
+    ['ctr','Click-through rate','％','#185FA5','#E8F0F8',mkxPct,'up']
   ];
-  document.getElementById('mkOvKpis').innerHTML=defs.map(function(k){
+  var kpiCard=function(k){
     return '<div class="mkx-kpi" style="--accent:'+k[3]+';--tint:'+k[4]+'"><div class="mkx-kpi-top"><span class="mkx-kpi-label">'+k[1]+'</span><span class="mkx-kpi-icon">'+k[2]+'</span></div>'+
       '<div class="mkx-kpi-value">'+mkEsc(k[5](t[k[0]]))+'</div><div class="mkx-kpi-foot">'+mkxDelta(t,pd&&pd.totals,k[0],k[6],per)+mkxSpark(mkxFull(m).map(function(x){return x[k[0]];}))+'</div></div>';
-  }).join('');
+  };
+  // headline: money first (spend, revenue, bookings, ROAS), then the funnel efficiency numbers
+  var byKey=function(ks){return ks.map(function(x){return defs.filter(function(k){return k[0]===x;})[0];});};
+  document.getElementById('mkOvKpis').innerHTML=byKey(['spend','revenue','bookings','roas']).map(kpiCard).join('');
+  document.getElementById('mkOvKpis2').innerHTML=byKey(['leads','costPerLead','costPerBooking','ctr']).map(kpiCard).join('');
   var mini=[['Revenue per lead',mkInr(t.revenuePerLead)],['ROI',t.roi==null?'—':Math.round(t.roi).toLocaleString('en-IN')+'%'],['Impressions',mkNum(t.impressions)],['Clicks',mkNum(t.clicks)],['Conversion rate',mkxPct(t.conversionRate)],['Leads to sales',t.leadsToSales==null?'—':Number(t.leadsToSales).toFixed(4)]];
   document.getElementById('mkxMini').innerHTML=mini.map(function(x){return '<div><span>'+x[0]+'</span><strong>'+mkEsc(x[1])+'</strong></div>';}).join('');
   var divName={all:'All channels',git:'GIT',fit:'FIT'}[d.division||mkOv.division]||'All channels';
@@ -1699,8 +1711,9 @@ function mkxRenderOpt(d){
       '<div class="mkx-kpi-top"><span class="mkx-kpi-label">Zero-booking ad spend</span><span class="mkx-kpi-icon">!</span></div>'+
       '<div class="mkx-kpi-value">'+(perf?mkBig(zSpend):'—')+'</div>'+
       '<div class="mkx-kpi-foot">'+(perf?'<b>'+mkNum(zero.length)+'</b>&nbsp;campaign'+(zero.length===1?'':'s')+' with spend and no confirmed bookings'+(tSpend>0?' · '+(zSpend*100/tSpend).toFixed(1)+'% of ad spend':''):'Needs the updated server')+'</div>'+
-      '<div class="mkx-kpi-note">Spend on zero-booking campaigns, <b>not guaranteed wasted</b>: bookings count only leads linked to a campaign. Click to filter the table.</div></button>'+
-    '<button type="button" class="mkx-kpi" id="mkxUnTile" style="--accent:#B87D00;--tint:#FEF3C7"'+(u?'':' disabled')+'>'+
+      '<div class="mkx-kpi-note">Spend on zero-booking campaigns, <b>not guaranteed wasted</b>: bookings count only leads linked to a campaign. Click to filter the table.</div></button>';
+  var ud=document.getElementById('mkxData2');
+  if(ud)ud.innerHTML='<button type="button" class="mkx-kpi" id="mkxUnTile" style="--accent:#B87D00;--tint:#FEF3C7"'+(u?'':' disabled')+'>'+
       '<div class="mkx-kpi-top"><span class="mkx-kpi-label">Unmatched records</span><span class="mkx-kpi-icon">⛓</span></div>'+
       '<div class="mkx-kpi-value">'+(u?mkNum(u.leads)+' leads':'—')+'</div>'+
       '<div class="mkx-kpi-foot">'+(u?'<b>'+mkNum(u.bookings)+'</b>&nbsp;bookings · '+mkBig(u.revenue)+' attributed revenue':'Needs the updated server')+'</div>'+
