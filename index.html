@@ -371,6 +371,11 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mkx-mini span{display:block;font-size:10px;color:var(--mx-muted);font-weight:700;}
 #viewMarketing .mkx-mini strong{display:block;font-family:'Inter Tight',sans-serif;font-size:19px;margin-top:7px;letter-spacing:-.4px;}
 #viewMarketing .mkx-unlinked{margin-top:12px;padding:11px 14px;border-radius:12px;background:#fff8ee;border:1px solid #f6e3c8;color:#8a5a1f;font-size:11px;line-height:1.6;}
+#viewMarketing .mkx-pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--mx-muted);}
+#viewMarketing .mkx-pager-ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#viewMarketing .mkx-pager-ctl label{display:flex;align-items:center;gap:6px;}
+#viewMarketing .mkx-pager-ctl .mk-select{min-width:64px;}
+#viewMarketing .mkx-pager .mkx-btn:disabled{opacity:.4;cursor:default;}
 #viewMarketing .mkx-busy{opacity:.45;pointer-events:none;transition:opacity .15s;}
 #viewMarketing #mkBody,#viewMarketing #mkOvBody{transition:opacity .15s;}
 #viewMarketing .mkx-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:15px;margin-bottom:15px;}
@@ -800,6 +805,15 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
             <tbody id="mkRows"></tbody>
           </table>
         </div>
+        <div class="mkx-pager" id="mkPager" style="display:none;">
+          <span id="mkPgInfo"></span>
+          <div class="mkx-pager-ctl">
+            <label>Rows per page <select class="mk-select" id="mkPgSize" aria-label="Rows per page"><option>10</option><option>25</option><option>50</option><option>100</option></select></label>
+            <button class="mkx-btn" id="mkPgPrev">&#8249; Previous</button>
+            <span id="mkPgNum"></span>
+            <button class="mkx-btn" id="mkPgNext">Next &#8250;</button>
+          </div>
+        </div>
         <div class="mk-note" id="mkNote"></div>
       </div>
     </main>
@@ -1182,14 +1196,26 @@ function loadMarketing(month){
   p.then(function(d){if(mkMonthTok!==tok)return;L.style.display='none';B.style.display='block';B.setAttribute('data-ready','1');B.classList.remove('mkx-busy');renderMarketing(d);})
    .catch(function(err){if(mkMonthTok!==tok)return;L.style.display='none';B.classList.remove('mkx-busy');B.style.display='none';B.setAttribute('data-ready','0');E.style.display='block';E.textContent='Could not load marketing data ('+err.message+').';});
 }
+var mkMonthRows=[],mkPg={size:10,page:1};
+function mkRenderMonthRows(){
+  var rows=mkMonthRows,n=rows.length,pages=Math.max(1,Math.ceil(n/mkPg.size));
+  if(mkPg.page>pages)mkPg.page=pages;if(mkPg.page<1)mkPg.page=1;
+  var from=(mkPg.page-1)*mkPg.size,slice=rows.slice(from,from+mkPg.size);
+  document.getElementById('mkRows').innerHTML=slice.length?slice.map(function(c){
+    return '<tr><td class="c">'+mkEsc(c.campaign)+'</td><td class="n">'+mkInr(c.spend)+'</td><td class="n">'+mkNum(c.leads)+'</td><td class="n">'+mkInr(c.costPerLead)+'</td><td class="n">'+mkNum(c.confirmations)+'</td><td class="n">'+mkInr(c.costPerConfirmation)+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="mk-dim" style="text-align:center;padding:24px;">No data for this month.</td></tr>';
+  var P=document.getElementById('mkPager');
+  P.style.display=n>10?'flex':'none';
+  document.getElementById('mkPgInfo').textContent=n?('Showing '+(from+1)+'–'+(from+slice.length)+' of '+mkNum(n)+' campaigns'):'';
+  document.getElementById('mkPgNum').textContent='Page '+mkPg.page+' of '+pages;
+  document.getElementById('mkPgPrev').disabled=mkPg.page<=1;
+  document.getElementById('mkPgNext').disabled=mkPg.page>=pages;
+}
 function renderMarketing(d){
   var t=d.totals;
   var kpis=[['Ad spend',mkInr(t.spend)],['Leads',mkNum(t.leads)],['Cost per lead',mkInr(t.costPerLead)],['Confirmations',mkNum(t.confirmations)],['Cost per confirmation',mkInr(t.costPerConfirmation)]];
   document.getElementById('mkKpis').innerHTML=kpis.map(function(k){return '<div class="mk-kpi"><div class="mk-kpi-lbl">'+k[0]+'</div><div class="mk-kpi-val">'+k[1]+'</div></div>';}).join('');
-  var rows=d.campaigns||[];
-  document.getElementById('mkRows').innerHTML=rows.length?rows.map(function(c){
-    return '<tr><td class="c">'+mkEsc(c.campaign)+'</td><td class="n">'+mkInr(c.spend)+'</td><td class="n">'+mkNum(c.leads)+'</td><td class="n">'+mkInr(c.costPerLead)+'</td><td class="n">'+mkNum(c.confirmations)+'</td><td class="n">'+mkInr(c.costPerConfirmation)+'</td></tr>';
-  }).join(''):'<tr><td colspan="6" class="mk-dim" style="text-align:center;padding:24px;">No data for this month.</td></tr>';
+  mkMonthRows=d.campaigns||[];mkPg.page=1;mkRenderMonthRows();
   var fmt=function(x){return x?new Date(x).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'—';};
   var notes=['Leads are Social Media leads created in the month, matched to Meta campaigns by campaign name. Confirmations are bookings made in the month that count as confirmations on the live tabs, linked to the ad through the lead.'];
   if(d.leadsWithoutCampaign) notes.push(mkNum(d.leadsWithoutCampaign)+' Social Media leads have no campaign name and are counted in the totals only.');
@@ -1490,6 +1516,9 @@ function mkxWire(){
     var k=th.getAttribute('data-k');
     if(mkxSort.k===k)mkxSort.dir=-mkxSort.dir;else{mkxSort.k=k;mkxSort.dir=(k==='name'||k==='status'||k==='insight')?1:-1;}
     mkxRenderTable();});});
+  document.getElementById('mkPgSize').addEventListener('change',function(){mkPg.size=Number(this.value);mkPg.page=1;mkRenderMonthRows();});
+  document.getElementById('mkPgPrev').addEventListener('click',function(){mkPg.page--;mkRenderMonthRows();});
+  document.getElementById('mkPgNext').addEventListener('click',function(){mkPg.page++;mkRenderMonthRows();});
   document.getElementById('mkRefreshBtn').addEventListener('click',mkRefresh);
   document.getElementById('mkExportBtn').addEventListener('click',mkxExportCsv);
 }
