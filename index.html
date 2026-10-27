@@ -792,26 +792,17 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         <div class="mkx-head" id="mkxTrends"><div><h2>Performance trends</h2><p id="mkxTrendSub">Spot movement over time, not just totals.</p></div></div>
         <div class="mkx-grid">
           <section class="mkx-panel">
-            <div class="mkx-panel-head"><div><div class="mkx-ptitle">Spend vs. booking revenue</div><div class="mkx-psub">Monthly investment (left axis) and attributed revenue (right axis)</div></div>
-              <div class="mkx-legend"><span><i class="mkx-sw" style="background:#E8613A"></i>Ad spend</span><span><i class="mkx-sw" style="background:#185FA5"></i>Revenue</span></div></div>
-            <div class="mkx-canvas"><canvas id="mkChSpend"></canvas></div>
+            <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxTrTitle"></div><div class="mkx-psub" id="mkxTrDesc"></div></div>
+              <div class="mkx-seg" id="mkxTrTabs"><button data-tr="money" class="on">Money</button><button data-tr="volume">Volume</button><button data-tr="traffic">Traffic</button></div></div>
+            <div class="mkx-legend" id="mkxTrLegend" style="margin-bottom:10px;"></div>
+            <div class="mkx-canvas" data-pane="money"><canvas id="mkChSpend"></canvas></div>
+            <div class="mkx-canvas" data-pane="volume" style="display:none;"><canvas id="mkChLeads"></canvas></div>
+            <div class="mkx-canvas" data-pane="traffic" style="display:none;"><canvas id="mkChClicks"></canvas></div>
           </section>
           <section class="mkx-panel">
             <div class="mkx-panel-head"><div><div class="mkx-ptitle">Lead conversion funnel</div><div class="mkx-psub">From impression to confirmed booking</div></div><span class="mkx-tag" id="mkxFunnelTag">Selected period</span></div>
             <div class="mkx-funnel" id="mkxFunnel"></div>
             <div class="mkx-callout" id="mkxFunnelNote"></div>
-          </section>
-        </div>
-        <div class="mkx-grid even">
-          <section class="mkx-panel">
-            <div class="mkx-panel-head"><div><div class="mkx-ptitle">Leads, bookings and conversion</div><div class="mkx-psub">Conversion = bookings as % of leads</div></div>
-              <div class="mkx-legend"><span><i class="mkx-sw" style="background:#185FA5"></i>Leads</span><span><i class="mkx-sw" style="background:#1A7A4A"></i>Bookings</span><span><i class="mkx-sw" style="background:#E8613A"></i>Conversion %</span></div></div>
-            <div class="mkx-canvas"><canvas id="mkChLeads"></canvas></div>
-          </section>
-          <section class="mkx-panel">
-            <div class="mkx-panel-head"><div><div class="mkx-ptitle">Clicks and click-through rate</div><div class="mkx-psub">Meta link clicks by month</div></div>
-              <div class="mkx-legend"><span><i class="mkx-sw" style="background:#185FA5"></i>Clicks</span><span><i class="mkx-sw" style="background:#E8613A"></i>CTR %</span></div></div>
-            <div class="mkx-canvas"><canvas id="mkChClicks"></canvas></div>
           </section>
         </div>
 
@@ -1543,26 +1534,26 @@ function renderMkOverview(d,pd,trend){
   // charts
   var o1=mkxBase();o1.scales.y.ticks.callback=function(v){return mkBig(v);};
   o1.scales.y.ticks.color='#E8613A';
-  o1.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},ticks:{font:{size:10},color:'#185FA5',callback:function(v){return mkBig(v);}}};
+  o1.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},ticks:{font:{size:10},color:'#1A7A4A',callback:function(v){return mkBig(v);}}};
   o1.plugins.tooltip.callbacks={label:function(c){return c.dataset.label+': '+mkInr(c.parsed.y);}};
   mkChart('mkChSpend',{type:'bar',data:{labels:labels,datasets:[
     {label:'Ad spend',data:m.map(function(x){return x.spend;}),backgroundColor:'#E8613A',borderRadius:5,maxBarThickness:26,yAxisID:'y'},
-    {label:'Revenue',data:m.map(function(x){return x.revenue;}),backgroundColor:'#185FA5',borderRadius:5,maxBarThickness:26,yAxisID:'y2'}]},options:o1});
+    {label:'Revenue',data:m.map(function(x){return x.revenue;}),backgroundColor:'#1A7A4A',borderRadius:5,maxBarThickness:26,yAxisID:'y2'}]},options:o1});
   var o2=mkxBase();
   o2.scales.y.ticks.precision=0;
   o2.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},ticks:{font:{size:10},color:'#9B8E80',precision:0}};
   o2.scales.y3={display:false,beginAtZero:true,position:'right',grid:{drawOnChartArea:false}};
   o2.plugins.tooltip.callbacks={label:function(c){return c.dataset.label+': '+(c.dataset.yAxisID==='y3'?Number(c.parsed.y).toFixed(2)+'%':mkNum(c.parsed.y));}};
   mkChart('mkChLeads',{type:'bar',data:{labels:labels,datasets:[
-    {label:'Leads',data:m.map(function(x){return x.leads;}),backgroundColor:'#185FA5',borderRadius:5,maxBarThickness:24,yAxisID:'y',order:2},
+    {label:'Leads',data:m.map(function(x){return x.leads;}),backgroundColor:'#C9A227',borderRadius:5,maxBarThickness:24,yAxisID:'y',order:2},
     {label:'Bookings',data:m.map(function(x){return x.bookings;}),backgroundColor:'#1A7A4A',borderRadius:5,maxBarThickness:24,yAxisID:'y2',order:2},
-    {label:'Conversion',type:'line',data:m.map(function(x){return x.conversionRate;}),borderColor:'#E8613A',backgroundColor:'#E8613A',borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y3',order:1}]},options:o2});
+    {label:'Conversion',type:'line',data:m.map(function(x){return x.conversionRate;}),borderColor:'#8A6A00',backgroundColor:'#8A6A00',borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y3',order:1}]},options:o2});
   var o3=mkxBase();o3.scales.y.ticks.callback=function(v){return mkShort2(v);};
   o3.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},ticks:{font:{size:10},color:'#9B8E80',callback:function(v){return v+'%';}}};
   o3.plugins.tooltip.callbacks={label:function(c){return c.dataset.label+': '+(c.dataset.yAxisID==='y2'?Number(c.parsed.y).toFixed(2)+'%':mkNum(c.parsed.y));}};
   mkChart('mkChClicks',{type:'bar',data:{labels:labels,datasets:[
     {label:'Clicks',data:m.map(function(x){return x.clicks;}),backgroundColor:'#185FA5',borderRadius:5,maxBarThickness:26,yAxisID:'y',order:2},
-    {label:'CTR',type:'line',data:m.map(function(x){return x.ctr;}),borderColor:'#E8613A',backgroundColor:'#E8613A',borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y2',order:1}]},options:o3});
+    {label:'CTR',type:'line',data:m.map(function(x){return x.ctr;}),borderColor:'#0B3D6B',backgroundColor:'#0B3D6B',borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y2',order:1}]},options:o3});
 
   // funnel (bar lengths are log-scaled because the stages differ by orders of magnitude)
   var stages=[['Impressions',t.impressions,mkNum(t.impressions),'#9B8E80'],
@@ -1586,7 +1577,7 @@ function renderMkOverview(d,pd,trend){
   mkxRenderTable();
   mkxInsights(d,mkxRows,t);
   mkxRenderOpt(d);
-  mkxWireRank();mkxRenderRank(d);
+  mkxWireRank();mkxRenderRank(d);mkxSetTrend();
   mkxRenderAttention(d);
 
   // campaign dropdown follows the filters
@@ -1694,8 +1685,23 @@ function mkxRenderSources(){
     return '<div class="mkx-source"><span title="'+mkEsc(x.source)+'">'+mkEsc(x.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+MKX_PAL[i%MKX_PAL.length]+'"></div></div><strong style="text-align:right;">'+p.toFixed(0)+'%<em>'+mkInr(x.revenue)+' · '+mkNum(x.bookings)+(x.bookings===1?' booking':' bookings')+'</em></strong></div>';
   }).join(''):'<div class="mk-dim" style="font-size:12px;">No bookings in this period.</div>';
 }
+var mkxTrTab='money';
+var MKX_TR={
+  money:['Spend vs. booking revenue','Monthly investment (left axis) and attributed revenue (right axis)',[['#E8613A','Ad spend'],['#1A7A4A','Revenue']],'mkChSpend'],
+  volume:['Leads, bookings and conversion','Conversion = bookings as % of leads',[['#C9A227','Leads'],['#1A7A4A','Bookings'],['#8A6A00','Conversion %']],'mkChLeads'],
+  traffic:['Clicks and click-through rate','Meta link clicks by month',[['#185FA5','Clicks'],['#0B3D6B','CTR %']],'mkChClicks']
+};
+function mkxSetTrend(tab){
+  if(tab)mkxTrTab=tab;var m=MKX_TR[mkxTrTab];if(!m||!document.getElementById('mkxTrTitle'))return;
+  document.getElementById('mkxTrTitle').textContent=m[0];document.getElementById('mkxTrDesc').textContent=m[1];
+  document.getElementById('mkxTrLegend').innerHTML=m[2].map(function(x){return '<span><i class="mkx-sw" style="background:'+x[0]+'"></i>'+x[1]+'</span>';}).join('');
+  document.querySelectorAll('#mkxTrTabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tr')===mkxTrTab);});
+  document.querySelectorAll('[data-pane]').forEach(function(p){p.style.display=p.getAttribute('data-pane')===mkxTrTab?'':'none';});
+  var c=mkCharts[m[3]];if(c)requestAnimationFrame(function(){c.resize();});
+}
 function mkxWireRank(){
   if(mkxRankWired)return;mkxRankWired=true;
+  document.getElementById('mkxTrTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(b)mkxSetTrend(b.getAttribute('data-tr'));});
   document.getElementById('mkxRankTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;mkxRankTab=b.getAttribute('data-r');mkxRankAll=false;mkxRenderRank();});
   document.getElementById('mkxRankMore').addEventListener('click',function(){mkxRankAll=!mkxRankAll;mkxRenderRank();});
   document.getElementById('mkxSrcTabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;mkxSrcMode=b.getAttribute('data-m');mkxRenderSources();});
