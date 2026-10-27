@@ -1240,7 +1240,7 @@ function mkShift(ym,d){var p=ym.split('-');var dt=new Date(Date.UTC(Number(p[0])
 function mkLabel(ym){var p=ym.split('-');return new Date(Date.UTC(Number(p[0]),Number(p[1])-1,1)).toLocaleDateString('en-IN',{month:'long',year:'numeric',timeZone:'UTC'});}
 function mkEsc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function mkInr(v){return v==null?'—':'₹'+Math.round(v).toLocaleString('en-IN');}
-function mkNum(v){return Number(v).toLocaleString('en-IN');}
+function mkNum(v){return v==null||isNaN(Number(v))?'—':Number(v).toLocaleString('en-IN');}
 function mkAddDays(s,n){var d=new Date(s+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
 function mkDaysBetween(a,b){return Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5);}
 function mkFyName(y){return 'FY'+String(y%100).padStart(2,'0')+'–'+String((y+1)%100).padStart(2,'0');}
