@@ -310,45 +310,161 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #mgmtFcChart{width:100%!important;height:300px!important;}
 #mgmtBrChart{width:100%!important;height:280px!important;}
 @media(max-width:820px){.mgmt-kpis{grid-template-columns:1fr;}.mgmt-charts{grid-template-columns:1fr;}.mgmt-ret-tiles{grid-template-columns:1fr;}}
-/* ── Marketing Analytics tab ── */
-.mk-wrap{flex:1;overflow:auto;padding:20px 24px 28px;}
-.mk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
-.mk-title{font-family:'Inter Tight',sans-serif;font-size:22px;font-weight:800;color:var(--ink);}
-.mk-sub{font-size:12px;color:var(--ink-light);margin-top:2px;}
-.mk-nav{display:flex;align-items:center;gap:8px;}
-.mk-arrow{width:32px;height:32px;border-radius:8px;border:1px solid var(--rule);background:var(--surface);color:var(--ink-mid);font-size:18px;cursor:pointer;line-height:1;}
-.mk-arrow:disabled{opacity:.35;cursor:default;}
-.mk-month{min-width:130px;text-align:center;font-weight:600;font-size:14px;color:var(--ink);}
-.mk-msg{padding:40px;text-align:center;color:var(--ink-light);font-size:14px;}
-.mk-err{color:var(--red);}
-.mk-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
-.mk-kpi{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;}
-.mk-kpi-lbl{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-light);margin-bottom:6px;}
-.mk-kpi-val{font-family:'Inter Tight',sans-serif;font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-0.02em;}
-.mk-table-wrap{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:auto;}
-.mk-table{width:100%;border-collapse:collapse;font-size:13px;}
-.mk-table th{position:sticky;top:0;background:var(--paper);text-align:left;font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-mid);padding:10px 12px;white-space:nowrap;}
-.mk-table td{padding:9px 12px;border-top:1px solid var(--rule);color:var(--ink);}
-.mk-table .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.mk-table td.c{max-width:340px;}
-.mk-dim{color:var(--ink-light);}
-.mk-ov{margin-bottom:28px;}
-.mk-ov-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
-.mk-title-sm{font-size:16px;}
-.mk-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.mk-pills{display:flex;gap:6px;}
-.mk-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-light);font-family:'Inter',sans-serif;}
-.mk-pill.active{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600;}
-.mk-select{padding:6px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);font-size:12px;font-family:'Inter',sans-serif;}
-.mk-camp{max-width:240px;}
-.mk-kpis.mk-kpis-sm{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));}
-.mk-kpi-sub{font-size:11px;color:var(--ink-light);margin-top:4px;}
-.mk-charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
-.mk-chart-card{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;}
-.mk-chart-title{font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:700;color:var(--ink-mid);margin-bottom:10px;}
-.mk-canvas{position:relative;height:220px;}
-@media(max-width:820px){.mk-charts{grid-template-columns:1fr;}}
-.mk-note{font-size:11px;color:var(--ink-light);margin-top:12px;line-height:1.6;}
+/* ── Marketing Analytics tab (redesign: navy sidebar + premium cards) — all rules scoped to #viewMarketing ── */
+#viewMarketing{--mx-bg:#f4f6fb;--mx-surface:#fff;--mx-ink:#17223b;--mx-muted:#7b8499;--mx-line:#e8ebf3;--mx-nav:#101a31;--mx-teal:#13b8a6;--mx-blue:#4777f5;--mx-purple:#8a65ef;--mx-orange:#ff8a55;--mx-green:#22a879;--mx-shadow:0 8px 28px rgba(24,39,75,.055);background:var(--mx-bg);color:var(--mx-ink);}
+#viewMarketing .mkx{flex:1;min-height:0;display:grid;grid-template-columns:232px minmax(0,1fr);}
+#viewMarketing .mkx-side{background:var(--mx-nav);color:#dbe4f7;padding:22px 14px;display:flex;flex-direction:column;gap:22px;overflow-y:auto;}
+#viewMarketing .mkx-sidehead{display:flex;align-items:center;gap:10px;padding:0 10px;color:#fff;}
+#viewMarketing .mkx-mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#2ce0c4,#4782ff);display:grid;place-items:center;color:#0c1c31;font-weight:900;font-size:19px;flex:0 0 34px;}
+#viewMarketing .mkx-sidehead b{display:block;font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;}
+#viewMarketing .mkx-sidehead small{display:block;font-size:10px;color:#8795b1;margin-top:2px;}
+#viewMarketing .mkx-navlabel{font-size:10px;letter-spacing:1.6px;color:#7e8ba7;font-weight:700;padding:0 12px;margin-bottom:-14px;}
+#viewMarketing .mkx-nav{display:grid;gap:5px;}
+#viewMarketing .mkx-nav button{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;border:0;background:transparent;color:#aebbd3;font:600 13px 'Inter',sans-serif;text-align:left;cursor:pointer;}
+#viewMarketing .mkx-nav button i{font-style:normal;width:18px;text-align:center;font-size:15px;}
+#viewMarketing .mkx-nav button:hover{background:#17243f;color:#fff;}
+#viewMarketing .mkx-nav button.active{color:#fff;background:linear-gradient(100deg,#234c69,#1c3a57);box-shadow:inset 3px 0 var(--mx-teal);}
+#viewMarketing .mkx-nav button.active i{color:#5ce3d0;}
+#viewMarketing .mkx-sidefoot{margin-top:auto;padding:14px;border:1px solid #31405d;background:#172440;border-radius:14px;font-size:11px;line-height:1.7;color:#a4b1c9;}
+#viewMarketing .mkx-sidefoot strong{display:block;color:#fff;font-size:12px;margin-bottom:4px;}
+#viewMarketing .mkx-sidefoot span{display:block;color:#fff;font-weight:600;}
+#viewMarketing .mkx-main{min-width:0;overflow:auto;padding:24px 30px 40px;scroll-behavior:smooth;}
+#viewMarketing .mkx-top{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:20px;}
+#viewMarketing .mkx-top h1{font-family:'Inter Tight',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.8px;color:var(--mx-ink);}
+#viewMarketing .mkx-subtitle{margin-top:6px;color:var(--mx-muted);font-size:13px;}
+#viewMarketing .mkx-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+#viewMarketing .mkx-live{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;background:#e7faf4;color:#138d73;font-size:11px;font-weight:800;letter-spacing:.4px;}
+#viewMarketing .mkx-dot{width:7px;height:7px;border-radius:50%;background:#1db58e;box-shadow:0 0 0 4px #d0f4e8;}
+#viewMarketing .mkx-btn{border:1px solid var(--mx-line);background:#fff;color:#3b4660;padding:9px 13px;border-radius:10px;font:700 12px 'Inter',sans-serif;cursor:pointer;box-shadow:0 2px 5px #17223b05;}
+#viewMarketing .mkx-btn:hover{background:#f7f9fd;}
+#viewMarketing .mkx-btn.primary{background:var(--mx-nav);border-color:var(--mx-nav);color:#fff;}
+#viewMarketing .mkx-filters{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 14px;background:#fff;border:1px solid var(--mx-line);border-radius:14px;margin-bottom:8px;box-shadow:var(--mx-shadow);}
+#viewMarketing .mkx-flabel{font-size:11px;font-weight:800;color:#758099;letter-spacing:.5px;margin-right:2px;}
+#viewMarketing .mkx-spacer{flex:1;}
+#viewMarketing .mk-pills{display:flex;gap:6px;}
+#viewMarketing .mk-pill{border:1px solid var(--mx-line);background:#fff;border-radius:9px;padding:8px 13px;font:700 11px 'Inter',sans-serif;color:#68738a;cursor:pointer;}
+#viewMarketing .mk-pill.active{background:var(--mx-ink);color:#fff;border-color:var(--mx-ink);}
+#viewMarketing .mk-select{border:1px solid var(--mx-line);background:#fff;border-radius:9px;padding:8px 10px;color:#4d5870;font:500 11px 'Inter',sans-serif;min-width:110px;}
+#viewMarketing .mk-camp{max-width:260px;min-width:150px;}
+#viewMarketing .mkx-to{color:#9aa2b3;font-size:11px;}
+#viewMarketing .mkx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:26px 0 13px;}
+#viewMarketing .mkx-head h2{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;}
+#viewMarketing .mkx-head p{font-size:11px;color:var(--mx-muted);margin-top:5px;}
+#viewMarketing .mk-msg{padding:40px;text-align:center;color:var(--mx-muted);font-size:14px;}
+#viewMarketing .mk-err{color:#c0392b;}
+#viewMarketing .mkx-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;}
+#viewMarketing .mkx-kpi{background:#fff;border:1px solid var(--mx-line);border-radius:16px;padding:16px 16px 13px;box-shadow:var(--mx-shadow);min-width:0;position:relative;overflow:hidden;}
+#viewMarketing .mkx-kpi:after{content:"";position:absolute;right:-23px;top:-32px;width:92px;height:92px;border-radius:50%;background:var(--tint,#e9f8f6);opacity:.7;}
+#viewMarketing .mkx-kpi-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;}
+#viewMarketing .mkx-kpi-label{font-size:10px;letter-spacing:.75px;color:#7d879b;font-weight:800;text-transform:uppercase;}
+#viewMarketing .mkx-kpi-icon{width:29px;height:29px;border-radius:9px;background:var(--tint,#e9f8f6);display:grid;place-items:center;color:var(--accent,var(--mx-teal));font-size:15px;font-weight:700;}
+#viewMarketing .mkx-kpi-value{font-family:'Inter Tight',sans-serif;font-size:26px;letter-spacing:-1px;font-weight:800;margin:12px 0 9px;position:relative;z-index:1;white-space:nowrap;}
+#viewMarketing .mkx-kpi-foot{flex-wrap:wrap;display:flex;align-items:center;gap:6px;font-size:10px;color:#8a93a6;position:relative;z-index:1;min-height:22px;}
+#viewMarketing .mkx-up{color:#149b77;font-weight:800;}
+#viewMarketing .mkx-down{color:#e56e59;font-weight:800;}
+#viewMarketing .mkx-flat{color:#7d879b;font-weight:800;}
+#viewMarketing .mkx-spark{width:66px;height:22px;margin-left:auto;flex:0 0 66px;}
+#viewMarketing .mkx-spark svg{width:100%;height:100%;overflow:visible;}
+#viewMarketing .mkx-spark polyline{fill:none;stroke:var(--accent,var(--mx-teal));stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+#viewMarketing .mkx-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-top:13px;}
+#viewMarketing .mkx-mini div{background:#fff;border:1px solid var(--mx-line);border-radius:13px;padding:13px 15px;}
+#viewMarketing .mkx-mini span{display:block;font-size:10px;color:var(--mx-muted);font-weight:700;}
+#viewMarketing .mkx-mini strong{display:block;font-family:'Inter Tight',sans-serif;font-size:19px;margin-top:7px;letter-spacing:-.4px;}
+#viewMarketing .mkx-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:15px;margin-bottom:15px;}
+#viewMarketing .mkx-grid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+#viewMarketing .mkx-panel{background:#fff;border:1px solid var(--mx-line);border-radius:17px;box-shadow:var(--mx-shadow);padding:18px;min-width:0;}
+#viewMarketing .mkx-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+#viewMarketing .mkx-ptitle{font-size:13px;font-weight:800;}
+#viewMarketing .mkx-psub{font-size:10px;color:var(--mx-muted);margin-top:5px;}
+#viewMarketing .mkx-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:#748098;}
+#viewMarketing .mkx-legend span{display:flex;align-items:center;gap:5px;}
+#viewMarketing .mkx-sw{width:8px;height:8px;border-radius:3px;display:inline-block;}
+#viewMarketing .mkx-canvas{position:relative;height:230px;}
+#viewMarketing .mkx-tag{display:inline-flex;padding:5px 8px;border-radius:6px;background:#e8f9f2;color:#138764;font-size:9px;font-weight:800;}
+#viewMarketing .mkx-tag.warn{background:#fff3e9;color:#c76b32;}
+#viewMarketing .mkx-tag.grey{background:#eff1f7;color:#6b768c;}
+#viewMarketing .mkx-funnel{display:grid;gap:15px;padding:6px 0 2px;}
+#viewMarketing .mkx-frow{display:flex;justify-content:space-between;gap:8px;font-size:11px;margin-bottom:7px;}
+#viewMarketing .mkx-frow span{color:#8490a5;text-align:right;}
+#viewMarketing .mkx-track{height:8px;border-radius:9px;background:#eff1f7;overflow:hidden;}
+#viewMarketing .mkx-fill{height:100%;border-radius:9px;background:var(--c,#13b8a6);}
+#viewMarketing .mkx-callout{background:#f5f7fc;border-radius:10px;padding:11px 12px;margin-top:16px;font-size:10px;color:#758099;line-height:1.6;}
+#viewMarketing .mkx-callout strong{color:#34425e;}
+#viewMarketing .mkx-search{width:190px;border:1px solid var(--mx-line);border-radius:8px;padding:8px 10px;font:500 11px 'Inter',sans-serif;outline:none;}
+#viewMarketing .mkx-tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+#viewMarketing .mkx-twrap{overflow:auto;}
+#viewMarketing .mkx-table{width:100%;border-collapse:collapse;font-size:11px;}
+#viewMarketing .mkx-table th{text-align:left;color:#8a94a7;font-size:9px;letter-spacing:.7px;padding:11px 10px;border-bottom:1px solid var(--mx-line);white-space:nowrap;cursor:pointer;user-select:none;text-transform:uppercase;}
+#viewMarketing .mkx-table th:hover{color:var(--mx-ink);}
+#viewMarketing .mkx-table th.sorted{color:var(--mx-ink);}
+#viewMarketing .mkx-table td{padding:12px 10px;border-bottom:1px solid #eff1f6;color:#4d5870;white-space:nowrap;}
+#viewMarketing .mkx-table tr:last-child td{border-bottom:0;}
+#viewMarketing .mkx-table td.name{font-weight:700;color:#28344d;max-width:280px;overflow:hidden;text-overflow:ellipsis;}
+#viewMarketing .mkx-table .num{text-align:right;font-variant-numeric:tabular-nums;}
+#viewMarketing .mkx-more{display:block;margin:12px auto 0;}
+#viewMarketing .mkx-source{display:grid;grid-template-columns:120px 1fr 44px;align-items:center;gap:10px;font-size:11px;color:#657087;margin-bottom:13px;}
+#viewMarketing .mkx-source span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#viewMarketing .mkx-source strong{text-align:right;color:#27334c;}
+#viewMarketing .mkx-insight{background:linear-gradient(135deg,#142541,#233c5b);color:#fff;border-radius:16px;padding:20px;position:relative;overflow:hidden;margin-bottom:14px;}
+#viewMarketing .mkx-insight:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;border:1px solid #ffffff14;right:-65px;top:-72px;box-shadow:0 0 0 22px #ffffff08,0 0 0 44px #ffffff05;}
+#viewMarketing .mkx-eyebrow{color:#74e5d2;font-size:10px;font-weight:800;letter-spacing:1.3px;}
+#viewMarketing .mkx-insight h3{font-family:'Inter Tight',sans-serif;font-size:18px;line-height:1.3;letter-spacing:-.4px;margin:10px 0 6px;position:relative;z-index:1;max-width:420px;}
+#viewMarketing .mkx-insight p{font-size:11px;line-height:1.7;color:#b5c4d9;position:relative;z-index:1;max-width:420px;}
+#viewMarketing .mkx-metrics{display:flex;gap:22px;flex-wrap:wrap;margin-top:15px;position:relative;z-index:1;}
+#viewMarketing .mkx-metrics strong{display:block;font-size:17px;}
+#viewMarketing .mkx-metrics small{color:#a6bad1;font-size:9px;}
+#viewMarketing .mkx-alerts{display:grid;gap:10px;}
+#viewMarketing .mkx-alert{display:flex;align-items:center;gap:10px;padding:11px;border-radius:11px;background:#fafbfe;border:1px solid #edf0f6;}
+#viewMarketing .mkx-alert-ico{width:31px;height:31px;flex:0 0 31px;border-radius:9px;display:grid;place-items:center;background:#fff1e8;color:#e77a49;font-weight:800;}
+#viewMarketing .mkx-alert.good .mkx-alert-ico{background:#e8f9f4;color:#169a7e;}
+#viewMarketing .mkx-alert.info .mkx-alert-ico{background:#eaf0ff;color:#4777f5;}
+#viewMarketing .mkx-alert-text{min-width:0;flex:1;}
+#viewMarketing .mkx-alert-text strong{display:block;font-size:11px;}
+#viewMarketing .mkx-alert-text small{display:block;color:#8992a5;font-size:10px;margin-top:4px;line-height:1.5;word-break:break-word;}
+#viewMarketing .mkx-alert-val{font-size:11px;font-weight:800;color:#33405a;white-space:nowrap;}
+#viewMarketing .mk-note,#viewMarketing .mkx-note{font-size:11px;color:var(--mx-muted);margin-top:14px;line-height:1.7;}
+/* monthly campaign block (existing feature, restyled) */
+#viewMarketing .mk-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px;}
+#viewMarketing .mk-title{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;color:var(--mx-ink);}
+#viewMarketing .mk-sub{font-size:11px;color:var(--mx-muted);margin-top:5px;}
+#viewMarketing .mk-nav{display:flex;align-items:center;gap:8px;}
+#viewMarketing .mk-arrow{width:32px;height:32px;border-radius:9px;border:1px solid var(--mx-line);background:#fff;color:#3b4660;font-size:18px;cursor:pointer;line-height:1;}
+#viewMarketing .mk-arrow:disabled{opacity:.35;cursor:default;}
+#viewMarketing .mk-month{min-width:130px;text-align:center;font-weight:700;font-size:13px;color:var(--mx-ink);}
+#viewMarketing .mk-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:14px;}
+#viewMarketing .mk-kpi{background:#fff;border:1px solid var(--mx-line);border-radius:14px;padding:13px 15px;box-shadow:var(--mx-shadow);}
+#viewMarketing .mk-kpi-lbl{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#7d879b;margin-bottom:6px;}
+#viewMarketing .mk-kpi-val{font-family:'Inter Tight',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.6px;color:var(--mx-ink);}
+#viewMarketing .mk-table-wrap{background:#fff;border:1px solid var(--mx-line);border-radius:17px;box-shadow:var(--mx-shadow);overflow:auto;}
+#viewMarketing .mk-table{width:100%;border-collapse:collapse;font-size:11px;}
+#viewMarketing .mk-table th{background:#fff;text-align:left;font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#8a94a7;padding:11px 12px;border-bottom:1px solid var(--mx-line);white-space:nowrap;}
+#viewMarketing .mk-table td{padding:11px 12px;border-top:1px solid #eff1f6;color:#4d5870;}
+#viewMarketing .mk-table td.c{max-width:340px;font-weight:700;color:#28344d;}
+#viewMarketing .mk-table .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+#viewMarketing .mk-dim{color:var(--mx-muted);}
+@media(max-width:1100px){#viewMarketing .mkx-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:1150px){#viewMarketing .mkx{grid-template-columns:200px minmax(0,1fr);}#viewMarketing .mkx-main{padding:20px 20px 34px;}#viewMarketing .mkx-grid{grid-template-columns:1fr;}}
+@media(max-width:900px){
+  #viewMarketing .mkx{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);}
+  #viewMarketing .mkx-side{flex-direction:row;align-items:center;padding:10px 12px;gap:8px;overflow-x:auto;overflow-y:hidden;}
+  #viewMarketing .mkx-sidehead,#viewMarketing .mkx-navlabel,#viewMarketing .mkx-sidefoot{display:none;}
+  #viewMarketing .mkx-nav{display:flex;gap:6px;}
+  #viewMarketing .mkx-nav button{white-space:nowrap;padding:8px 12px;}
+  #viewMarketing .mkx-nav button i{display:none;}
+}
+@media(max-width:760px){
+  #viewMarketing .mkx-main{padding:16px 12px 30px;}
+  #viewMarketing .mkx-top h1{font-size:22px;}
+  #viewMarketing .mkx-grid.even{grid-template-columns:1fr;}
+  #viewMarketing .mkx-kpis{gap:9px;}
+  #viewMarketing .mkx-kpi{padding:12px;}#viewMarketing .mkx-kpi-value{font-size:20px;}
+  #viewMarketing .mkx-spark{display:none;}
+  #viewMarketing .mkx-spacer{display:none;}
+  #viewMarketing .mk-select,#viewMarketing .mk-camp{flex:1;min-width:100px;max-width:none;}
+  #viewMarketing .mkx-table{min-width:760px;}
+  #viewMarketing .mkx-source{grid-template-columns:90px 1fr 40px;}
+  #viewMarketing .mkx-canvas{height:200px;}
+}
 </style>
 </head>
 <body>
@@ -559,63 +675,130 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   </div>
 </div>
 
-<!-- ══ MARKETING ANALYTICS VIEW (access-gated, blank placeholder) ══ -->
+<!-- ══ MARKETING ANALYTICS VIEW (access-gated) ══ -->
 <div class="view" id="viewMarketing">
-  <div class="mk-wrap">
-    <div class="mk-ov">
-      <div class="mk-ov-head">
+  <div class="mkx">
+    <aside class="mkx-side">
+      <div class="mkx-sidehead"><div class="mkx-mark">↗</div><div><b>Marketing</b><small>Growth intelligence</small></div></div>
+      <div class="mkx-navlabel">ANALYTICS</div>
+      <nav class="mkx-nav" id="mkxNav">
+        <button class="active" data-t="mkxOverview"><i>▦</i>Overview</button>
+        <button data-t="mkxTrends"><i>↗</i>Trends</button>
+        <button data-t="mkxCampaigns"><i>◈</i>Campaigns</button>
+        <button data-t="mkxSources"><i>◎</i>Lead sources</button>
+        <button data-t="mkxInsights"><i>✧</i>Insights</button>
+        <button data-t="mkxMonthly"><i>▤</i>Monthly campaigns</button>
+      </nav>
+      <div class="mkx-sidefoot"><strong>Data freshness</strong>Meta spend<span id="mkSyncMeta">—</span>CRM<span id="mkSyncCrm">—</span></div>
+    </aside>
+    <main class="mkx-main" id="mkxMain">
+      <header class="mkx-top" id="mkxOverview">
         <div>
-          <div class="mk-title">Marketing Analytics</div>
-          <div class="mk-sub">Meta ad spend with CRM Social Media leads and bookings</div>
+          <h1>Marketing Analytics</h1>
+          <p class="mkx-subtitle">Meta ad spend with CRM Social Media leads and bookings</p>
         </div>
-        <div class="mk-filters">
-          <div class="mk-pills" id="mkDivPills">
-            <button class="mk-pill active" data-div="all">All</button>
-            <button class="mk-pill" data-div="git">GIT</button>
-            <button class="mk-pill" data-div="fit">FIT</button>
-          </div>
-          <select class="mk-select" id="mkFrom" aria-label="From month"></select>
-          <span class="mk-sub">to</span>
-          <select class="mk-select" id="mkTo" aria-label="To month"></select>
-          <select class="mk-select mk-camp" id="mkCamp" aria-label="Campaign"><option value="">All campaigns</option></select>
+        <div class="mkx-actions">
+          <div class="mkx-live"><span class="mkx-dot"></span>LIVE DATA</div>
+          <button class="mkx-btn" id="mkRefreshBtn">⟳ &nbsp;Refresh</button>
+          <button class="mkx-btn primary" id="mkExportBtn">⇩ &nbsp;Export campaigns</button>
         </div>
+      </header>
+      <div class="mkx-filters">
+        <span class="mkx-flabel">VIEW</span>
+        <div class="mk-pills" id="mkDivPills">
+          <button class="mk-pill active" data-div="all">All</button>
+          <button class="mk-pill" data-div="git">GIT</button>
+          <button class="mk-pill" data-div="fit">FIT</button>
+        </div>
+        <span class="mkx-spacer"></span>
+        <span class="mkx-flabel">PERIOD</span>
+        <select class="mk-select" id="mkFrom" aria-label="From month"></select>
+        <span class="mkx-to">to</span>
+        <select class="mk-select" id="mkTo" aria-label="To month"></select>
+        <select class="mk-select mk-camp" id="mkCamp" aria-label="Campaign"><option value="">All campaigns</option></select>
       </div>
       <div class="mk-msg" id="mkOvLoading">Loading marketing overview…</div>
       <div class="mk-msg mk-err" id="mkOvError" style="display:none;"></div>
       <div id="mkOvBody" style="display:none;">
-        <div class="mk-kpis" id="mkOvKpis"></div>
-        <div class="mk-charts">
-          <div class="mk-chart-card"><div class="mk-chart-title">Ad spend by month</div><div class="mk-canvas"><canvas id="mkChSpend"></canvas></div></div>
-          <div class="mk-chart-card"><div class="mk-chart-title">Leads and bookings by month</div><div class="mk-canvas"><canvas id="mkChLeads"></canvas></div></div>
-          <div class="mk-chart-card"><div class="mk-chart-title">Clicks by month</div><div class="mk-canvas"><canvas id="mkChClicks"></canvas></div></div>
-          <div class="mk-chart-card"><div class="mk-chart-title">Bookings by lead source</div><div class="mk-canvas"><canvas id="mkChSrc"></canvas></div></div>
+        <div class="mkx-head"><div><h2>Performance at a glance</h2><p id="mkxPeriod"></p></div></div>
+        <section class="mkx-kpis" id="mkOvKpis"></section>
+        <section class="mkx-mini" id="mkxMini"></section>
+
+        <div class="mkx-head" id="mkxTrends"><div><h2>Performance trends</h2><p>Spot movement over time, not just totals.</p></div></div>
+        <div class="mkx-grid">
+          <section class="mkx-panel">
+            <div class="mkx-panel-head"><div><div class="mkx-ptitle">Spend vs. booking revenue</div><div class="mkx-psub">Monthly investment (left axis) and attributed revenue (right axis)</div></div>
+              <div class="mkx-legend"><span><i class="mkx-sw" style="background:#ff8a55"></i>Ad spend</span><span><i class="mkx-sw" style="background:#4777f5"></i>Revenue</span></div></div>
+            <div class="mkx-canvas"><canvas id="mkChSpend"></canvas></div>
+          </section>
+          <section class="mkx-panel">
+            <div class="mkx-panel-head"><div><div class="mkx-ptitle">Lead conversion funnel</div><div class="mkx-psub">From impression to confirmed booking</div></div><span class="mkx-tag" id="mkxFunnelTag">Selected period</span></div>
+            <div class="mkx-funnel" id="mkxFunnel"></div>
+            <div class="mkx-callout" id="mkxFunnelNote"></div>
+          </section>
         </div>
-        <div class="mk-note" id="mkOvNote"></div>
+        <div class="mkx-grid even">
+          <section class="mkx-panel">
+            <div class="mkx-panel-head"><div><div class="mkx-ptitle">Leads, bookings and conversion</div><div class="mkx-psub">Conversion = bookings as % of leads</div></div>
+              <div class="mkx-legend"><span><i class="mkx-sw" style="background:#8a65ef"></i>Leads</span><span><i class="mkx-sw" style="background:#13b8a6"></i>Bookings</span><span><i class="mkx-sw" style="background:#ff8a55"></i>Conversion %</span></div></div>
+            <div class="mkx-canvas"><canvas id="mkChLeads"></canvas></div>
+          </section>
+          <section class="mkx-panel">
+            <div class="mkx-panel-head"><div><div class="mkx-ptitle">Clicks and click-through rate</div><div class="mkx-psub">Meta link clicks by month</div></div>
+              <div class="mkx-legend"><span><i class="mkx-sw" style="background:#4777f5"></i>Clicks</span><span><i class="mkx-sw" style="background:#ff8a55"></i>CTR %</span></div></div>
+            <div class="mkx-canvas"><canvas id="mkChClicks"></canvas></div>
+          </section>
+        </div>
+
+        <div class="mkx-head" id="mkxCampaigns"><div><h2>Campaign command center</h2><p>Find campaigns that deserve more budget, or a closer look.</p></div></div>
+        <section class="mkx-panel">
+          <div class="mkx-panel-head"><div><div class="mkx-ptitle">Campaign performance</div><div class="mkx-psub" id="mkxCampSub">Spend, leads, bookings and efficiency</div></div>
+            <div class="mkx-tabs"><input class="mkx-search" id="mkxSearch" placeholder="Search campaigns…" aria-label="Search campaigns"></div></div>
+          <div class="mkx-twrap"><table class="mkx-table" id="mkxCampTable">
+            <thead><tr>
+              <th data-k="name">Campaign</th><th data-k="status">Status</th><th class="num" data-k="spend">Spend</th><th class="num" data-k="leads">Leads</th>
+              <th class="num" data-k="costPerLead">Cost / lead</th><th class="num" data-k="bookings">Bookings</th><th class="num" data-k="costPerBooking">Cost / booking</th><th class="num" data-k="revenue">Revenue</th><th data-k="insight">Insight</th>
+            </tr></thead>
+            <tbody id="mkxCampRows"></tbody>
+          </table></div>
+          <button class="mkx-btn mkx-more" id="mkxMore" style="display:none;"></button>
+        </section>
+
+        <div class="mkx-head" id="mkxSources"><div><h2>Where bookings come from</h2><p>Share of confirmed bookings by lead source (ignores the campaign filter)</p></div></div>
+        <section class="mkx-panel"><div id="mkxSourceList"></div></section>
+
+        <div class="mkx-head" id="mkxInsights"><div><h2>Marketing insights</h2><p>Top performers and campaigns that need attention, from the data above.</p></div></div>
+        <div class="mkx-grid even">
+          <div id="mkxTop"></div>
+          <section class="mkx-panel"><div class="mkx-panel-head"><div><div class="mkx-ptitle">Needs attention</div><div class="mkx-psub">Under-performing campaigns and gaps</div></div></div><div class="mkx-alerts" id="mkxAlerts"></div></section>
+        </div>
+        <div class="mkx-note" id="mkOvNote"></div>
       </div>
-    </div>
-    <div class="mk-head">
-      <div>
-        <div class="mk-title mk-title-sm">Campaigns by month</div>
-        <div class="mk-sub" id="mkSub">Spend, leads and confirmations per campaign</div>
+
+      <div class="mkx-head" id="mkxMonthly">
+        <div>
+          <h2>Campaigns by month</h2>
+          <p id="mkSub">Spend, leads and confirmations per campaign</p>
+        </div>
+        <div class="mk-nav">
+          <button class="mk-arrow" id="mkPrev" aria-label="Previous month">&#8249;</button>
+          <div class="mk-month" id="mkMonthLabel">—</div>
+          <button class="mk-arrow" id="mkNext" aria-label="Next month">&#8250;</button>
+        </div>
       </div>
-      <div class="mk-nav">
-        <button class="mk-arrow" id="mkPrev" aria-label="Previous month">&#8249;</button>
-        <div class="mk-month" id="mkMonthLabel">—</div>
-        <button class="mk-arrow" id="mkNext" aria-label="Next month">&#8250;</button>
+      <div class="mk-msg" id="mkLoading">Loading marketing data…</div>
+      <div class="mk-msg mk-err" id="mkError" style="display:none;"></div>
+      <div id="mkBody" style="display:none;">
+        <div class="mk-kpis" id="mkKpis"></div>
+        <div class="mk-table-wrap">
+          <table class="mk-table">
+            <thead><tr><th>Campaign</th><th class="n">Spend</th><th class="n">Leads</th><th class="n">Cost / lead</th><th class="n">Confirmations</th><th class="n">Cost / confirmation</th></tr></thead>
+            <tbody id="mkRows"></tbody>
+          </table>
+        </div>
+        <div class="mk-note" id="mkNote"></div>
       </div>
-    </div>
-    <div class="mk-msg" id="mkLoading">Loading marketing data…</div>
-    <div class="mk-msg mk-err" id="mkError" style="display:none;"></div>
-    <div id="mkBody" style="display:none;">
-      <div class="mk-kpis" id="mkKpis"></div>
-      <div class="mk-table-wrap">
-        <table class="mk-table">
-          <thead><tr><th>Campaign</th><th class="n">Spend</th><th class="n">Leads</th><th class="n">Cost / lead</th><th class="n">Confirmations</th><th class="n">Cost / confirmation</th></tr></thead>
-          <tbody id="mkRows"></tbody>
-        </table>
-      </div>
-      <div class="mk-note" id="mkNote"></div>
-    </div>
+    </main>
   </div>
 </div>
 
@@ -960,6 +1143,7 @@ function mkEsc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){ret
 function mkInr(v){return v==null?'—':'₹'+Math.round(v).toLocaleString('en-IN');}
 function mkNum(v){return Number(v).toLocaleString('en-IN');}
 function openMarketing(){
+  mkxWire();
   openMkOverview();
   if(!mkWired){
     mkWired=true;
@@ -992,6 +1176,7 @@ function renderMarketing(d){
   var notes=['Leads are Social Media leads created in the month, matched to Meta campaigns by campaign name. Confirmations are bookings made in the month that count as confirmations on the live tabs, linked to the ad through the lead.'];
   if(d.leadsWithoutCampaign) notes.push(mkNum(d.leadsWithoutCampaign)+' Social Media leads have no campaign name and are counted in the totals only.');
   if(d.confirmationsWithoutCampaign) notes.push(mkNum(d.confirmationsWithoutCampaign)+' confirmations come from leads with no campaign name and are counted in the totals only.');
+  document.getElementById('mkSyncMeta').textContent=fmt(d.metaSyncedAt);document.getElementById('mkSyncCrm').textContent=fmt(d.crmSyncedAt);
   notes.push('Meta spend updated '+fmt(d.metaSyncedAt)+' · CRM updated '+fmt(d.crmSyncedAt)+' (refreshed nightly).');
   document.getElementById('mkNote').innerHTML=notes.map(mkEsc).join('<br>');
 }
@@ -1037,46 +1222,215 @@ function mkChart(id,cfg){
   if(mkCharts[id])mkCharts[id].destroy();
   mkCharts[id]=new Chart(ctx,cfg);
 }
+// ── Marketing redesign: KPI cards, charts, funnel, campaign table, insights ──
+var mkxRows=[],mkxTotals=null,mkxSort={k:'spend',dir:-1},mkxShowAll=false,mkxWired=false;
+var MKX_PAL=['#8a65ef','#4777f5','#13b8a6','#ff8a55','#e3b341','#d4537e','#22a879','#aab4c7'];
+function mkxPct(v){return v==null?'—':Number(v).toFixed(2)+'%';}
+function mkxX(v){return v==null?'—':Number(v).toFixed(2)+'×';}
+function mkxSpark(vals){
+  var v=vals.filter(function(x){return x!=null;});
+  if(vals.length<2||v.length<2)return '';
+  var mn=Math.min.apply(null,v),mx=Math.max.apply(null,v),rg=(mx-mn)||1,n=vals.length;
+  var pts=vals.map(function(x,i){if(x==null)return null;return (1+i*64/(n-1)).toFixed(1)+','+(20-((x-mn)/rg)*18).toFixed(1);}).filter(Boolean).join(' ');
+  return '<div class="mkx-spark"><svg viewBox="0 0 66 22"><polyline points="'+pts+'"/></svg></div>';
+}
+function mkxDelta(m,k,good){
+  if(m.length<2)return '<span class="mkx-flat">—</span><span>one month selected</span>';
+  var a=m[m.length-1][k],b=m[m.length-2][k];
+  if(a==null||b==null||b===0)return '<span class="mkx-flat">—</span><span>no prior month data</span>';
+  var p=(a-b)/Math.abs(b)*100,up=p>=0;
+  var cls=good==null?'mkx-flat':((up===(good==='up'))?'mkx-up':'mkx-down');
+  var tail=' vs '+MK_MON[Number(m[m.length-2].month.split('-')[1])-1]+(m[m.length-1].month===mkCur()?' · MTD':'');
+  return '<span class="'+cls+'">'+(up?'↑ ':'↓ ')+Math.abs(p).toFixed(1)+'%</span><span>'+tail+'</span>';
+}
+function mkxBase(){
+  return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#142541',padding:10,cornerRadius:8}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#8a94a8'}},y:{beginAtZero:true,grid:{color:'#edf0f6'},border:{display:false},ticks:{font:{size:10},color:'#8a94a8'}}}};
+}
+function mkxBuildRows(d,totals){
+  var perf=d.campaignPerf&&d.campaignPerf.length;
+  var src=perf?d.campaignPerf:(d.campaigns||[]).map(function(c){return {key:c.key,name:c.name,spend:c.spend,leads:null,bookings:null,revenue:null,costPerLead:null,costPerBooking:null,lastSpendDate:null};});
+  var sp=src.map(function(r){return r.spend;}).filter(function(x){return x>0;}).sort(function(a,b){return a-b;});
+  var med=sp.length?sp[Math.floor(sp.length/2)]:0;
+  return src.map(function(r){
+    var status='—';
+    if(r.lastSpendDate){status=((Date.now()-new Date(r.lastSpendDate+'T00:00:00').getTime())/864e5)<=3?'Active':'Inactive';}
+    var ins='—',cls='grey';
+    if(perf){
+      if(r.bookings>0){ins='Converting';cls='';}
+      else if(r.spend>=Math.max(med,2000)){ins='Review';cls='warn';}
+      else if(r.leads>0&&r.costPerLead!=null&&totals.costPerLead&&r.costPerLead<=totals.costPerLead*0.6){ins='Low CPL';cls='';}
+      else{ins='Monitor';cls='grey';}
+    }
+    return {key:r.key,name:r.name,status:status,spend:r.spend,leads:r.leads,costPerLead:r.costPerLead,bookings:r.bookings,costPerBooking:r.costPerBooking,revenue:r.revenue,insight:ins,insCls:cls};
+  });
+}
+function mkxVisibleRows(){
+  var q=(document.getElementById('mkxSearch').value||'').trim().toLowerCase();
+  var rows=mkxRows.filter(function(r){return !q||String(r.name).toLowerCase().indexOf(q)>=0;});
+  var k=mkxSort.k,dir=mkxSort.dir;
+  rows.sort(function(a,b){
+    var x=a[k],y=b[k];
+    if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
+    if(typeof x==='string')return dir*x.localeCompare(y);
+    return dir*(x-y);
+  });
+  return rows;
+}
+function mkxRenderTable(){
+  var all=mkxVisibleRows(),LIMIT=15,rows=mkxShowAll?all:all.slice(0,LIMIT);
+  document.getElementById('mkxCampRows').innerHTML=rows.length?rows.map(function(r){
+    return '<tr><td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td>'+
+      '<td>'+(r.status==='—'?'<span class="mk-dim">—</span>':'<span class="mkx-tag'+(r.status==='Active'?'':' grey')+'">'+r.status+'</span>')+'</td>'+
+      '<td class="num">'+mkInr(r.spend)+'</td><td class="num">'+(r.leads==null?'—':mkNum(r.leads))+'</td><td class="num">'+mkInr(r.costPerLead)+'</td>'+
+      '<td class="num">'+(r.bookings==null?'—':mkNum(r.bookings))+'</td><td class="num">'+mkInr(r.costPerBooking)+'</td><td class="num">'+(r.revenue==null?'—':mkBig(r.revenue))+'</td>'+
+      '<td><span class="mkx-tag '+r.insCls+'">'+r.insight+'</span></td></tr>';
+  }).join(''):'<tr><td colspan="9" class="mk-dim" style="text-align:center;padding:24px;">No campaigns match.</td></tr>';
+  var more=document.getElementById('mkxMore');
+  if(all.length>LIMIT){more.style.display='block';more.textContent=mkxShowAll?'Show top '+LIMIT:'Show all '+all.length+' campaigns';}else{more.style.display='none';}
+  document.querySelectorAll('#mkxCampTable th').forEach(function(th){
+    var on=th.getAttribute('data-k')===mkxSort.k;th.classList.toggle('sorted',on);
+    th.setAttribute('data-arrow',on?(mkxSort.dir<0?' ▼':' ▲'):'');
+    var base=th.getAttribute('data-label');if(!base){base=th.textContent;th.setAttribute('data-label',base);}
+    th.textContent=base+(on?(mkxSort.dir<0?' ▼':' ▲'):'');
+  });
+}
+function mkxExportCsv(){
+  var rows=mkxVisibleRows();if(!rows.length)return;
+  var esc=function(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  var head=['Campaign','Status','Spend','Leads','Cost per lead','Bookings','Cost per booking','Revenue','Insight'];
+  var lines=[head.join(',')].concat(rows.map(function(r){return [r.name,r.status,r.spend,r.leads,r.costPerLead==null?'':r.costPerLead.toFixed(2),r.bookings,r.costPerBooking==null?'':r.costPerBooking.toFixed(2),r.revenue,r.insight].map(esc).join(',');}));
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'}));
+  a.download='tripoly-campaigns-'+mkOv.from+'-to-'+mkOv.to+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function mkxInsights(d,rows,t){
+  var perf=d.campaignPerf&&d.campaignPerf.length;
+  var top=document.getElementById('mkxTop'),al=document.getElementById('mkxAlerts');
+  if(!perf){top.innerHTML='<div class="mkx-insight"><div class="mkx-eyebrow">TOP PERFORMER</div><h3>Campaign-level results are not available yet</h3><p>The server is not returning per-campaign leads and bookings.</p></div>';al.innerHTML='';return;}
+  var conv=rows.filter(function(r){return r.bookings>0;});
+  var pool=conv.filter(function(r){return r.bookings>=2;});if(!pool.length)pool=conv;
+  pool=pool.slice().sort(function(a,b){return a.costPerBooking-b.costPerBooking;});
+  if(pool.length){
+    var b=pool[0],roas=b.spend>0?b.revenue/b.spend:null,also=pool.slice(1,3).map(function(r){return mkEsc(r.name);}).join(' · ');
+    top.innerHTML='<div class="mkx-insight"><div class="mkx-eyebrow">TOP PERFORMING CAMPAIGN</div><h3>'+mkEsc(b.name)+'</h3><p>Lowest cost per booking among campaigns with '+(b.bookings>=2?'two or more':'at least one')+' confirmed booking.'+(also?'<br>Next best: '+also:'')+'</p>'+
+      '<div class="mkx-metrics"><div><strong>'+mkNum(b.bookings)+'</strong><small>Bookings</small></div><div><strong>'+mkInr(b.costPerBooking)+'</strong><small>Cost / booking</small></div><div><strong>'+mkxX(roas)+'</strong><small>ROAS</small></div><div><strong>'+mkBig(b.spend)+'</strong><small>Spend</small></div></div></div>';
+  }else{
+    top.innerHTML='<div class="mkx-insight"><div class="mkx-eyebrow">TOP PERFORMING CAMPAIGN</div><h3>No campaign has a confirmed booking in this selection</h3><p>Widen the period or switch the view to see campaign winners.</p></div>';
+  }
+  var items=[];
+  var zero=rows.filter(function(r){return r.bookings===0&&r.spend>0;}).sort(function(a,b){return b.spend-a.spend;}).slice(0,3);
+  if(zero.length)items.push(['','!','Spend with no bookings',zero.map(function(r){return mkEsc(r.name)+' ('+mkBig(r.spend)+')';}).join('<br>'),mkBig(zero.reduce(function(s,r){return s+r.spend;},0))]);
+  var cpl=rows.filter(function(r){return r.leads>=30&&r.costPerLead!=null;}).sort(function(a,b){return a.costPerLead-b.costPerLead;})[0];
+  if(cpl)items.push(['good','↘','Lowest cost per lead',mkEsc(cpl.name)+' · '+mkNum(cpl.leads)+' leads',mkInr(cpl.costPerLead)]);
+  if(t.conversionRate!=null)items.push(['info','◎','Lead-to-booking gap','Of all leads in this selection, this share became confirmed bookings. Review lead qualification and follow-up speed.',mkxPct(t.conversionRate)]);
+  var lm=d.leadMatch||{};
+  if(lm.total>0&&lm.unmatched>0)items.push(['info','⛓','Leads not linked to a campaign',mkNum(lm.unmatched)+' of '+mkNum(lm.total)+' Social Media leads cannot be tied to an ad, so campaign rows understate leads and bookings.',Math.round(lm.unmatched*100/lm.total)+'%']);
+  al.innerHTML=items.map(function(i){return '<div class="mkx-alert '+i[0]+'"><div class="mkx-alert-ico">'+i[1]+'</div><div class="mkx-alert-text"><strong>'+i[2]+'</strong><small>'+i[3]+'</small></div><div class="mkx-alert-val">'+i[4]+'</div></div>';}).join('')||'<div class="mk-dim" style="font-size:12px;">Nothing needs attention in this selection.</div>';
+}
 function renderMkOverview(d){
-  var t=d.totals;
-  var f1=function(v){return v==null?'—':Number(v).toFixed(2);};
-  var kpis=[
-    ['Ad spend',mkBig(t.spend)],['Revenue',mkBig(t.revenue)],['Leads',mkNum(t.leads)],['Bookings',mkNum(t.bookings)],
-    ['Cost per lead',mkInr(t.costPerLead)],['Cost per booking',mkInr(t.costPerBooking)],['Revenue per lead',mkInr(t.revenuePerLead)],
-    ['ROAS',t.roas==null?'—':f1(t.roas)+'x'],['ROI',t.roi==null?'—':Math.round(t.roi).toLocaleString('en-IN')+'%'],
-    ['Impressions',mkNum(t.impressions)],['Clicks',mkNum(t.clicks)],['CTR',t.ctr==null?'—':f1(t.ctr)+'%'],
-    ['Conversion rate',t.conversionRate==null?'—':f1(t.conversionRate)+'%'],['Leads to sales',t.leadsToSales==null?'—':Number(t.leadsToSales).toFixed(4)]
+  var t=d.totals,m=d.monthly,labels=m.map(function(x){return mkShort(x.month);});
+  var defs=[
+    ['spend','Ad spend','↗','#13b8a6','#e3f8f4',mkBig,null],
+    ['revenue','Booking revenue','₹','#4777f5','#eaf0ff',mkBig,'up'],
+    ['leads','Leads generated','♧','#8a65ef','#f0eaff',mkNum,'up'],
+    ['bookings','Confirmed bookings','✓','#ff8a55','#fff0e8',mkNum,'up'],
+    ['costPerLead','Cost per lead','◎','#ff8a55','#fff0e8',mkInr,'down'],
+    ['costPerBooking','Cost per booking','◉','#13b8a6','#e3f8f4',mkInr,'down'],
+    ['roas','Return on ad spend','↗','#22a879','#e4f8ef',mkxX,'up'],
+    ['ctr','Click-through rate','％','#4777f5','#eaf0ff',mkxPct,'up']
   ];
-  document.getElementById('mkOvKpis').className='mk-kpis mk-kpis-sm';
-  document.getElementById('mkOvKpis').innerHTML=kpis.map(function(k){return '<div class="mk-kpi"><div class="mk-kpi-lbl">'+mkEsc(k[0])+'</div><div class="mk-kpi-val" style="font-size:22px;">'+mkEsc(k[1])+'</div></div>';}).join('');
-  var labels=d.monthly.map(function(m){return mkShort(m.month);});
-  var base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{font:{size:10}}}}};
-  var clone=function(o){return JSON.parse(JSON.stringify(o));};
-  var o1=clone(base);o1.scales.y.ticks.callback=function(v){return mkBig(v);};
-  o1.plugins.tooltip={callbacks:{label:function(c){return mkInr(c.parsed.y);}}};
-  mkChart('mkChSpend',{type:'bar',data:{labels:labels,datasets:[{data:d.monthly.map(function(m){return m.spend;}),backgroundColor:'#E8613A',borderRadius:4}]},options:o1});
-  var o2=clone(base);o2.plugins.legend={display:true,position:'bottom',labels:{font:{size:10},boxWidth:10}};
-  o2.scales.y.position='left';o2.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:10},precision:0}};
+  document.getElementById('mkOvKpis').innerHTML=defs.map(function(k){
+    return '<div class="mkx-kpi" style="--accent:'+k[3]+';--tint:'+k[4]+'"><div class="mkx-kpi-top"><span class="mkx-kpi-label">'+k[1]+'</span><span class="mkx-kpi-icon">'+k[2]+'</span></div>'+
+      '<div class="mkx-kpi-value">'+mkEsc(k[5](t[k[0]]))+'</div><div class="mkx-kpi-foot">'+mkxDelta(m,k[0],k[6])+mkxSpark(m.map(function(x){return x[k[0]];}))+'</div></div>';
+  }).join('');
+  var mini=[['Revenue per lead',mkInr(t.revenuePerLead)],['ROI',t.roi==null?'—':Math.round(t.roi).toLocaleString('en-IN')+'%'],['Impressions',mkNum(t.impressions)],['Clicks',mkNum(t.clicks)],['Conversion rate',mkxPct(t.conversionRate)],['Leads to sales',t.leadsToSales==null?'—':Number(t.leadsToSales).toFixed(4)]];
+  document.getElementById('mkxMini').innerHTML=mini.map(function(x){return '<div><span>'+x[0]+'</span><strong>'+mkEsc(x[1])+'</strong></div>';}).join('');
+  var divName={all:'All channels',git:'GIT',fit:'FIT'}[d.division||mkOv.division]||'All channels';
+  var campName='';if(mkOv.campaign){var cs=(d.campaigns||[]).filter(function(c){return c.key===mkOv.campaign;})[0];campName=cs?' · '+cs.name:'';}
+  document.getElementById('mkxPeriod').textContent=mkShort(mkOv.from)+' – '+mkShort(mkOv.to)+' · '+divName+campName;
+
+  // charts
+  var o1=mkxBase();o1.scales.y.ticks.callback=function(v){return mkBig(v);};
+  o1.scales.y.ticks.color='#e8743f';
+  o1.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},ticks:{font:{size:10},color:'#4777f5',callback:function(v){return mkBig(v);}}};
+  o1.plugins.tooltip.callbacks={label:function(c){return c.dataset.label+': '+mkInr(c.parsed.y);}};
+  mkChart('mkChSpend',{type:'bar',data:{labels:labels,datasets:[
+    {label:'Ad spend',data:m.map(function(x){return x.spend;}),backgroundColor:'#ff8a55',borderRadius:5,maxBarThickness:26,yAxisID:'y'},
+    {label:'Revenue',data:m.map(function(x){return x.revenue;}),backgroundColor:'#4777f5',borderRadius:5,maxBarThickness:26,yAxisID:'y2'}]},options:o1});
+  var o2=mkxBase();
+  o2.scales.y.ticks.precision=0;
+  o2.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},ticks:{font:{size:10},color:'#8a94a8',precision:0}};
+  o2.scales.y3={display:false,beginAtZero:true,position:'right',grid:{drawOnChartArea:false}};
+  o2.plugins.tooltip.callbacks={label:function(c){return c.dataset.label+': '+(c.dataset.yAxisID==='y3'?Number(c.parsed.y).toFixed(2)+'%':mkNum(c.parsed.y));}};
   mkChart('mkChLeads',{type:'bar',data:{labels:labels,datasets:[
-    {label:'Leads',data:d.monthly.map(function(m){return m.leads;}),backgroundColor:'#185FA5',borderRadius:4,yAxisID:'y'},
-    {label:'Bookings',data:d.monthly.map(function(m){return m.bookings;}),backgroundColor:'#1A7A4A',borderRadius:4,yAxisID:'y2'}]},options:o2});
-  var o3=clone(base);
-  mkChart('mkChClicks',{type:'bar',data:{labels:labels,datasets:[{data:d.monthly.map(function(m){return m.clicks;}),backgroundColor:'#C9A227',borderRadius:4}]},options:o3});
-  var src=(d.sources||[]).slice(0,8),rest=(d.sources||[]).slice(8).reduce(function(a,s){return a+s.bookings;},0);
-  var sl=src.map(function(s){return s.source;}),sv=src.map(function(s){return s.bookings;});
-  if(rest>0){sl.push('Others');sv.push(rest);}
-  mkChart('mkChSrc',{type:'doughnut',data:{labels:sl,datasets:[{data:sv,backgroundColor:['#E8613A','#185FA5','#1A7A4A','#C9A227','#7F77DD','#D4537E','#639922','#9B8E80','#BA7517'],borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:true,position:'right',labels:{font:{size:10},boxWidth:10}},datalabels:{display:false},tooltip:{callbacks:{label:function(c){return c.label+': '+c.parsed+' bookings';}}}}}});
+    {label:'Leads',data:m.map(function(x){return x.leads;}),backgroundColor:'#8a65ef',borderRadius:5,maxBarThickness:24,yAxisID:'y',order:2},
+    {label:'Bookings',data:m.map(function(x){return x.bookings;}),backgroundColor:'#13b8a6',borderRadius:5,maxBarThickness:24,yAxisID:'y2',order:2},
+    {label:'Conversion',type:'line',data:m.map(function(x){return x.conversionRate;}),borderColor:'#ff8a55',backgroundColor:'#ff8a55',borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y3',order:1}]},options:o2});
+  var o3=mkxBase();o3.scales.y.ticks.callback=function(v){return mkShort2(v);};
+  o3.scales.y2={beginAtZero:true,position:'right',grid:{drawOnChartArea:false},border:{display:false},ticks:{font:{size:10},color:'#8a94a8',callback:function(v){return v+'%';}}};
+  o3.plugins.tooltip.callbacks={label:function(c){return c.dataset.label+': '+(c.dataset.yAxisID==='y2'?Number(c.parsed.y).toFixed(2)+'%':mkNum(c.parsed.y));}};
+  mkChart('mkChClicks',{type:'bar',data:{labels:labels,datasets:[
+    {label:'Clicks',data:m.map(function(x){return x.clicks;}),backgroundColor:'#4777f5',borderRadius:5,maxBarThickness:26,yAxisID:'y',order:2},
+    {label:'CTR',type:'line',data:m.map(function(x){return x.ctr;}),borderColor:'#ff8a55',backgroundColor:'#ff8a55',borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y2',order:1}]},options:o3});
+
+  // funnel (bar lengths are log-scaled because the stages differ by orders of magnitude)
+  var stages=[['Impressions',t.impressions,mkNum(t.impressions),'#8a65ef'],
+    ['Clicks',t.clicks,mkNum(t.clicks)+(t.ctr==null?'':' · '+mkxPct(t.ctr)+' CTR'),'#4777f5'],
+    ['Leads',t.leads,mkNum(t.leads)+(t.clicks>0?' · '+(t.leads*100/t.clicks).toFixed(1)+'% of clicks':''),'#13b8a6'],
+    ['Confirmed bookings',t.bookings,mkNum(t.bookings)+(t.leads>0?' · '+(t.bookings*100/t.leads).toFixed(2)+'% of leads':''),'#ff8a55']];
+  var mx=Math.log(Math.max(t.impressions,1)+1);
+  document.getElementById('mkxFunnel').innerHTML=stages.map(function(s){
+    var w=mx>0?Math.max(2,Math.log(s[1]+1)/mx*100):0;
+    return '<div><div class="mkx-frow"><strong>'+s[0]+'</strong><span>'+mkEsc(s[2])+'</span></div><div class="mkx-track"><div class="mkx-fill" style="width:'+w.toFixed(1)+'%;--c:'+s[3]+'"></div></div></div>';
+  }).join('');
+  document.getElementById('mkxFunnelNote').innerHTML='<strong>Reading the funnel:</strong> bar lengths use a log scale so every stage stays visible. '+(t.conversionRate!=null?'Only '+t.conversionRate.toFixed(2)+'% of leads become confirmed bookings, so lead qualification and follow-up speed are the biggest lever.':'');
+
+  // sources (share of bookings)
+  var srcs=(d.sources||[]),tot=srcs.reduce(function(a,s){return a+s.bookings;},0),top7=srcs.slice(0,7),rest=srcs.slice(7).reduce(function(a,s){return a+s.bookings;},0);
+  if(rest>0)top7=top7.concat([{source:'Other sources',bookings:rest}]);
+  document.getElementById('mkxSourceList').innerHTML=tot>0?top7.map(function(s,i){
+    var p=s.bookings*100/tot;
+    return '<div class="mkx-source"><span title="'+mkEsc(s.source)+'">'+mkEsc(s.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+MKX_PAL[i%MKX_PAL.length]+'"></div></div><strong>'+p.toFixed(0)+'%</strong></div>';
+  }).join(''):'<div class="mk-dim" style="font-size:12px;">No bookings in this period.</div>';
+
+  // campaign table + insights
+  mkxTotals=t;mkxRows=mkxBuildRows(d,t);
+  var hasPerf=d.campaignPerf&&d.campaignPerf.length;
+  document.getElementById('mkxCampSub').textContent=mkNum(mkxRows.length)+' campaigns with ad spend'+(hasPerf?' · leads and bookings counted only where the lead links to the campaign':' · lead and booking columns need the updated server');
+  mkxRenderTable();
+  mkxInsights(d,mkxRows,t);
+
   // campaign dropdown follows the filters
   var sel=document.getElementById('mkCamp'),cur=mkOv.campaign;
   sel.innerHTML='';var o=document.createElement('option');o.value='';o.textContent='All campaigns';sel.appendChild(o);
   (d.campaigns||[]).forEach(function(c){var x=document.createElement('option');x.value=c.key;x.textContent=c.name;sel.appendChild(x);});
   sel.value=cur;if(sel.value!==cur){mkOv.campaign='';sel.value='';}
   var notes=['GIT and FIT use the Meta ad account (GIT = account 1399…, FIT = account 2886…) for spend and for matching leads, so lead counts per division are approximate. Leads are Social Media leads matched to an ad or campaign by the name stored in the CRM; unmatched leads appear only under All.',
-    'Bookings are counted in the month they were made and linked to an ad through the lead. Revenue is the Quote Value of those bookings. The lead-source chart shows all bookings (GIT/FIT by layout) and ignores the campaign filter.'];
+    'Bookings are counted in the month they were made and linked to an ad through the lead. Revenue is the Quote Value of those bookings. Trend arrows compare the last month in the period with the month before it (the current month is month-to-date). The lead-source list shows all bookings (GIT/FIT by layout) and ignores the campaign filter.'];
   var lm=d.leadMatch||{};
   if(lm.total>0&&lm.unmatched>0){notes.unshift(mkNum(lm.unmatched)+' of '+mkNum(lm.total)+' Social Media leads ('+Math.round(lm.unmatched*100/lm.total)+'%) could not be linked to a Meta ad or campaign, mostly April to August when the CRM stored ad names that have since been renamed in Meta. They count in the lead totals for All but not for GIT, FIT or a single campaign.');}
   document.getElementById('mkOvNote').innerHTML=notes.map(mkEsc).join('<br>');
+}
+function mkShort2(v){v=Number(v);if(v>=10000000)return (v/10000000).toFixed(1)+'Cr';if(v>=100000)return (v/100000).toFixed(1)+'L';if(v>=1000)return (v/1000).toFixed(0)+'K';return String(v);}
+function mkRefresh(){ if(mkOvWired)loadMkOverview(); if(mkMonth)loadMarketing(mkMonth); }
+function mkxWire(){
+  if(mkxWired)return;mkxWired=true;
+  var main=document.getElementById('mkxMain'),btns=[].slice.call(document.querySelectorAll('#mkxNav button'));
+  btns.forEach(function(b){b.addEventListener('click',function(){var el=document.getElementById(b.getAttribute('data-t'));if(el&&el.offsetParent!==null)el.scrollIntoView({behavior:'smooth',block:'start'});});});
+  main.addEventListener('scroll',function(){
+    var top=main.getBoundingClientRect().top+90,cur=btns[0];
+    btns.forEach(function(b){var el=document.getElementById(b.getAttribute('data-t'));if(el&&el.offsetParent!==null&&el.getBoundingClientRect().top<=top)cur=b;});
+    btns.forEach(function(b){b.classList.toggle('active',b===cur);});
+  });
+  document.getElementById('mkxSearch').addEventListener('input',function(){mkxShowAll=false;mkxRenderTable();});
+  document.getElementById('mkxMore').addEventListener('click',function(){mkxShowAll=!mkxShowAll;mkxRenderTable();});
+  document.querySelectorAll('#mkxCampTable th').forEach(function(th){th.addEventListener('click',function(){
+    var k=th.getAttribute('data-k');
+    if(mkxSort.k===k)mkxSort.dir=-mkxSort.dir;else{mkxSort.k=k;mkxSort.dir=(k==='name'||k==='status'||k==='insight')?1:-1;}
+    mkxRenderTable();});});
+  document.getElementById('mkRefreshBtn').addEventListener('click',mkRefresh);
+  document.getElementById('mkExportBtn').addEventListener('click',mkxExportCsv);
 }
 
 function mgmtLabel(ym){var p=ym.split('-');var d=new Date(Number(p[0]),Number(p[1])-1,1);return d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});}
@@ -1476,7 +1830,7 @@ document.getElementById('cel-overlay').addEventListener('click',function(){clear
 document.getElementById('refreshBtn').addEventListener('click',function(){
   if(activePeriod==='performance') fetchPerformanceData(activePerfMonth);
   else if(activePeriod==='fy') fetchFYData();
-  else fetchData();
+  else{ if(activePeriod==='marketing') mkRefresh(); fetchData(); }
 });
 document.getElementById('testBtn').addEventListener('click',function(){celebrate('Shailesh Joshi','SPARKLING EUROPE',520000,AV_COLOURS[0]);});
 document.getElementById('lastBookingBtn').addEventListener('click',function(){
