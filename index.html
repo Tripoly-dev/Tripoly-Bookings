@@ -349,7 +349,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mk-camp{max-width:260px;min-width:150px;}
 #viewMarketing .mkx-to{color:var(--mx-muted);font-size:11px;}
 #viewMarketing .mkx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:26px 0 13px;}
-#viewMarketing .mkx-head h2{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;}
+#viewMarketing .mkx-head h2{font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;border-left:4px solid var(--hc,var(--ink));padding-left:10px;}
+#viewMarketing .mkx-head[data-c=green]{--hc:#1A7A4A;}#viewMarketing .mkx-head[data-c=blue]{--hc:#185FA5;}#viewMarketing .mkx-head[data-c=red]{--hc:#C0392B;}#viewMarketing .mkx-head[data-c=orange]{--hc:#E8613A;}#viewMarketing .mkx-head[data-c=grey]{--hc:#9B8E80;}#viewMarketing .mkx-head[data-c=ink]{--hc:#1A1208;}
+#viewMarketing .mkx-head p{padding-left:14px;}
 #viewMarketing .mkx-head p{font-size:11px;color:var(--mx-muted);margin-top:5px;}
 #viewMarketing .mk-msg{padding:40px;text-align:center;color:var(--mx-muted);font-size:14px;}
 #viewMarketing .mk-err{color:var(--red);}
@@ -388,6 +390,10 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mkx-thr .mkx-btn{align-self:end;}
 #viewMarketing .mkx-tag.red{background:var(--red-lt);color:var(--red);}
 #viewMarketing .mkx-tag.blue{background:#E8F0F8;color:#185FA5;}
+#viewMarketing .mkx-tag.gold{background:#FBF3D9;color:#8A6A00;}
+#viewMarketing .mkx-pos{color:#1A7A4A;font-weight:700;}
+#viewMarketing .mkx-neg{color:#C0392B;font-weight:700;}
+#viewMarketing .mkx-table tr.mkx-zero td{background:#FDF3F1;}
 #viewMarketing .mkx-tag + .mkx-tag{margin-left:4px;}
 #viewMarketing .mkx-table td.act{white-space:normal;min-width:260px;max-width:380px;line-height:1.5;}
 #viewMarketing .mkx-modal{position:fixed;inset:0;background:rgba(26,18,8,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
@@ -774,11 +780,11 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
       <div class="mk-msg" id="mkOvLoading">Loading marketing overview…</div>
       <div class="mk-msg mk-err" id="mkOvError" style="display:none;"></div>
       <div id="mkOvBody" style="display:none;">
-        <div class="mkx-head"><div><h2>Performance at a glance</h2><p id="mkxPeriod"></p></div></div>
+        <div class="mkx-head" data-c="ink"><div><h2>Performance at a glance</h2><p id="mkxPeriod"></p></div></div>
         <section class="mkx-kpis" id="mkOvKpis"></section>
         <section class="mkx-kpis sub" id="mkOvKpis2"></section>
         <section class="mkx-mini" id="mkxMini"></section>
-        <div class="mkx-head" id="mkxRank"><div><h2>Campaign rankings</h2><p>Best and worst campaigns, and where ad spend is not producing bookings, for the selected period. Ignores the campaign filter.</p></div></div>
+        <div class="mkx-head" data-c="green" id="mkxRank"><div><h2>Campaign rankings</h2><p>Best and worst campaigns, and where ad spend is not producing bookings, for the selected period. Ignores the campaign filter.</p></div></div>
         <div class="mkx-opt" id="mkxOpt"></div>
         <section class="mkx-panel">
           <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxRankTitle"></div><div class="mkx-psub" id="mkxRankDesc"></div></div>
@@ -789,7 +795,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <div class="mkx-note" id="mkxRankNote"></div>
         </section>
 
-        <div class="mkx-head" id="mkxTrends"><div><h2>Performance trends</h2><p id="mkxTrendSub">Spot movement over time, not just totals.</p></div></div>
+        <div class="mkx-head" data-c="blue" id="mkxTrends"><div><h2>Performance trends</h2><p id="mkxTrendSub">Spot movement over time, not just totals.</p></div></div>
         <div class="mkx-grid">
           <section class="mkx-panel">
             <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxTrTitle"></div><div class="mkx-psub" id="mkxTrDesc"></div></div>
@@ -806,14 +812,14 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           </section>
         </div>
 
-        <div class="mkx-head" id="mkxSources"><div><h2>Where bookings and revenue come from</h2><p>Confirmed bookings and revenue (Quote Value) by lead source for the selected period. All lead sources, GIT/FIT by layout, ignores the campaign filter.</p></div></div>
+        <div class="mkx-head" data-c="green" id="mkxSources"><div><h2>Where bookings and revenue come from</h2><p>Confirmed bookings and revenue (Quote Value) by lead source for the selected period. All lead sources, GIT/FIT by layout, ignores the campaign filter.</p></div></div>
         <section class="mkx-panel">
           <div class="mkx-panel-head"><div><div class="mkx-ptitle" id="mkxSrcTitle"></div></div>
             <div class="mkx-seg" id="mkxSrcTabs"><button data-m="bookings" class="on">Bookings</button><button data-m="revenue">Revenue</button></div></div>
           <div id="mkxSourceList"></div>
         </section>
 
-        <div class="mkx-head" id="mkxAttention"><div><h2>Campaigns requiring attention</h2><p>Suggestions only. Nothing is paused or changed automatically.</p></div><button class="mkx-btn" id="mkxThrBtn">⚙ &nbsp;Thresholds</button></div>
+        <div class="mkx-head" data-c="red" id="mkxAttention"><div><h2>Campaigns requiring attention</h2><p>Suggestions only. Nothing is paused or changed automatically.</p></div><button class="mkx-btn" id="mkxThrBtn">⚙ &nbsp;Thresholds</button></div>
         <section class="mkx-panel">
           <div class="mkx-thr" id="mkxThr">
             <label>Min spend to flag (₹)<input type="number" min="0" step="500" data-c="minSpend"></label>
@@ -832,7 +838,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <div class="mkx-note" id="mkxAttnNote"></div>
         </section>
 
-        <div class="mkx-head" id="mkxCampaigns"><div><h2>Campaign command center</h2><p>Find campaigns that deserve more budget, or a closer look.</p></div></div>
+        <div class="mkx-head" data-c="orange" id="mkxCampaigns"><div><h2>Campaign command center</h2><p>Find campaigns that deserve more budget, or a closer look.</p></div></div>
         <section class="mkx-panel">
           <div class="mkx-panel-head"><div><div class="mkx-ptitle">Campaign performance</div><div class="mkx-psub" id="mkxCampSub">Spend, leads, bookings and efficiency</div></div>
             <div class="mkx-tabs"><input class="mkx-search" id="mkxSearch" placeholder="Search campaigns…" aria-label="Search campaigns"></div></div>
@@ -847,12 +853,12 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <button class="mkx-btn mkx-more" id="mkxMore" style="display:none;"></button>
         </section>
 
-        <div class="mkx-head" id="mkxInsights"><div><h2>Marketing insights</h2><p>Top performers and campaigns that need attention, from the data above.</p></div></div>
+        <div class="mkx-head" data-c="green" id="mkxInsights"><div><h2>Marketing insights</h2><p>Top performers and campaigns that need attention, from the data above.</p></div></div>
         <div class="mkx-grid even">
           <div id="mkxTop"></div>
           <section class="mkx-panel"><div class="mkx-panel-head"><div><div class="mkx-ptitle">Needs attention</div><div class="mkx-psub">Under-performing campaigns and gaps</div></div></div><div class="mkx-alerts" id="mkxAlerts"></div></section>
         </div>
-        <div class="mkx-head" id="mkxMonthly">
+        <div class="mkx-head" data-c="ink" id="mkxMonthly">
           <div>
             <h2>Campaign summary</h2>
             <p id="mkSub">Spend, leads and confirmations per campaign</p>
@@ -877,7 +883,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         </div>
         <div class="mk-note" id="mkNote"></div>
       </div>
-        <div class="mkx-head" id="mkxData"><div><h2>Data quality</h2><p>Records that cannot be tied to a Meta campaign, and how the numbers are built.</p></div></div>
+        <div class="mkx-head" data-c="grey" id="mkxData"><div><h2>Data quality</h2><p>Records that cannot be tied to a Meta campaign, and how the numbers are built.</p></div></div>
         <div class="mkx-opt" id="mkxData2" style="grid-template-columns:minmax(240px,360px);"></div>
         <div class="mkx-note" id="mkOvNote"></div>
       </div>
@@ -1457,10 +1463,10 @@ function mkxRenderTable(){
   mkxRenderChip();
   var all=mkxVisibleRows(),LIMIT=15,rows=mkxShowAll?all:all.slice(0,LIMIT);
   document.getElementById('mkxCampRows').innerHTML=rows.length?rows.map(function(r){
-    return '<tr><td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td>'+
+    return '<tr'+(r.spend>0&&r.bookings===0?' class="mkx-zero"':'')+'><td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td>'+
       '<td>'+(r.status==='—'?'<span class="mk-dim">—</span>':'<span class="mkx-tag'+(r.status==='Active'?'':' grey')+'">'+r.status+'</span>')+'</td>'+
       '<td class="num">'+mkInr(r.spend)+'</td><td class="num">'+(r.leads==null?'—':mkNum(r.leads))+'</td><td class="num">'+mkInr(r.costPerLead)+'</td>'+
-      '<td class="num">'+(r.bookings==null?'—':mkNum(r.bookings))+'</td><td class="num">'+mkInr(r.costPerBooking)+'</td><td class="num">'+(r.revenue==null?'—':mkBig(r.revenue))+'</td>'+
+      '<td class="num">'+(r.bookings==null?'—':mkNum(r.bookings))+'</td><td class="num">'+mkInr(r.costPerBooking)+'</td><td class="num'+(r.revenue>0?' mkx-pos':'')+'">'+(r.revenue==null?'—':mkBig(r.revenue))+'</td>'+
       '<td><span class="mkx-tag '+r.insCls+'">'+r.insight+'</span></td></tr>';
   }).join(''):'<tr><td colspan="9" class="mk-dim" style="text-align:center;padding:24px;">No campaigns match.</td></tr>';
   var more=document.getElementById('mkxMore');
@@ -1525,7 +1531,8 @@ function renderMkOverview(d,pd,trend){
   document.getElementById('mkOvKpis').innerHTML=byKey(['spend','revenue','bookings','roas']).map(kpiCard).join('');
   document.getElementById('mkOvKpis2').innerHTML=byKey(['leads','costPerLead','costPerBooking','ctr']).map(kpiCard).join('');
   var mini=[['Revenue per lead',mkInr(t.revenuePerLead)],['ROI',t.roi==null?'—':Math.round(t.roi).toLocaleString('en-IN')+'%'],['Impressions',mkNum(t.impressions)],['Clicks',mkNum(t.clicks)],['Conversion rate',mkxPct(t.conversionRate)],['Leads to sales',t.leadsToSales==null?'—':Number(t.leadsToSales).toFixed(4)]];
-  document.getElementById('mkxMini').innerHTML=mini.map(function(x){return '<div><span>'+x[0]+'</span><strong>'+mkEsc(x[1])+'</strong></div>';}).join('');
+  var miniC=['#1A7A4A','#1A7A4A','#185FA5','#185FA5','#C9A227','#C9A227'];
+  document.getElementById('mkxMini').innerHTML=mini.map(function(x,i){return '<div style="border-left:3px solid '+miniC[i]+';"><span>'+x[0]+'</span><strong>'+mkEsc(x[1])+'</strong></div>';}).join('');
   var divName={all:'All channels',git:'GIT',fit:'FIT'}[d.division||mkOv.division]||'All channels';
   var campName='';if(mkOv.campaign){var cs=(d.campaigns||[]).filter(function(c){return c.key===mkOv.campaign;})[0];campName=cs?' · '+cs.name:'';}
   document.getElementById('mkxPeriod').textContent=mkPeriodText(per)+' · '+(per.prev?'compared '+per.cmpText.replace(/^vs /,'with '):'no comparison ('+per.noPrev+')')+' · '+divName+campName;
@@ -1627,6 +1634,9 @@ function mkxTopWorst(d){
 }
 // ── Rankings (top / worst / zero-booking) and lead-source panel ──
 var mkxRankTab='top',mkxRankAll=false,mkxRankD=null,mkxSrcMode='bookings',mkxSrcData=[],mkxRankWired=false;
+function mkxSegCls(seg){return seg==='GIT'?'gold':seg==='FIT'?'blue':'grey';}
+// ROAS against the period average: green at or above it, red at half of it or less
+function mkxRoasCls(roas,avg){return roas==null||!(avg>0)?'':roas>=avg?'mkx-pos':roas<=0.5*avg?'mkx-neg':'';}
 function mkxRankRows(d,tab){
   var all=(d&&d.campaignPerf)||[],min=mkxCfg.minSpend;
   var ro=function(r){return r.spend>0?r.revenue/r.spend:0;};
@@ -1649,14 +1659,14 @@ function mkxRenderRank(d){
   var head=tab==='zero'?['Campaign','Ad account','Status','Ad spend','Leads','Cost / lead','Last spend']:['#','Campaign','Ad account','Ad spend','Leads','Bookings','Revenue','ROAS'];
   var nums=tab==='zero'?{3:1,4:1,5:1}:{3:1,4:1,5:1,6:1,7:1};
   document.getElementById('mkxRankHead').innerHTML='<tr>'+head.map(function(h,i){return '<th'+(nums[i]?' class="num"':'')+' style="cursor:default;">'+h+'</th>';}).join('')+'</tr>';
-  var seg=function(r){return '<span class="mkx-tag '+(r.segment==='Mixed'?'grey':'blue')+'">'+mkEsc(r.segment||'—')+'</span>';};
+  var seg=function(r){return '<span class="mkx-tag '+mkxSegCls(r.segment)+'">'+mkEsc(r.segment||'—')+'</span>';};
   var nm=function(r){return '<td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td>';};
   var status=function(r){var a=r.lastSpendDate&&((Date.now()-new Date(r.lastSpendDate+'T00:00:00').getTime())/864e5)<=3;return '<span class="mkx-tag '+(a?'warn':'grey')+'">'+(a?'Still spending':'Inactive')+'</span>';};
   body.innerHTML=!perf?'<tr><td colspan="8" class="mk-dim" style="text-align:center;padding:22px;">Campaign-level results are not available yet (needs the updated server).</td></tr>'
     :shown.length?shown.map(function(r,i){
       return tab==='zero'
-        ?'<tr>'+nm(r)+'<td>'+seg(r)+'</td><td>'+status(r)+'</td><td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkInr(r.costPerLead)+'</td><td>'+mkEsc(r.lastSpendDate||'—')+'</td></tr>'
-        :'<tr><td class="mkx-rk">'+(i+1)+'</td>'+nm(r)+'<td>'+seg(r)+'</td><td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkNum(r.bookings)+'</td><td class="num">'+mkInr(r.revenue)+'</td><td class="num">'+(r.spend>0?mkxX(r.revenue/r.spend):'—')+'</td></tr>';
+        ?'<tr class="mkx-zero">'+nm(r)+'<td>'+seg(r)+'</td><td>'+status(r)+'</td><td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkInr(r.costPerLead)+'</td><td>'+mkEsc(r.lastSpendDate||'—')+'</td></tr>'
+        :'<tr><td class="mkx-rk">'+(i+1)+'</td>'+nm(r)+'<td>'+seg(r)+'</td><td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkNum(r.bookings)+'</td><td class="num '+(r.revenue>0?'mkx-pos':'')+'">'+mkInr(r.revenue)+'</td><td class="num '+mkxRoasCls(r.spend>0?r.revenue/r.spend:null,d.totals&&d.totals.roas)+'">'+(r.spend>0?mkxX(r.revenue/r.spend):'—')+'</td></tr>';
     }).join(''):'<tr><td colspan="8" class="mk-dim" style="text-align:center;padding:22px;">'+(tab==='top'?'No confirmed bookings linked to a campaign in this period.':tab==='worst'?'No campaign has spent '+mkInr(mkxCfg.minSpend)+' or more in this period.':'Every campaign with spend has at least one booking in this period.')+'</td></tr>';
   var more=document.getElementById('mkxRankMore');
   if(tab==='zero'&&rows.length>LIM){more.style.display='';more.textContent=mkxRankAll?'Show top 10 only':'Show all '+mkNum(rows.length)+' campaigns';}else more.style.display='none';
@@ -1682,7 +1692,7 @@ function mkxRenderSources(){
   document.getElementById('mkxSrcTitle').textContent=totB>0?mkNum(totB)+(totB===1?' booking':' bookings')+' · '+mkInr(totR)+' revenue':'';
   el.innerHTML=tot>0?top7.map(function(x,i){
     var p=x[key]*100/tot;
-    return '<div class="mkx-source"><span title="'+mkEsc(x.source)+'">'+mkEsc(x.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+MKX_PAL[i%MKX_PAL.length]+'"></div></div><strong style="text-align:right;">'+p.toFixed(0)+'%<em>'+mkInr(x.revenue)+' · '+mkNum(x.bookings)+(x.bookings===1?' booking':' bookings')+'</em></strong></div>';
+    return '<div class="mkx-source"><span title="'+mkEsc(x.source)+'">'+mkEsc(x.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+(x.source==='Social Media'?'#E8613A':['#4A3F32','#7A6E60','#9B8E80','#B9AFA2','#CFC7BB','#DDD6CC','#E8E2D9'][i%7])+'"></div></div><strong style="text-align:right;">'+p.toFixed(0)+'%<em>'+mkInr(x.revenue)+' · '+mkNum(x.bookings)+(x.bookings===1?' booking':' bookings')+'</em></strong></div>';
   }).join(''):'<div class="mk-dim" style="font-size:12px;">No bookings in this period.</div>';
 }
 var mkxTrTab='money';
@@ -1765,8 +1775,8 @@ function mkxRenderAttention(d){
   };
   body.innerHTML=rows.length?rows.map(function(x){
     var r=x.r;
-    return '<tr><td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td><td><span class="mkx-tag '+(r.segment==='Mixed'?'grey':'blue')+'">'+mkEsc(r.segment||'—')+'</span></td>'+
-      '<td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkInr(r.costPerLead)+'</td><td class="num">'+mkNum(r.bookings)+'</td><td class="num">'+mkxX(r.roas)+'</td>'+
+    return '<tr><td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td><td><span class="mkx-tag '+mkxSegCls(r.segment)+'">'+mkEsc(r.segment||'—')+'</span></td>'+
+      '<td class="num">'+mkInr(r.spend)+'</td><td class="num">'+mkNum(r.leads)+'</td><td class="num">'+mkInr(r.costPerLead)+'</td><td class="num">'+mkNum(r.bookings)+'</td><td class="num '+mkxRoasCls(r.roas,res.avgRoas)+'">'+mkxX(r.roas)+'</td>'+
       '<td class="act">'+x.f.map(function(k){return '<span class="mkx-tag '+tag[k][0]+'">'+tag[k][1]+'</span>';}).join('')+'<div>'+mkEsc(action(x))+'</div></td></tr>';
   }).join(''):'<tr><td colspan="8" class="mk-dim" style="text-align:center;padding:22px;">No campaigns meet the thresholds in this selection.</td></tr>';
   var more=document.getElementById('mkxAttnMore');
