@@ -370,6 +370,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #viewMarketing .mkx-mini div{background:#fff;border:1px solid var(--mx-line);border-radius:13px;padding:13px 15px;}
 #viewMarketing .mkx-mini span{display:block;font-size:10px;color:var(--mx-muted);font-weight:700;}
 #viewMarketing .mkx-mini strong{display:block;font-family:'Inter Tight',sans-serif;font-size:19px;margin-top:7px;letter-spacing:-.4px;}
+#viewMarketing .mkx-unlinked{margin-top:12px;padding:11px 14px;border-radius:12px;background:#fff8ee;border:1px solid #f6e3c8;color:#8a5a1f;font-size:11px;line-height:1.6;}
+#viewMarketing .mkx-busy{opacity:.45;pointer-events:none;transition:opacity .15s;}
+#viewMarketing #mkBody,#viewMarketing #mkOvBody{transition:opacity .15s;}
 #viewMarketing .mkx-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:15px;margin-bottom:15px;}
 #viewMarketing .mkx-grid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
 #viewMarketing .mkx-panel{background:#fff;border:1px solid var(--mx-line);border-radius:17px;box-shadow:var(--mx-shadow);padding:18px;min-width:0;}
@@ -698,7 +701,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <p class="mkx-subtitle">Meta ad spend with CRM Social Media leads and bookings</p>
         </div>
         <div class="mkx-actions">
-          <div class="mkx-live"><span class="mkx-dot"></span>LIVE DATA</div>
+          <div class="mkx-live"><span class="mkx-dot"></span><span id="mkxLiveTxt">LIVE DATA</span></div>
           <button class="mkx-btn" id="mkRefreshBtn">⟳ &nbsp;Refresh</button>
           <button class="mkx-btn primary" id="mkExportBtn">⇩ &nbsp;Export campaigns</button>
         </div>
@@ -723,6 +726,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         <div class="mkx-head"><div><h2>Performance at a glance</h2><p id="mkxPeriod"></p></div></div>
         <section class="mkx-kpis" id="mkOvKpis"></section>
         <section class="mkx-mini" id="mkxMini"></section>
+        <div class="mkx-unlinked" id="mkxUnlinked" style="display:none;"></div>
 
         <div class="mkx-head" id="mkxTrends"><div><h2>Performance trends</h2><p>Spot movement over time, not just totals.</p></div></div>
         <div class="mkx-grid">
@@ -1152,17 +1156,31 @@ function openMarketing(){
   }
   if(mkMonth===null) loadMarketing(mkCur()<MK_FIRST?MK_FIRST:mkCur());
 }
+var mkMonthTok=null;
+// One month of the overview data, reshaped for the monthly block (used for GIT / FIT, which the old monthly endpoint cannot filter).
+function mkMonthlyShape(d,month,division){
+  var t=d.totals;
+  return {month:month,_division:division,
+    totals:{spend:t.spend,leads:t.leads,costPerLead:t.costPerLead,confirmations:t.bookings,costPerConfirmation:t.costPerBooking},
+    campaigns:(d.campaignPerf||[]).filter(function(c){return c.spend>0||c.leads>0||c.bookings>0;}).map(function(c){
+      return {campaign:c.name,spend:c.spend,leads:c.leads,costPerLead:c.costPerLead,confirmations:c.bookings,costPerConfirmation:c.costPerBooking};})};
+}
 function loadMarketing(month){
   mkMonth=month;
+  var div=mkOv.division,tok={};mkMonthTok=tok;
   document.getElementById('mkMonthLabel').textContent=mkLabel(month);
   document.getElementById('mkPrev').disabled=(month<=MK_FIRST);
   document.getElementById('mkNext').disabled=(month>=mkCur());
+  document.getElementById('mkSub').textContent=(div==='all'?'':div.toUpperCase()+' only · ')+'Spend, leads and confirmations per campaign';
   var L=document.getElementById('mkLoading'),E=document.getElementById('mkError'),B=document.getElementById('mkBody');
-  L.style.display='block';E.style.display='none';B.style.display='none';
-  fetch(PROXY_BASE+'/api/marketing?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId()))
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-    .then(function(d){if(d.month!==mkMonth)return;L.style.display='none';B.style.display='block';renderMarketing(d);})
-    .catch(function(err){if(month!==mkMonth)return;L.style.display='none';E.style.display='block';E.textContent='Could not load marketing data ('+err.message+').';});
+  var ready=B.getAttribute('data-ready')==='1';
+  E.style.display='none';
+  if(ready){B.classList.add('mkx-busy');}else{L.style.display='block';B.style.display='none';}
+  var p=div==='all'
+    ?fetch(PROXY_BASE+'/api/marketing?month='+encodeURIComponent(month)+'&deviceId='+encodeURIComponent(getDeviceId())).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    :mkFetchOverview(month,month,div,'').then(function(d){return mkMonthlyShape(d,month,div);});
+  p.then(function(d){if(mkMonthTok!==tok)return;L.style.display='none';B.style.display='block';B.setAttribute('data-ready','1');B.classList.remove('mkx-busy');renderMarketing(d);})
+   .catch(function(err){if(mkMonthTok!==tok)return;L.style.display='none';B.classList.remove('mkx-busy');B.style.display='none';B.setAttribute('data-ready','0');E.style.display='block';E.textContent='Could not load marketing data ('+err.message+').';});
 }
 function renderMarketing(d){
   var t=d.totals;
@@ -1176,8 +1194,9 @@ function renderMarketing(d){
   var notes=['Leads are Social Media leads created in the month, matched to Meta campaigns by campaign name. Confirmations are bookings made in the month that count as confirmations on the live tabs, linked to the ad through the lead.'];
   if(d.leadsWithoutCampaign) notes.push(mkNum(d.leadsWithoutCampaign)+' Social Media leads have no campaign name and are counted in the totals only.');
   if(d.confirmationsWithoutCampaign) notes.push(mkNum(d.confirmationsWithoutCampaign)+' confirmations come from leads with no campaign name and are counted in the totals only.');
-  document.getElementById('mkSyncMeta').textContent=fmt(d.metaSyncedAt);document.getElementById('mkSyncCrm').textContent=fmt(d.crmSyncedAt);
-  notes.push('Meta spend updated '+fmt(d.metaSyncedAt)+' · CRM updated '+fmt(d.crmSyncedAt)+' (refreshed nightly).');
+  if(d.metaSyncedAt){document.getElementById('mkSyncMeta').textContent=fmt(d.metaSyncedAt);document.getElementById('mkSyncCrm').textContent=fmt(d.crmSyncedAt);}
+  if(d._division&&d._division!=='all') notes.push('Showing '+d._division.toUpperCase()+' only, split by Meta ad account (the same rule as the figures above). Leads that cannot be linked to an ad account are not counted here.');
+  if(d.metaSyncedAt) notes.push('Meta spend updated '+fmt(d.metaSyncedAt)+' · CRM updated '+fmt(d.crmSyncedAt)+' (refreshed nightly).');
   document.getElementById('mkNote').innerHTML=notes.map(mkEsc).join('<br>');
 }
 
@@ -1203,19 +1222,58 @@ function openMkOverview(){
     document.querySelectorAll('#mkDivPills .mk-pill').forEach(function(b){b.addEventListener('click',function(){
       mkOv.division=b.getAttribute('data-div');mkOv.campaign='';
       document.querySelectorAll('#mkDivPills .mk-pill').forEach(function(x){x.classList.toggle('active',x===b);});
-      loadMkOverview();});});
+      loadMkOverview();if(mkMonth)loadMarketing(mkMonth);});});
     loadMkOverview();
   }
 }
+// Results are remembered per filter combination for 5 minutes, so switching back and forth is instant.
+var mkCache={},MK_TTL=5*60*1000;
+function mkKey(f,t,d,c){return [f,t,d,c].join('|');}
+function mkFetchOverview(from,to,division,campaign,force){
+  var key=mkKey(from,to,division,campaign),hit=mkCache[key];
+  if(!force&&hit){
+    if(hit.d&&(Date.now()-hit.t)<MK_TTL)return Promise.resolve(hit.d);
+    if(hit.p)return hit.p;
+  }
+  var q='from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to)+'&division='+encodeURIComponent(division)+'&campaign='+encodeURIComponent(campaign)+'&deviceId='+encodeURIComponent(getDeviceId());
+  var p=fetch(PROXY_BASE+'/api/marketing-overview?'+q)
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){mkCache[key]={t:Date.now(),d:d,p:null};return d;});
+  mkCache[key]={t:0,d:null,p:p};
+  p.catch(function(){if(mkCache[key]&&mkCache[key].p===p)delete mkCache[key];});
+  return p;
+}
 function loadMkOverview(){
   var seq=++mkOvSeq;
-  var L=document.getElementById('mkOvLoading'),E=document.getElementById('mkOvError'),B=document.getElementById('mkOvBody');
-  L.style.display='block';E.style.display='none';B.style.display='none';
-  var q='from='+encodeURIComponent(mkOv.from)+'&to='+encodeURIComponent(mkOv.to)+'&division='+encodeURIComponent(mkOv.division)+'&campaign='+encodeURIComponent(mkOv.campaign)+'&deviceId='+encodeURIComponent(getDeviceId());
-  fetch(PROXY_BASE+'/api/marketing-overview?'+q)
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-    .then(function(d){if(seq!==mkOvSeq)return;L.style.display='none';B.style.display='block';renderMkOverview(d);})
-    .catch(function(err){if(seq!==mkOvSeq)return;L.style.display='none';E.style.display='block';E.textContent='Could not load the marketing overview ('+err.message+').';});
+  var L=document.getElementById('mkOvLoading'),E=document.getElementById('mkOvError'),B=document.getElementById('mkOvBody'),chip=document.getElementById('mkxLiveTxt');
+  var ready=B.getAttribute('data-ready')==='1';
+  E.style.display='none';
+  if(ready){B.classList.add('mkx-busy');chip.textContent='UPDATING…';}else{L.style.display='block';B.style.display='none';}
+  mkFetchOverview(mkOv.from,mkOv.to,mkOv.division,mkOv.campaign)
+    .then(function(d){if(seq!==mkOvSeq)return;L.style.display='none';B.style.display='block';B.setAttribute('data-ready','1');B.classList.remove('mkx-busy');chip.textContent='LIVE DATA';renderMkOverview(d);mkxPrefetch(seq);})
+    .catch(function(err){if(seq!==mkOvSeq)return;L.style.display='none';B.classList.remove('mkx-busy');B.style.display='none';B.setAttribute('data-ready','0');chip.textContent='LIVE DATA';E.style.display='block';E.textContent='Could not load the marketing overview ('+err.message+').';});
+}
+// After a load, quietly fetch the other two views for the same period so GIT / FIT / All switch instantly and the unlinked line can be worked out.
+function mkxPrefetch(seq){
+  if(mkOv.campaign)return;
+  var f=mkOv.from,t=mkOv.to,todo=['all','git','fit'].filter(function(d){var h=mkCache[mkKey(f,t,d,'')];return !(h&&h.d);});
+  (function next(){
+    if(!todo.length||seq!==mkOvSeq){mkxUnlinked();return;}
+    mkFetchOverview(f,t,todo.shift(),'').then(function(){mkxUnlinked();next();},function(){next();});
+  })();
+}
+function mkxUnlinked(){
+  var el=document.getElementById('mkxUnlinked');if(!el)return;
+  var tot=function(dv){var h=mkCache[mkKey(mkOv.from,mkOv.to,dv,'')];return h&&h.d?h.d.totals:null;};
+  var a=tot('all'),g=tot('git'),f=tot('fit');
+  if(mkOv.campaign||!a||!g||!f){el.style.display='none';return;}
+  var ul=a.leads-g.leads-f.leads,ub=a.bookings-g.bookings-f.bookings,ur=a.revenue-g.revenue-f.revenue;
+  if(ul<=0&&ub<=0){el.style.display='none';return;}
+  var what=mkNum(ul)+' leads and '+mkNum(ub)+' bookings ('+mkBig(ur)+' revenue)';
+  el.innerHTML=mkOv.division==='all'
+    ?'<strong>Reconciliation:</strong> '+what+' in these totals cannot be tied to the GIT or FIT ad account, so GIT + FIT adds up to less than All.'
+    :'<strong>Why GIT + FIT is less than All:</strong> '+what+' cannot be tied to either ad account. They are counted under All only.';
+  el.style.display='block';
 }
 function mkChart(id,cfg){
   var ctx=document.getElementById(id);if(!ctx||!window.Chart)return;
@@ -1234,14 +1292,16 @@ function mkxSpark(vals){
   var pts=vals.map(function(x,i){if(x==null)return null;return (1+i*64/(n-1)).toFixed(1)+','+(20-((x-mn)/rg)*18).toFixed(1);}).filter(Boolean).join(' ');
   return '<div class="mkx-spark"><svg viewBox="0 0 66 22"><polyline points="'+pts+'"/></svg></div>';
 }
+function mkxFull(m){return m.filter(function(x){return x.month!==mkCur();});}
 function mkxDelta(m,k,good){
-  if(m.length<2)return '<span class="mkx-flat">—</span><span>one month selected</span>';
-  var a=m[m.length-1][k],b=m[m.length-2][k];
-  if(a==null||b==null||b===0)return '<span class="mkx-flat">—</span><span>no prior month data</span>';
-  var p=(a-b)/Math.abs(b)*100,up=p>=0;
+  var mc=mkxFull(m);
+  if(mc.length<2)return '<span class="mkx-flat">—</span><span>needs 2 full months</span>';
+  var a=mc[mc.length-1],b=mc[mc.length-2],x=a[k],y=b[k];
+  if(x==null||y==null||y===0)return '<span class="mkx-flat">—</span><span>no prior month data</span>';
+  var p=(x-y)/Math.abs(y)*100,up=p>=0;
   var cls=good==null?'mkx-flat':((up===(good==='up'))?'mkx-up':'mkx-down');
-  var tail=' vs '+MK_MON[Number(m[m.length-2].month.split('-')[1])-1]+(m[m.length-1].month===mkCur()?' · MTD':'');
-  return '<span class="'+cls+'">'+(up?'↑ ':'↓ ')+Math.abs(p).toFixed(1)+'%</span><span>'+tail+'</span>';
+  var nm=function(r){return MK_MON[Number(r.month.split('-')[1])-1];};
+  return '<span class="'+cls+'">'+(up?'↑ ':'↓ ')+Math.abs(p).toFixed(1)+'%</span><span>'+nm(a)+' vs '+nm(b)+'</span>';
 }
 function mkxBase(){
   return {responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1342,7 +1402,7 @@ function renderMkOverview(d){
   ];
   document.getElementById('mkOvKpis').innerHTML=defs.map(function(k){
     return '<div class="mkx-kpi" style="--accent:'+k[3]+';--tint:'+k[4]+'"><div class="mkx-kpi-top"><span class="mkx-kpi-label">'+k[1]+'</span><span class="mkx-kpi-icon">'+k[2]+'</span></div>'+
-      '<div class="mkx-kpi-value">'+mkEsc(k[5](t[k[0]]))+'</div><div class="mkx-kpi-foot">'+mkxDelta(m,k[0],k[6])+mkxSpark(m.map(function(x){return x[k[0]];}))+'</div></div>';
+      '<div class="mkx-kpi-value">'+mkEsc(k[5](t[k[0]]))+'</div><div class="mkx-kpi-foot">'+mkxDelta(m,k[0],k[6])+mkxSpark(mkxFull(m).map(function(x){return x[k[0]];}))+'</div></div>';
   }).join('');
   var mini=[['Revenue per lead',mkInr(t.revenuePerLead)],['ROI',t.roi==null?'—':Math.round(t.roi).toLocaleString('en-IN')+'%'],['Impressions',mkNum(t.impressions)],['Clicks',mkNum(t.clicks)],['Conversion rate',mkxPct(t.conversionRate)],['Leads to sales',t.leadsToSales==null?'—':Number(t.leadsToSales).toFixed(4)]];
   document.getElementById('mkxMini').innerHTML=mini.map(function(x){return '<div><span>'+x[0]+'</span><strong>'+mkEsc(x[1])+'</strong></div>';}).join('');
@@ -1400,6 +1460,7 @@ function renderMkOverview(d){
   document.getElementById('mkxCampSub').textContent=mkNum(mkxRows.length)+' campaigns with ad spend'+(hasPerf?' · leads and bookings counted only where the lead links to the campaign':' · lead and booking columns need the updated server');
   mkxRenderTable();
   mkxInsights(d,mkxRows,t);
+  mkxUnlinked();
 
   // campaign dropdown follows the filters
   var sel=document.getElementById('mkCamp'),cur=mkOv.campaign;
@@ -1407,13 +1468,13 @@ function renderMkOverview(d){
   (d.campaigns||[]).forEach(function(c){var x=document.createElement('option');x.value=c.key;x.textContent=c.name;sel.appendChild(x);});
   sel.value=cur;if(sel.value!==cur){mkOv.campaign='';sel.value='';}
   var notes=['GIT and FIT use the Meta ad account (GIT = account 1399…, FIT = account 2886…) for spend and for matching leads, so lead counts per division are approximate. Leads are Social Media leads matched to an ad or campaign by the name stored in the CRM; unmatched leads appear only under All.',
-    'Bookings are counted in the month they were made and linked to an ad through the lead. Revenue is the Quote Value of those bookings. Trend arrows compare the last month in the period with the month before it (the current month is month-to-date). The lead-source list shows all bookings (GIT/FIT by layout) and ignores the campaign filter.'];
+    'Bookings are counted in the month they were made and linked to an ad through the lead. Revenue is the Quote Value of those bookings. Trend arrows compare the last two complete months in the period; the current month (month to date) is left out so a part-month never looks like a drop. The lead-source list shows all bookings (GIT/FIT by layout) and ignores the campaign filter.'];
   var lm=d.leadMatch||{};
   if(lm.total>0&&lm.unmatched>0){notes.unshift(mkNum(lm.unmatched)+' of '+mkNum(lm.total)+' Social Media leads ('+Math.round(lm.unmatched*100/lm.total)+'%) could not be linked to a Meta ad or campaign, mostly April to August when the CRM stored ad names that have since been renamed in Meta. They count in the lead totals for All but not for GIT, FIT or a single campaign.');}
   document.getElementById('mkOvNote').innerHTML=notes.map(mkEsc).join('<br>');
 }
 function mkShort2(v){v=Number(v);if(v>=10000000)return (v/10000000).toFixed(1)+'Cr';if(v>=100000)return (v/100000).toFixed(1)+'L';if(v>=1000)return (v/1000).toFixed(0)+'K';return String(v);}
-function mkRefresh(){ if(mkOvWired)loadMkOverview(); if(mkMonth)loadMarketing(mkMonth); }
+function mkRefresh(){ mkCache={}; if(mkOvWired)loadMkOverview(); if(mkMonth)loadMarketing(mkMonth); }
 function mkxWire(){
   if(mkxWired)return;mkxWired=true;
   var main=document.getElementById('mkxMain'),btns=[].slice.call(document.querySelectorAll('#mkxNav button'));
