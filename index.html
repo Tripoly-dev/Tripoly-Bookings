@@ -1699,21 +1699,19 @@ function mkxRenderRank(d){
 }
 // Each lead source keeps the same colour wherever it ranks; unknown sources take the next free colour.
 var MKX_SRC_COL={'Social Media':'#E8613A','Existing Client':'#1A7A4A','Client Reference':'#185FA5','Direct Call':'#C9A227','Moved from FIT':'#7B4FA3','Chat':'#2A8C8C','Others':'#8C5A2B','Other sources':'#9B8E80'};
-var MKX_SRC_EXTRA=['#C0392B','#4A3F32','#3B7DD8','#6BA43A','#D4813B','#A34F7B'];
-function mkxSrcColor(name,i){return MKX_SRC_COL[name]||MKX_SRC_EXTRA[i%MKX_SRC_EXTRA.length];}
+var MKX_SRC_EXTRA=['#7A8B3A','#4A3F32','#3B7DD8','#6BA43A','#D4813B','#A34F7B'];
+function mkxSrcColor(name){if(MKX_SRC_COL[name])return MKX_SRC_COL[name];var h=0,n=String(name);for(var k=0;k<n.length;k++)h=(h*31+n.charCodeAt(k))>>>0;return MKX_SRC_EXTRA[h%MKX_SRC_EXTRA.length];}
 function mkxRenderSources(){
   var el=document.getElementById('mkxSourceList');if(!el)return;
   var mode=mkxSrcMode,key=mode;
   document.querySelectorAll('#mkxSrcTabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-m')===mode);});
   var srcs=(mkxSrcData||[]).slice().sort(function(a,b){return (b[key]||0)-(a[key]||0);});
   var totB=0,totR=0,totP=0;srcs.forEach(function(x){totB+=x.bookings;totR+=x.revenue;totP+=(x.pax||0);});
-  var top7=srcs.slice(0,7),rest=srcs.slice(7);
-  if(rest.length)top7=top7.concat([{source:'Other sources',bookings:rest.reduce(function(a,x){return a+x.bookings;},0),revenue:rest.reduce(function(a,x){return a+x.revenue;},0),pax:rest.reduce(function(a,x){return a+(x.pax||0);},0)}]);
   var tot=mode==='revenue'?totR:mode==='pax'?totP:totB;
   document.getElementById('mkxSrcTitle').textContent=totB>0?mkInr(totR)+' revenue · '+mkNum(totP)+' PAX · '+mkNum(totB)+(totB===1?' booking':' bookings'):'';
-  el.innerHTML=tot>0?top7.map(function(x,i){
+  el.innerHTML=tot>0?srcs.map(function(x,i){
     var p=(x[key]||0)*100/tot;
-    return '<div class="mkx-source"><span title="'+mkEsc(x.source)+'">'+mkEsc(x.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+mkxSrcColor(x.source,i)+'"></div></div><strong style="text-align:right;">'+p.toFixed(0)+'%<em>'+mkInr(x.revenue)+' · '+mkNum(x.pax||0)+' PAX · '+mkNum(x.bookings)+(x.bookings===1?' booking':' bookings')+'</em></strong></div>';
+    return '<div class="mkx-source"><span title="'+mkEsc(x.source)+'">'+mkEsc(x.source)+'</span><div class="mkx-track"><div class="mkx-fill" style="width:'+Math.max(p,1.5).toFixed(1)+'%;--c:'+mkxSrcColor(x.source)+'"></div></div><strong style="text-align:right;">'+p.toFixed(0)+'%<em>'+mkInr(x.revenue)+' · '+mkNum(x.pax||0)+' PAX · '+mkNum(x.bookings)+(x.bookings===1?' booking':' bookings')+'</em></strong></div>';
   }).join(''):'<div class="mk-dim" style="font-size:12px;">No bookings in this period.</div>';
 }
 var mkxTrTab='money';
