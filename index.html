@@ -2457,7 +2457,7 @@ function renderSales(){
 }
 function salesTable(){
   var d=salesData;if(!d)return '';
-  var rows=(d.rows||[]).slice();
+  var rows=(d.rows||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name);});
   var metric=salesSort;
   var showPrev=(!d.showYoyOnly);
   if(!rows.length)return '<div class="mgmt-msg">No sales bookings this period.</div>';
@@ -3164,6 +3164,7 @@ var DEVICE_LS_KEY = 'tripoly_device_id';
 var gatePollTimer = null;
 var canSeeMarketing = false;
 var canSeeManagement = false;
+var canSeeSales = false;
 
 function getDeviceId(){
   var id = null;
@@ -3183,16 +3184,18 @@ function cachedAccessValid(){
     if(obj && obj.expiresAt && obj.expiresAt > Date.now()){
       canSeeMarketing = (obj.marketing === true);
       canSeeManagement = (obj.management === true);
+      canSeeSales = (obj.sales === true);
       return true;
     }
     return false;
   } catch(e){ return false; }
 }
 
-function cacheAccess(expiresAt, marketing, management){
+function cacheAccess(expiresAt, marketing, management, sales){
   canSeeMarketing = (marketing === true);
   canSeeManagement = (management === true);
-  try { localStorage.setItem(ACCESS_LS_KEY, JSON.stringify({expiresAt:expiresAt, marketing:canSeeMarketing, management:canSeeManagement})); } catch(e){}
+  canSeeSales = (sales === true);
+  try { localStorage.setItem(ACCESS_LS_KEY, JSON.stringify({expiresAt:expiresAt, marketing:canSeeMarketing, management:canSeeManagement, sales:canSeeSales})); } catch(e){}
 }
 
 function applyMarketingTab(){
@@ -3207,7 +3210,7 @@ function applyManagementTab(){
 
 function applySalesTab(){
   var t = document.getElementById('tabSales');
-  if(t) t.style.display = canSeeManagement ? 'inline-block' : 'none';
+  if(t) t.style.display = canSeeSales ? 'inline-block' : 'none';
 }
 
 // After a cached fast-path start, re-check the server so access changes
@@ -3218,7 +3221,7 @@ function refreshAccessFlags(){
       .then(function(r){ return r.json(); })
       .then(function(d){
         if(d.status === 'approved'){
-          cacheAccess(d.expiresAt, d.marketing, d.management);
+          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales);
           applyMarketingTab();
           applyManagementTab();
           applySalesTab();
@@ -3245,7 +3248,7 @@ function startGatePolling(){
       .then(function(d){
         if(d.status === 'approved'){
           clearInterval(gatePollTimer);
-          cacheAccess(d.expiresAt, d.marketing, d.management);
+          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales);
           startDashboard();
         } else if(d.status === 'none'){
           // request was denied (removed from pending without approval)
@@ -3273,7 +3276,7 @@ function submitAccessRequest(){
   }).then(function(r){ return r.json(); }).then(function(d){
     btn.disabled = false; btn.textContent = 'Request Access';
     if(d.status === 'approved'){
-      cacheAccess(d.expiresAt, d.marketing, d.management); startDashboard();
+      cacheAccess(d.expiresAt, d.marketing, d.management, d.sales); startDashboard();
     } else if(d.status === 'pending'){
       showGateState('waiting'); startGatePolling();
     } else {
@@ -3303,7 +3306,7 @@ function initAccessGate(){
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.status === 'approved'){
-        cacheAccess(d.expiresAt, d.marketing, d.management); startDashboard();
+        cacheAccess(d.expiresAt, d.marketing, d.management, d.sales); startDashboard();
       } else if(d.status === 'pending'){
         showGateState('waiting'); startGatePolling();
       } else {
