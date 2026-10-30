@@ -310,6 +310,12 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #mgmtFcChart{width:100%!important;height:300px!important;}
 #mgmtBrChart{width:100%!important;height:280px!important;}
 #salesChart{width:100%!important;height:380px!important;}
+.sales-row{cursor:pointer;}
+.sales-row:hover{background:var(--bg);}
+.sx-caret{display:inline-block;transition:transform .15s;font-size:10px;color:var(--ink-light);}
+.sales-row.open .sx-caret{transform:rotate(90deg);}
+.sales-detailbox{padding:4px 2px 10px;}
+.sx-dethead{font-weight:700;font-size:12px;margin:4px 0 6px;color:var(--ink);}
 @media(max-width:820px){.mgmt-kpis{grid-template-columns:1fr;}.mgmt-charts{grid-template-columns:1fr;}.mgmt-ret-tiles{grid-template-columns:1fr;}}
 /* ── Marketing Analytics tab (redesign: navy sidebar + premium cards) — all rules scoped to #viewMarketing ── */
 #viewMarketing{--mx-bg:var(--bg);--mx-surface:var(--surface);--mx-ink:var(--ink);--mx-muted:#857868;--mx-line:var(--rule);--mx-nav:var(--surface);--mx-teal:var(--orange);--mx-blue:#185FA5;--mx-purple:#B87D00;--mx-orange:var(--orange);--mx-green:var(--green);--mx-shadow:var(--shadow);background:var(--mx-bg);color:var(--mx-ink);}
@@ -2414,6 +2420,17 @@ function openSales(){
       for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-s')===salesSort);
       renderSalesChart(); document.getElementById('salesTableWrap').innerHTML=salesTable();
     });}
+    // click a salesperson row to expand their period-by-period detail
+    document.getElementById('salesTableWrap').addEventListener('click',function(e){
+      var row=e.target.closest?e.target.closest('tr.sales-row'):null;
+      if(!row)return;
+      var det=row.nextElementSibling;
+      if(det&&det.classList.contains('sales-detail')){
+        var show=(det.style.display==='none');
+        det.style.display=show?'table-row':'none';
+        row.classList.toggle('open',show);
+      }
+    });
   }
   if(salesMonth===null) salesMonth=salesCurMonth();
   if(!salesLoaded) loadSales(salesMonth);
@@ -2444,15 +2461,17 @@ function salesTable(){
   var metric=salesSort;
   var showPrev=(!d.showYoyOnly);
   if(!rows.length)return '<div class="mgmt-msg">No sales bookings this period.</div>';
+  var cols=9+(showPrev?1:0)+1; // total columns, for the detail row colspan
   var head='<thead><tr><th>#</th><th>Salesperson</th><th>FIT Bkg</th><th>FIT PAX</th><th>FIT Rev</th><th>GIT Bkg</th><th>GIT PAX</th><th>GIT Rev</th><th>Total Rev</th>'+(showPrev?('<th>'+d.deltaPrev+'</th>'):'')+'<th>'+d.deltaYoy+'</th></tr></thead>';
   var body=rows.map(function(r,i){
     var cp=r.total[metric], pp=r.prevTotal?r.prevTotal[metric]:null, yp=r.yoyTotal?r.yoyTotal[metric]:null;
-    var cells='<td class="met">'+(i+1)+'</td><td class="met">'+r.name+'</td>'+
+    var cells='<td class="met"><span class="sx-caret">▸</span> '+(i+1)+'</td><td class="met">'+r.name+'</td>'+
       '<td>'+r.fit.count+'</td><td>'+fmtAmt(r.fit.pax)+'</td><td>'+fmtAmtShort(r.fit.revenue)+'</td>'+
       '<td>'+r.git.count+'</td><td>'+fmtAmt(r.git.pax)+'</td><td>'+fmtAmtShort(r.git.revenue)+'</td>'+
       '<td class="met">'+fmtAmtShort(r.total.revenue)+'</td>'+
       (showPrev?('<td>'+dCell(cp,pp)+'</td>'):'')+'<td>'+dCell(cp,yp)+'</td>';
-    return '<tr>'+cells+'</tr>';
+    return '<tr class="sales-row" data-idx="'+i+'">'+cells+'</tr>'+
+      '<tr class="sales-detail" style="display:none;"><td colspan="'+cols+'">'+salesDetail(r,showPrev)+'</td></tr>';
   }).join('');
   var g=d.grand,gt=g.fit.revenue+g.git.revenue;
   var foot='<tr style="background:var(--bg);font-weight:700;"><td></td><td class="met">All</td>'+
@@ -2460,6 +2479,18 @@ function salesTable(){
     '<td>'+g.git.count+'</td><td>'+fmtAmt(g.git.pax)+'</td><td>'+fmtAmtShort(g.git.revenue)+'</td>'+
     '<td class="met">'+fmtAmtShort(gt)+'</td>'+(showPrev?'<td>—</td>':'')+'<td>—</td></tr>';
   return '<table class="mgmt-table">'+head+'<tbody>'+body+foot+'</tbody></table>';
+}
+function salesDetail(r,showPrev){
+  var d=salesData;
+  function seg(o){
+    return '<td>'+o.fit.count+'</td><td>'+fmtAmt(o.fit.pax)+'</td><td>'+fmtAmtShort(o.fit.revenue)+'</td>'+
+           '<td>'+o.git.count+'</td><td>'+fmtAmt(o.git.pax)+'</td><td>'+fmtAmtShort(o.git.revenue)+'</td>';
+  }
+  var rowsH='<tr><td class="met">'+(d.selColLabel||'This')+'</td>'+seg({fit:r.fit,git:r.git})+'</tr>';
+  if(showPrev) rowsH+='<tr><td class="met">'+(d.prevColLabel||'Prev')+'</td>'+seg(r.prev)+'</tr>';
+  rowsH+='<tr><td class="met">'+(d.yoyColLabel||'Last yr')+'</td>'+seg(r.yoy)+'</tr>';
+  return '<div class="sales-detailbox"><div class="sx-dethead">'+r.name+' — FIT vs GIT by period</div>'+
+    '<table class="mgmt-table"><thead><tr><th>Period</th><th>FIT Bkg</th><th>FIT PAX</th><th>FIT Rev</th><th>GIT Bkg</th><th>GIT PAX</th><th>GIT Rev</th></tr></thead><tbody>'+rowsH+'</tbody></table></div>';
 }
 function renderSalesChart(){
   var ctx=document.getElementById('salesChart');if(!ctx||!window.Chart)return;
