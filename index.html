@@ -2474,10 +2474,12 @@ function salesTable(){
       '<tr class="sales-detail" style="display:none;"><td colspan="'+cols+'">'+salesDetail(r,showPrev)+'</td></tr>';
   }).join('');
   var g=d.grand,gt=g.fit.revenue+g.git.revenue;
+  var gm=function(o){return o.fit[metric]+o.git[metric];};
+  var gCur=gm(g), gPrev=d.prevGrand?gm(d.prevGrand):null, gYoy=d.yoyGrand?gm(d.yoyGrand):null;
   var foot='<tr style="background:var(--bg);font-weight:700;"><td></td><td class="met">All</td>'+
     '<td>'+g.fit.count+'</td><td>'+fmtAmt(g.fit.pax)+'</td><td>'+fmtAmtShort(g.fit.revenue)+'</td>'+
     '<td>'+g.git.count+'</td><td>'+fmtAmt(g.git.pax)+'</td><td>'+fmtAmtShort(g.git.revenue)+'</td>'+
-    '<td class="met">'+fmtAmtShort(gt)+'</td>'+(showPrev?'<td>—</td>':'')+'<td>—</td></tr>';
+    '<td class="met">'+fmtAmtShort(gt)+'</td>'+(showPrev?('<td>'+dCell(gCur,gPrev)+'</td>'):'')+'<td>'+dCell(gCur,gYoy)+'</td></tr>';
   return '<table class="mgmt-table">'+head+'<tbody>'+body+foot+'</tbody></table>';
 }
 function salesDetail(r,showPrev){
