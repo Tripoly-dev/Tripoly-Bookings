@@ -3215,6 +3215,11 @@ function applySalesTab(){
 
 // After a cached fast-path start, re-check the server so access changes
 // (admin toggled someone on/off) take effect without clearing cache.
+function clearAccessCache(){
+  canSeeMarketing = false; canSeeManagement = false; canSeeSales = false;
+  try { localStorage.removeItem(ACCESS_LS_KEY); } catch(e){}
+}
+
 function refreshAccessFlags(){
   try {
     fetch(PROXY_BASE + '/api/access/status?deviceId=' + encodeURIComponent(getDeviceId()))
@@ -3225,9 +3230,18 @@ function refreshAccessFlags(){
           applyMarketingTab();
           applyManagementTab();
           applySalesTab();
+        } else if(d.status === 'pending'){
+          // access revoked/reset on the server — re-lock and wait for re-approval
+          clearAccessCache();
+          showGateState('waiting');
+          startGatePolling();
+        } else if(d.status === 'none' || d.status === 'denied'){
+          // access revoked — re-lock and ask for name + email again
+          clearAccessCache();
+          showGateState('form');
         }
       })
-      .catch(function(){ /* offline/transient — keep cached state */ });
+      .catch(function(){ /* offline/transient — keep cached state (fail-open for TVs) */ });
   } catch(e){}
 }
 
