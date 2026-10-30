@@ -309,6 +309,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #mgmtRetChart{width:100%!important;height:240px!important;}
 #mgmtFcChart{width:100%!important;height:300px!important;}
 #mgmtBrChart{width:100%!important;height:280px!important;}
+#salesChart{width:100%!important;height:380px!important;}
 @media(max-width:820px){.mgmt-kpis{grid-template-columns:1fr;}.mgmt-charts{grid-template-columns:1fr;}.mgmt-ret-tiles{grid-template-columns:1fr;}}
 /* ── Marketing Analytics tab (redesign: navy sidebar + premium cards) — all rules scoped to #viewMarketing ── */
 #viewMarketing{--mx-bg:var(--bg);--mx-surface:var(--surface);--mx-ink:var(--ink);--mx-muted:#857868;--mx-line:var(--rule);--mx-nav:var(--surface);--mx-teal:var(--orange);--mx-blue:#185FA5;--mx-purple:#B87D00;--mx-orange:var(--orange);--mx-green:var(--green);--mx-shadow:var(--shadow);background:var(--mx-bg);color:var(--mx-ink);}
@@ -602,6 +603,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   <button class="tab-btn" id="tabPerf" onclick="switchTab('performance')">Performance</button>
   <button class="tab-btn" id="tabMarketing" onclick="switchTab('marketing')" style="display:none;">Marketing Analytics</button>
   <button class="tab-btn" id="tabManagement" onclick="switchTab('management')" style="display:none;">Management Dashboard</button>
+  <button class="tab-btn" id="tabSales" onclick="switchTab('sales')" style="display:none;">Sales Team</button>
 </div>
 
 <!-- ══ CURRENT / LAST MONTH VIEW ══ -->
@@ -1014,6 +1016,38 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   </div>
 </div>
 
+<!-- ══ SALES TEAM PERFORMANCE VIEW (access-gated: same as Management) ══ -->
+<div class="view" id="viewSales">
+  <div class="mgmt-wrap">
+    <div class="mgmt-head">
+      <div class="mgmt-ret-toggle" id="salesPeriodSel" style="flex-wrap:wrap;">
+        <button data-p="month" class="on">This Month</button><button data-p="currentQ">Current Quarter</button><button data-p="prevQ">Previous Quarter</button><button data-p="currentFY">Current FY</button>
+      </div>
+      <div class="mgmt-picker" id="salesMonthNav">
+        <button id="salesPrev" title="Previous month">◀</button>
+        <span class="mgmt-month" id="salesMonthLabel">—</span>
+        <button id="salesNext" title="Next month">▶</button>
+      </div>
+      <div class="mgmt-sub" id="salesSub"></div>
+    </div>
+    <div class="mgmt-msg" id="salesLoading">Loading sales performance…</div>
+    <div class="mgmt-msg" id="salesError" style="display:none;"></div>
+    <div id="salesBody" style="display:none;">
+      <div class="mgmt-chart-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
+          <div class="mgmt-chart-title" style="margin:0;">Top performers — FIT vs GIT <span id="salesChartNote" style="font-weight:400;opacity:.7;"></span></div>
+          <div class="mgmt-ret-toggle" id="salesToggle">
+            <button data-s="revenue" class="on">Revenue</button><button data-s="pax">PAX</button>
+          </div>
+        </div>
+        <div style="position:relative;height:380px;margin-bottom:12px;"><canvas id="salesChart"></canvas></div>
+        <div style="overflow:auto;"><div id="salesTableWrap"></div></div>
+        <small style="display:block;margin-top:8px;opacity:.65;">Active sales-profile employees only; bookings attributed to Owner; excludes internal owners. Qualifying FIT &amp; GIT, period-to-date.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ PERFORMANCE VIEW ══ -->
 <div class="view" id="viewPerf">
   <div class="perf-wrap" id="perfWrap">
@@ -1200,7 +1234,7 @@ function isQualifying(r){
 // ── Tab switching ──
 function switchTab(period){
   activePeriod=period;
-  ['Current','Last','FY','Perf','Marketing','Management'].forEach(function(t){
+  ['Current','Last','FY','Perf','Marketing','Management','Sales'].forEach(function(t){
     var el=document.getElementById('tab'+t);
     if(el) el.classList.remove('active');
   });
@@ -1240,6 +1274,11 @@ function switchTab(period){
     document.getElementById('viewManagement').classList.add('active');
     document.getElementById('headerSub').textContent='Management Dashboard';
     openManagement();
+  } else if(period==='sales'){
+    document.getElementById('tabSales').classList.add('active');
+    document.getElementById('viewSales').classList.add('active');
+    document.getElementById('headerSub').textContent='Sales Team Performance';
+    openSales();
   }
 
   if(period!=='performance') stopPerfScroll();
@@ -2350,6 +2389,97 @@ function renderBrChart(){
   ]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},datalabels:{anchor:'end',align:'end',offset:2,font:{size:9,weight:'700'},color:'#4A3F32',formatter:function(v){return v>0?fmt(v):'';}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.parsed.y);}}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9},callback:function(v){return fmt(v);}}},x:{ticks:{font:{size:10}}}}}});
 }
 
+// ── Sales Team Performance ──
+var salesData=null, salesPeriod='month', salesMonth=null, salesSort='revenue', salesLoaded=false, salesWired=false, salesChart=null;
+function salesCurMonth(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function salesLabelM(ym){var p=ym.split('-');var d=new Date(Number(p[0]),Number(p[1])-1,1);return d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});}
+function salesPeriodQuery(){return 'period='+encodeURIComponent(salesPeriod)+(salesPeriod==='month'?('&month='+encodeURIComponent(salesMonth)):'')+'&deviceId='+encodeURIComponent(getDeviceId());}
+function openSales(){
+  if(!salesWired){
+    salesWired=true;
+    document.getElementById('salesPrev').addEventListener('click',function(){if(salesPeriod==='month')loadSales(mgmtShift(salesMonth,-1));});
+    document.getElementById('salesNext').addEventListener('click',function(){if(salesPeriod==='month'&&salesMonth<salesCurMonth())loadSales(mgmtShift(salesMonth,1));});
+    var pb=document.getElementById('salesPeriodSel').querySelectorAll('button');
+    for(var i=0;i<pb.length;i++){pb[i].addEventListener('click',function(){
+      salesPeriod=this.getAttribute('data-p');
+      var bs=document.getElementById('salesPeriodSel').querySelectorAll('button');
+      for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-p')===salesPeriod);
+      document.getElementById('salesMonthNav').style.display=(salesPeriod==='month')?'flex':'none';
+      loadSales(salesMonth);
+    });}
+    var tb=document.getElementById('salesToggle').querySelectorAll('button');
+    for(var k=0;k<tb.length;k++){tb[k].addEventListener('click',function(){
+      salesSort=this.getAttribute('data-s');
+      var bs=document.getElementById('salesToggle').querySelectorAll('button');
+      for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-s')===salesSort);
+      renderSalesChart(); document.getElementById('salesTableWrap').innerHTML=salesTable();
+    });}
+  }
+  if(salesMonth===null) salesMonth=salesCurMonth();
+  if(!salesLoaded) loadSales(salesMonth);
+}
+function loadSales(month){
+  if(salesPeriod==='month'){
+    salesMonth=month;
+    document.getElementById('salesMonthLabel').textContent=salesLabelM(month);
+    document.getElementById('salesNext').disabled=(month>=salesCurMonth());
+  }
+  var L=document.getElementById('salesLoading'),E=document.getElementById('salesError'),B=document.getElementById('salesBody');
+  L.style.display='block';E.style.display='none';B.style.display='none';
+  fetch(PROXY_BASE+'/api/mgmt-sales?'+salesPeriodQuery())
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){salesData=d;salesLoaded=true;L.style.display='none';B.style.display='block';renderSales();})
+    .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load sales performance ('+err.message+').';});
+}
+function renderSales(){
+  var d=salesData;if(!d)return;
+  document.getElementById('salesSub').textContent=(d.periodLabel||'')+' · '+(d.inProgress?d.ptdNote:'Full period');
+  document.getElementById('salesChartNote').textContent=d.rows?('· '+d.rows.length+' active sales staff'):'';
+  document.getElementById('salesTableWrap').innerHTML=salesTable();
+  renderSalesChart();
+}
+function salesTable(){
+  var d=salesData;if(!d)return '';
+  var rows=(d.rows||[]).slice();
+  var metric=salesSort;
+  var showPrev=(!d.showYoyOnly);
+  if(!rows.length)return '<div class="mgmt-msg">No sales bookings this period.</div>';
+  var head='<thead><tr><th>#</th><th>Salesperson</th><th>FIT Bkg</th><th>FIT PAX</th><th>FIT Rev</th><th>GIT Bkg</th><th>GIT PAX</th><th>GIT Rev</th><th>Total Rev</th>'+(showPrev?('<th>'+d.deltaPrev+'</th>'):'')+'<th>'+d.deltaYoy+'</th></tr></thead>';
+  var body=rows.map(function(r,i){
+    var cp=r.total[metric], pp=r.prevTotal?r.prevTotal[metric]:null, yp=r.yoyTotal?r.yoyTotal[metric]:null;
+    var cells='<td class="met">'+(i+1)+'</td><td class="met">'+r.name+'</td>'+
+      '<td>'+r.fit.count+'</td><td>'+fmtAmt(r.fit.pax)+'</td><td>'+fmtAmtShort(r.fit.revenue)+'</td>'+
+      '<td>'+r.git.count+'</td><td>'+fmtAmt(r.git.pax)+'</td><td>'+fmtAmtShort(r.git.revenue)+'</td>'+
+      '<td class="met">'+fmtAmtShort(r.total.revenue)+'</td>'+
+      (showPrev?('<td>'+dCell(cp,pp)+'</td>'):'')+'<td>'+dCell(cp,yp)+'</td>';
+    return '<tr>'+cells+'</tr>';
+  }).join('');
+  var g=d.grand,gt=g.fit.revenue+g.git.revenue;
+  var foot='<tr style="background:var(--bg);font-weight:700;"><td></td><td class="met">All</td>'+
+    '<td>'+g.fit.count+'</td><td>'+fmtAmt(g.fit.pax)+'</td><td>'+fmtAmtShort(g.fit.revenue)+'</td>'+
+    '<td>'+g.git.count+'</td><td>'+fmtAmt(g.git.pax)+'</td><td>'+fmtAmtShort(g.git.revenue)+'</td>'+
+    '<td class="met">'+fmtAmtShort(gt)+'</td>'+(showPrev?'<td>—</td>':'')+'<td>—</td></tr>';
+  return '<table class="mgmt-table">'+head+'<tbody>'+body+foot+'</tbody></table>';
+}
+function renderSalesChart(){
+  var ctx=document.getElementById('salesChart');if(!ctx||!window.Chart)return;
+  if(typeof ensureDatalabels==='function')ensureDatalabels();
+  if(salesChart)salesChart.destroy();
+  var d=salesData;if(!d)return;
+  var rows=(d.rows||[]).slice();
+  var metric=salesSort;
+  rows.sort(function(a,b){return b.total[metric]-a.total[metric];});
+  var top=rows.slice(0,15);
+  var labels=top.map(function(r){return r.name;});
+  var fit=top.map(function(r){return metric==='pax'?r.fit.pax:r.fit.revenue;});
+  var git=top.map(function(r){return metric==='pax'?r.git.pax:r.git.revenue;});
+  var fmt=metric==='pax'?function(v){return fmtAmt(v);}:function(v){return fmtAmtShort(v);};
+  salesChart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
+    {label:'FIT',data:fit,backgroundColor:'#185FA5',borderRadius:4,stack:'s'},
+    {label:'GIT',data:git,backgroundColor:'#B87D00',borderRadius:4,stack:'s'}
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:46}},plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},datalabels:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.parsed.x);}}}},scales:{x:{stacked:true,beginAtZero:true,ticks:{font:{size:9},callback:function(v){return fmt(v);}}},y:{stacked:true,ticks:{font:{size:10}}}}}});
+}
+
 // ── Countdown ──
 function startCountdown(){
   clearInterval(countdownId);
@@ -2988,6 +3118,7 @@ function startDashboard(){
   if(gate) gate.style.display = 'none';
   applyMarketingTab();
   applyManagementTab();
+  applySalesTab();
   Promise.all([fetchUserMap(),fetchGroupDepartureMap()]).then(function(){
     buildPerfMonths();
     switchTab('current');
@@ -3041,6 +3172,11 @@ function applyManagementTab(){
   if(t) t.style.display = canSeeManagement ? 'inline-block' : 'none';
 }
 
+function applySalesTab(){
+  var t = document.getElementById('tabSales');
+  if(t) t.style.display = canSeeManagement ? 'inline-block' : 'none';
+}
+
 // After a cached fast-path start, re-check the server so access changes
 // (admin toggled someone on/off) take effect without clearing cache.
 function refreshAccessFlags(){
@@ -3052,6 +3188,7 @@ function refreshAccessFlags(){
           cacheAccess(d.expiresAt, d.marketing, d.management);
           applyMarketingTab();
           applyManagementTab();
+          applySalesTab();
         }
       })
       .catch(function(){ /* offline/transient — keep cached state */ });
