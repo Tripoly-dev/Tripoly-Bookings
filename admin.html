@@ -152,11 +152,12 @@ function loadDevices(){
           '<td style="text-align:center;"><input type="checkbox" class="mkt-toggle" data-email="' + escapeHtml(dev.email) + '"' + (dev.marketing ? ' checked' : '') + ' title="Marketing Analytics access"/></td>' +
           '<td style="text-align:center;"><input type="checkbox" class="mgmt-toggle" data-email="' + escapeHtml(dev.email) + '"' + (dev.management ? ' checked' : '') + ' title="Management Dashboard access"/></td>' +
           '<td style="text-align:center;"><input type="checkbox" class="sales-toggle" data-email="' + escapeHtml(dev.email) + '"' + (dev.sales ? ' checked' : '') + ' title="Sales Team access"/></td>' +
+          '<td style="text-align:center;"><input type="checkbox" class="accounts-toggle" data-email="' + escapeHtml(dev.email) + '"' + (dev.accounts ? ' checked' : '') + ' title="Accounts Data access"/></td>' +
           '<td style="text-align:right;"><button class="revoke" data-id="' + escapeHtml(dev.deviceId) + '">Revoke</button></td>' +
         '</tr>';
       }).join('');
       wrap.innerHTML =
-        '<table><thead><tr><th>User</th><th>Status</th><th>Approved</th><th>Expires</th><th style="text-align:center;">Marketing</th><th style="text-align:center;">Management</th><th style="text-align:center;">Sales</th><th></th></tr></thead><tbody>' +
+        '<table><thead><tr><th>User</th><th>Status</th><th>Approved</th><th>Expires</th><th style="text-align:center;">Marketing</th><th style="text-align:center;">Management</th><th style="text-align:center;">Sales</th><th style="text-align:center;">Accounts</th><th></th></tr></thead><tbody>' +
         rows + '</tbody></table>';
       // Wire revoke buttons
       var btns = wrap.querySelectorAll('.revoke');
@@ -175,6 +176,10 @@ function loadDevices(){
       var salesToggles = wrap.querySelectorAll('.sales-toggle');
       for(var s=0;s<salesToggles.length;s++){
         salesToggles[s].addEventListener('change', function(){ toggleSales(this.getAttribute('data-email'), this.checked, this); });
+      }
+      var accToggles = wrap.querySelectorAll('.accounts-toggle');
+      for(var ac=0;ac<accToggles.length;ac++){
+        accToggles[ac].addEventListener('change', function(){ toggleAccounts(this.getAttribute('data-email'), this.checked, this); });
       }
     }).catch(function(){
       wrap.innerHTML = '<div class="empty">Could not load devices. Check your connection and try Refresh.</div>';
@@ -226,6 +231,19 @@ function toggleSales(email, allowed, el){
     .then(function(d){
       el.disabled = false;
       if(!d.ok){ el.checked = !allowed; alert('Could not update sales access. Try again.'); return; }
+      loadDevices();
+    }).catch(function(){ el.disabled = false; el.checked = !allowed; alert('Network error. Try again.'); });
+}
+
+function toggleAccounts(email, allowed, el){
+  el.disabled = true;
+  fetch(PROXY_BASE + '/api/admin/accounts', {
+    method:'POST', headers:{'Content-Type':'application/json','x-admin-password':adminPw},
+    body: JSON.stringify({ email: email, allowed: allowed })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      el.disabled = false;
+      if(!d.ok){ el.checked = !allowed; alert('Could not update accounts access. Try again.'); return; }
       loadDevices();
     }).catch(function(){ el.disabled = false; el.checked = !allowed; alert('Network error. Try again.'); });
 }

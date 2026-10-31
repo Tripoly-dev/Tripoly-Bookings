@@ -310,6 +310,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #mgmtFcChart{width:100%!important;height:300px!important;}
 #mgmtBrChart{width:100%!important;height:280px!important;}
 #salesChart{width:100%!important;height:380px!important;}
+#viewAccounts a{color:#185FA5;text-decoration:underline;}
 .sales-row{cursor:pointer;}
 .sales-row:hover{background:var(--bg);}
 .sx-caret{display:inline-block;transition:transform .15s;font-size:10px;color:var(--ink-light);}
@@ -610,6 +611,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   <button class="tab-btn" id="tabMarketing" onclick="switchTab('marketing')" style="display:none;">Marketing Analytics</button>
   <button class="tab-btn" id="tabManagement" onclick="switchTab('management')" style="display:none;">Management Dashboard</button>
   <button class="tab-btn" id="tabSales" onclick="switchTab('sales')" style="display:none;">Sales Team</button>
+  <button class="tab-btn" id="tabAccounts" onclick="switchTab('accounts')" style="display:none;">Accounts Data</button>
 </div>
 
 <!-- ══ CURRENT / LAST MONTH VIEW ══ -->
@@ -1054,6 +1056,29 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   </div>
 </div>
 
+<!-- ══ ACCOUNTS DATA VIEW (access-gated: cash flow) ══ -->
+<div class="view" id="viewAccounts">
+  <div class="mgmt-wrap">
+    <div class="mgmt-head">
+      <div class="mgmt-ret-toggle" id="accRange" style="flex-wrap:wrap;">
+        <button data-r="today" class="on">Today</button><button data-r="week">This Week</button><button data-r="month">This Month</button><button data-r="currentQ">Current Quarter</button><button data-r="prevQ">Previous Quarter</button><button data-r="currentFY">Current FY</button>
+      </div>
+      <div class="mgmt-sub" id="accSub"></div>
+    </div>
+    <div class="mgmt-msg" id="accLoading">Loading cash flow…</div>
+    <div class="mgmt-msg" id="accError" style="display:none;"></div>
+    <div id="accBody" style="display:none;">
+      <div class="mgmt-chart-card">
+        <div class="mgmt-chart-title" style="margin:0 0 10px;">Cash Flow — <span id="accRangeLbl"></span></div>
+        <div style="overflow:auto;"><div id="accSummaryWrap"></div></div>
+        <small style="display:block;margin:8px 0 0;opacity:.65;">Inflows = customer Payments (received = Actual, pending by Expected Date = Expected). Outflows = vendor Payments sent (Actual) + Vendor Reservation balance due by Expected Date (Expected). FIT/GIT via Division Type. Opening/Closing balance to be added later.</small>
+      </div>
+      <div class="mgmt-ret-title" style="margin-top:20px;">Detail <span id="accDetailNote" style="font-weight:400;font-size:12px;opacity:.6;"></span></div>
+      <div style="max-height:460px;overflow:auto;"><div id="accDetailWrap"></div></div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ PERFORMANCE VIEW ══ -->
 <div class="view" id="viewPerf">
   <div class="perf-wrap" id="perfWrap">
@@ -1240,7 +1265,7 @@ function isQualifying(r){
 // ── Tab switching ──
 function switchTab(period){
   activePeriod=period;
-  ['Current','Last','FY','Perf','Marketing','Management','Sales'].forEach(function(t){
+  ['Current','Last','FY','Perf','Marketing','Management','Sales','Accounts'].forEach(function(t){
     var el=document.getElementById('tab'+t);
     if(el) el.classList.remove('active');
   });
@@ -1285,6 +1310,11 @@ function switchTab(period){
     document.getElementById('viewSales').classList.add('active');
     document.getElementById('headerSub').textContent='Sales Team Performance';
     openSales();
+  } else if(period==='accounts'){
+    document.getElementById('tabAccounts').classList.add('active');
+    document.getElementById('viewAccounts').classList.add('active');
+    document.getElementById('headerSub').textContent='Accounts — Cash Flow';
+    openAccounts();
   }
 
   if(period!=='performance') stopPerfScroll();
@@ -2516,6 +2546,70 @@ function renderSalesChart(){
   ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:46}},plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},datalabels:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.parsed.x);}}}},scales:{x:{stacked:true,beginAtZero:true,ticks:{font:{size:9},callback:function(v){return fmt(v);}}},y:{stacked:true,ticks:{font:{size:10}}}}}});
 }
 
+// ── Accounts Data (cash flow) ──
+var accData=null, accRange='today', accLoaded=false, accWired=false;
+function accEsc(s){return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function openAccounts(){
+  if(!accWired){
+    accWired=true;
+    var rb=document.getElementById('accRange').querySelectorAll('button');
+    for(var i=0;i<rb.length;i++){rb[i].addEventListener('click',function(){
+      accRange=this.getAttribute('data-r');
+      var bs=document.getElementById('accRange').querySelectorAll('button');
+      for(var j=0;j<bs.length;j++)bs[j].classList.toggle('on',bs[j].getAttribute('data-r')===accRange);
+      loadAccounts();
+    });}
+  }
+  if(!accLoaded) loadAccounts();
+}
+function loadAccounts(){
+  var L=document.getElementById('accLoading'),E=document.getElementById('accError'),B=document.getElementById('accBody');
+  L.style.display='block';E.style.display='none';B.style.display='none';
+  fetch(PROXY_BASE+'/api/accounts-cashflow?range='+encodeURIComponent(accRange)+'&deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){accData=d;accLoaded=true;L.style.display='none';B.style.display='block';renderAccounts();})
+    .catch(function(err){L.style.display='none';E.style.display='block';E.textContent='Could not load cash flow ('+err.message+').';});
+}
+function accNet(o){return (o.inAct+o.inExp)-(o.outAct+o.outExp);}
+function accSummary(){
+  var d=accData;
+  function row(label,o,strong){
+    var net=accNet(o);
+    var cls=strong?' style="font-weight:700;background:var(--bg);"':'';
+    return '<tr'+cls+'><td class="met">'+label+'</td>'+
+      '<td>'+fmtAmtShort(o.inAct)+'</td><td>'+fmtAmtShort(o.inExp)+'</td>'+
+      '<td>'+fmtAmtShort(o.outAct)+'</td><td>'+fmtAmtShort(o.outExp)+'</td>'+
+      '<td class="met" style="color:'+(net>=0?'#1A7A4A':'#C0392B')+';">'+(net>=0?'+':'')+fmtAmtShort(net)+'</td></tr>';
+  }
+  var hasOther=d.other&&(d.other.inAct||d.other.inExp||d.other.outAct||d.other.outExp);
+  var head='<thead><tr><th>Division</th><th>In · Actual</th><th>In · Expected</th><th>Out · Actual</th><th>Out · Expected</th><th>Net</th></tr></thead>';
+  var body=row('FIT',d.fit)+row('GIT',d.git)+(hasOther?row('Other',d.other):'')+row('Combined',d.combined,true);
+  return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
+}
+function accDetail(){
+  var d=accData; var rows=(d.rows||[]);
+  if(!rows.length)return '<div class="mgmt-msg">No cash movements in this range.</div>';
+  rows=rows.slice().sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+  var head='<thead><tr><th>Type</th><th>Mode</th><th>Div</th><th>Name</th><th>Amount</th><th>Date</th><th>Open</th></tr></thead>';
+  var body=rows.map(function(r){
+    var typ=r.kind==='in'?'<span style="color:#1A7A4A;font-weight:700;">Inflow</span>':'<span style="color:#C0392B;font-weight:700;">Outflow</span>';
+    var nameLink=(r.kind==='in'?r.tripLink:r.vendorLink);
+    var nameCell=nameLink?('<a href="'+nameLink+'" target="_blank" rel="noopener">'+accEsc(r.title)+'</a>'):accEsc(r.title);
+    var openCell=r.recLink?('<a href="'+r.recLink+'" target="_blank" rel="noopener">open ↗</a>'):'';
+    return '<tr><td>'+typ+'</td><td>'+r.mode+'</td><td class="met">'+r.division+'</td><td class="met">'+nameCell+'</td><td>'+fmtAmtShort(r.amount)+'</td><td>'+(r.date||'')+'</td><td>'+openCell+'</td></tr>';
+  }).join('');
+  return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
+}
+function renderAccounts(){
+  var d=accData;if(!d)return;
+  document.getElementById('accSub').textContent=(d.rangeLabel||'')+' · '+d.startDate+' → '+d.endDate;
+  document.getElementById('accRangeLbl').textContent=d.rangeLabel||'';
+  document.getElementById('accSummaryWrap').innerHTML=accSummary();
+  document.getElementById('accDetailWrap').innerHTML=accDetail();
+  var n=(d.rows?d.rows.length:0);
+  document.getElementById('accDetailNote').textContent=d.truncated?('(showing first '+n+' rows)'):(n+' row'+(n!==1?'s':''));
+}
+
 // ── Countdown ──
 function startCountdown(){
   clearInterval(countdownId);
@@ -3155,6 +3249,7 @@ function startDashboard(){
   applyMarketingTab();
   applyManagementTab();
   applySalesTab();
+  applyAccountsTab();
   Promise.all([fetchUserMap(),fetchGroupDepartureMap()]).then(function(){
     buildPerfMonths();
     switchTab('current');
@@ -3168,6 +3263,7 @@ var gatePollTimer = null;
 var canSeeMarketing = false;
 var canSeeManagement = false;
 var canSeeSales = false;
+var canSeeAccounts = false;
 
 function getDeviceId(){
   var id = null;
@@ -3188,17 +3284,19 @@ function cachedAccessValid(){
       canSeeMarketing = (obj.marketing === true);
       canSeeManagement = (obj.management === true);
       canSeeSales = (obj.sales === true);
+      canSeeAccounts = (obj.accounts === true);
       return true;
     }
     return false;
   } catch(e){ return false; }
 }
 
-function cacheAccess(expiresAt, marketing, management, sales){
+function cacheAccess(expiresAt, marketing, management, sales, accounts){
   canSeeMarketing = (marketing === true);
   canSeeManagement = (management === true);
   canSeeSales = (sales === true);
-  try { localStorage.setItem(ACCESS_LS_KEY, JSON.stringify({expiresAt:expiresAt, marketing:canSeeMarketing, management:canSeeManagement, sales:canSeeSales})); } catch(e){}
+  canSeeAccounts = (accounts === true);
+  try { localStorage.setItem(ACCESS_LS_KEY, JSON.stringify({expiresAt:expiresAt, marketing:canSeeMarketing, management:canSeeManagement, sales:canSeeSales, accounts:canSeeAccounts})); } catch(e){}
 }
 
 function applyMarketingTab(){
@@ -3216,6 +3314,11 @@ function applySalesTab(){
   if(t) t.style.display = canSeeSales ? 'inline-block' : 'none';
 }
 
+function applyAccountsTab(){
+  var t = document.getElementById('tabAccounts');
+  if(t) t.style.display = canSeeAccounts ? 'inline-block' : 'none';
+}
+
 // After a cached fast-path start, re-check the server so access changes
 // (admin toggled someone on/off) take effect without clearing cache.
 function clearAccessCache(){
@@ -3229,10 +3332,11 @@ function refreshAccessFlags(){
       .then(function(r){ return r.json(); })
       .then(function(d){
         if(d.status === 'approved'){
-          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales);
+          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts);
           applyMarketingTab();
           applyManagementTab();
           applySalesTab();
+  applyAccountsTab();
         } else if(d.status === 'pending'){
           // access revoked/reset on the server — re-lock and wait for re-approval
           clearAccessCache();
@@ -3265,7 +3369,7 @@ function startGatePolling(){
       .then(function(d){
         if(d.status === 'approved'){
           clearInterval(gatePollTimer);
-          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales);
+          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts);
           startDashboard();
         } else if(d.status === 'none'){
           // request was denied (removed from pending without approval)
@@ -3293,7 +3397,7 @@ function submitAccessRequest(){
   }).then(function(r){ return r.json(); }).then(function(d){
     btn.disabled = false; btn.textContent = 'Request Access';
     if(d.status === 'approved'){
-      cacheAccess(d.expiresAt, d.marketing, d.management, d.sales); startDashboard();
+      cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts); startDashboard();
     } else if(d.status === 'pending'){
       showGateState('waiting'); startGatePolling();
     } else {
@@ -3323,7 +3427,7 @@ function initAccessGate(){
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.status === 'approved'){
-        cacheAccess(d.expiresAt, d.marketing, d.management, d.sales); startDashboard();
+        cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts); startDashboard();
       } else if(d.status === 'pending'){
         showGateState('waiting'); startGatePolling();
       } else {
