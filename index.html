@@ -2606,14 +2606,23 @@ function accSummary(){
 }
 function accDivDetail(div){
   var d=accData;
-  var rows=(d.rows||[]).filter(function(r){return div==='Combined'?true:(r.division===div);}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
-  if(!rows.length)return '<div class="mgmt-msg" style="padding:12px;">No movements for '+div+' in this range.</div>';
-  var head='<thead><tr><th>Lead Ref No</th><th>Name / Lead Name</th><th>Date</th><th>Amount</th><th>Type</th><th>Mode</th><th>Division</th><th>Travel Date</th><th>Return Date</th></tr></thead>';
-  var body=rows.map(function(r){
+  var all=(d.rows||[]).filter(function(r){return div==='Combined'?true:(r.division===div);});
+  if(!all.length)return '<div class="mgmt-msg" style="padding:12px;">No movements for '+div+' in this range.</div>';
+  function rowHtml(r){
     var ref=r.leadRef?(r.link?('<a href="'+r.link+'" target="_blank" rel="noopener">'+accEsc(r.leadRef)+'</a>'):accEsc(r.leadRef)):(r.link?('<a href="'+r.link+'" target="_blank" rel="noopener">open ↗</a>'):'—');
     var typ=r.kind==='in'?'<span style="color:#1A7A4A;font-weight:700;">Inflow</span>':'<span style="color:#C0392B;font-weight:700;">Outflow</span>';
     return '<tr><td class="met">'+ref+'</td><td>'+accEsc(r.name)+'</td><td>'+(r.date||'')+'</td><td>'+fmtAmtShort(r.amount)+'</td><td>'+typ+'</td><td>'+r.mode+'</td><td class="met">'+r.division+'</td><td>'+(r.travel||'')+'</td><td>'+(r.returnDate||'')+'</td></tr>';
-  }).join('');
+  }
+  function grp(label,kind,color){
+    var rs=all.filter(function(r){return r.kind===kind;}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+    if(!rs.length)return '';
+    var tot=rs.reduce(function(s,r){return s+(r.amount||0);},0);
+    var hdr='<tr><td colspan="9" style="font-weight:700;color:'+color+';background:var(--bg);padding:6px 10px;">'+label+' · '+rs.length+' item'+(rs.length===1?'':'s')+'</td></tr>';
+    var sub='<tr style="font-weight:700;background:var(--bg);"><td></td><td>'+label+' total</td><td></td><td style="color:'+color+';">'+fmtAmtShort(tot)+'</td><td colspan="5"></td></tr>';
+    return hdr+rs.map(rowHtml).join('')+sub;
+  }
+  var head='<thead><tr><th>Lead Ref No</th><th>Name / Lead Name</th><th>Date</th><th>Amount</th><th>Type</th><th>Mode</th><th>Division</th><th>Travel Date</th><th>Return Date</th></tr></thead>';
+  var body=grp('Inflows','in','#1A7A4A')+grp('Outflows','out','#C0392B');
   return '<table class="mgmt-table" style="margin:4px 0;">'+head+'<tbody>'+body+'</tbody></table>';
 }
 function renderAccounts(){
