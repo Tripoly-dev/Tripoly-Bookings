@@ -2601,18 +2601,18 @@ function accSummary(){
   }
   var hasOther=d.other&&(d.other.inAct||d.other.inExp||d.other.outAct||d.other.outExp);
   var head='<thead><tr><th>Division</th><th>In · Actual</th><th>In · Expected</th><th>Out · Actual</th><th>Out · Expected</th><th>Net</th></tr></thead>';
-  var body=sumRow('FIT',d.fit,'FIT',true)+sumRow('GIT',d.git,'GIT',true)+(hasOther?sumRow('Other',d.other,'Other',true):'')+sumRow('Combined',d.combined,'Combined',false);
+  var body=sumRow('FIT',d.fit,'FIT',true)+sumRow('GIT',d.git,'GIT',true)+(hasOther?sumRow('Other',d.other,'Other',true):'')+sumRow('Combined',d.combined,'Combined',true);
   return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
 }
 function accDivDetail(div){
   var d=accData;
-  var rows=(d.rows||[]).filter(function(r){return r.division===div;}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+  var rows=(d.rows||[]).filter(function(r){return div==='Combined'?true:(r.division===div);}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
   if(!rows.length)return '<div class="mgmt-msg" style="padding:12px;">No movements for '+div+' in this range.</div>';
-  var head='<thead><tr><th>Lead Ref No</th><th>Name / Lead Name</th><th>Date</th><th>Amount</th><th>Type</th><th>Mode</th><th>Division</th></tr></thead>';
+  var head='<thead><tr><th>Lead Ref No</th><th>Name / Lead Name</th><th>Date</th><th>Amount</th><th>Type</th><th>Mode</th><th>Division</th><th>Travel Date</th><th>Return Date</th></tr></thead>';
   var body=rows.map(function(r){
     var ref=r.leadRef?(r.link?('<a href="'+r.link+'" target="_blank" rel="noopener">'+accEsc(r.leadRef)+'</a>'):accEsc(r.leadRef)):(r.link?('<a href="'+r.link+'" target="_blank" rel="noopener">open ↗</a>'):'—');
     var typ=r.kind==='in'?'<span style="color:#1A7A4A;font-weight:700;">Inflow</span>':'<span style="color:#C0392B;font-weight:700;">Outflow</span>';
-    return '<tr><td class="met">'+ref+'</td><td>'+accEsc(r.name)+'</td><td>'+(r.date||'')+'</td><td>'+fmtAmtShort(r.amount)+'</td><td>'+typ+'</td><td>'+r.mode+'</td><td class="met">'+r.division+'</td></tr>';
+    return '<tr><td class="met">'+ref+'</td><td>'+accEsc(r.name)+'</td><td>'+(r.date||'')+'</td><td>'+fmtAmtShort(r.amount)+'</td><td>'+typ+'</td><td>'+r.mode+'</td><td class="met">'+r.division+'</td><td>'+(r.travel||'')+'</td><td>'+(r.returnDate||'')+'</td></tr>';
   }).join('');
   return '<table class="mgmt-table" style="margin:4px 0;">'+head+'<tbody>'+body+'</tbody></table>';
 }
