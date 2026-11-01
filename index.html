@@ -1064,7 +1064,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   <div class="mgmt-wrap">
     <div class="mgmt-head">
       <div class="mgmt-ret-toggle" id="accRange" style="flex-wrap:wrap;">
-        <button data-r="today" class="on">Today</button><button data-r="week">This Week</button><button data-r="month">This Month</button><button data-r="currentQ">Current Quarter</button><button data-r="prevQ">Previous Quarter</button><button data-r="currentFY">Current FY</button>
+        <button data-r="today" class="on">Today</button><button data-r="week">This Week</button><button data-r="lastWeek">Last Week</button><button data-r="month">This Month</button><button data-r="lastMonth">Last Month</button><button data-r="currentQ">Current Quarter</button><button data-r="prevQ">Previous Quarter</button><button data-r="currentFY">Current FY</button>
       </div>
       <div class="mgmt-sub" id="accSub"></div>
     </div>
@@ -2614,14 +2614,22 @@ function accDivDetail(div){
     return '<tr><td class="met">'+ref+'</td><td>'+accEsc(r.name)+'</td><td>'+(r.date||'')+'</td><td>'+fmtAmtShort(r.amount)+'</td><td>'+typ+'</td><td>'+r.mode+'</td><td class="met">'+r.division+'</td><td>'+(r.travel||'')+'</td><td>'+(r.returnDate||'')+'</td></tr>';
   }
   function grp(label,kind,color){
-    var rs=all.filter(function(r){return r.kind===kind;}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+    var rs=all.filter(function(r){return r.kind===kind;});
     if(!rs.length)return '';
-    var tot=rs.reduce(function(s,r){return s+(r.amount||0);},0);
-    var hdr='<tr><td colspan="9" style="font-weight:700;color:'+color+';background:var(--bg);padding:6px 10px;">'+label+' · '+rs.length+' item'+(rs.length===1?'':'s')+'</td></tr>';
-    var sub='<tr style="font-weight:700;background:var(--bg);"><td></td><td>'+label+' total</td><td></td><td style="color:'+color+';">'+fmtAmtShort(tot)+'</td><td colspan="5"></td></tr>';
-    return hdr+rs.map(rowHtml).join('')+sub;
+    var out='<tr><td colspan="9" style="font-weight:800;color:'+color+';background:var(--bg);padding:7px 10px;border-top:2px solid '+color+'44;">'+label+'</td></tr>';
+    var grand=0;
+    ['Actual','Expected'].forEach(function(mode){
+      var ms=rs.filter(function(r){return r.mode===mode;}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+      if(!ms.length)return;
+      var tot=ms.reduce(function(s,r){return s+(r.amount||0);},0); grand+=tot;
+      out+='<tr><td colspan="9" style="font-weight:600;padding:5px 10px 5px 22px;opacity:.75;">'+mode+' · '+ms.length+' item'+(ms.length===1?'':'s')+'</td></tr>';
+      out+=ms.map(rowHtml).join('');
+      out+='<tr style="font-weight:600;background:var(--bg);"><td></td><td style="padding-left:22px;">'+mode+' subtotal</td><td></td><td style="color:'+color+';">'+fmtAmtShort(tot)+'</td><td colspan="5"></td></tr>';
+    });
+    out+='<tr style="font-weight:800;background:'+color+'14;"><td></td><td>'+label+' total</td><td></td><td style="color:'+color+';">'+fmtAmtShort(grand)+'</td><td colspan="5"></td></tr>';
+    return out;
   }
-  var head='<thead><tr><th>Lead Ref No</th><th>Name / Lead Name</th><th>Date</th><th>Amount</th><th>Type</th><th>Mode</th><th>Division</th><th>Travel Date</th><th>Return Date</th></tr></thead>';
+  var head='<thead><tr><th>Lead Ref No</th><th>LEAD / VENDOR NAME</th><th>Date</th><th>Amount</th><th>Type</th><th>Mode</th><th>Division</th><th>Travel Date</th><th>Return Date</th></tr></thead>';
   var body=grp('Inflows','in','#1A7A4A')+grp('Outflows','out','#C0392B');
   return '<table class="mgmt-table" style="margin:4px 0;">'+head+'<tbody>'+body+'</tbody></table>';
 }
