@@ -42,9 +42,12 @@ table{width:100%;border-collapse:collapse;}
 th{text-align:left;font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-light);padding:10px 20px;border-bottom:1px solid var(--rule);}
 td{padding:12px 20px;border-bottom:1px solid var(--paper);font-size:13px;}
 tr:last-child td{border-bottom:none;}
-#deviceTableWrap{overflow-x:auto;}
-/* sticky cells require border-collapse:separate (they don't stick under collapse) */
-#deviceTableWrap table{min-width:820px;border-collapse:separate;border-spacing:0;}
+#deviceTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+/* width:max-content forces the table to its natural width so the wrapper
+   actually scrolls (global table{width:100%} was compressing it to fit,
+   clipping the Revoke column). sticky needs border-collapse:separate. */
+#deviceTableWrap table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;}
+#deviceTableWrap th,#deviceTableWrap td{white-space:nowrap;}
 #deviceTableWrap th:last-child,#deviceTableWrap td:last-child{position:sticky;right:0;background:var(--surface);box-shadow:-7px 0 9px -6px rgba(0,0,0,.18);text-align:right;}
 #deviceTableWrap th:last-child{z-index:2;background:var(--surface);}
 .dev-name{font-weight:600;color:var(--ink);}
