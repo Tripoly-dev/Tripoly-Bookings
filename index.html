@@ -314,6 +314,10 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 .acc-row{cursor:pointer;}
 .acc-row:hover{background:var(--bg);}
 .acc-row.open .sx-caret{transform:rotate(90deg);}
+.acc-cell{cursor:pointer;}
+.acc-cell:hover{background:var(--bg);}
+.acc-cell.open{background:var(--bg);}
+.acc-cell.open .sx-caret{transform:rotate(90deg);}
 .sales-row{cursor:pointer;}
 .sales-row:hover{background:var(--bg);}
 .sx-caret{display:inline-block;transition:transform .15s;font-size:10px;color:var(--ink-light);}
@@ -1072,7 +1076,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
     <div class="mgmt-msg" id="accError" style="display:none;"></div>
     <div id="accBody" style="display:none;">
       <div class="mgmt-chart-card">
-        <div class="mgmt-chart-title" style="margin:0 0 10px;">Cash Flow — <span id="accRangeLbl"></span> <span style="font-weight:400;font-size:12px;opacity:.6;">· click a row's ▸ for detail</span></div>
+        <div class="mgmt-chart-title" style="margin:0 0 10px;">Cash Flow — <span id="accRangeLbl"></span> <span style="font-weight:400;font-size:12px;opacity:.6;">· click any amount's ▸ for its detail</span></div>
         <div style="overflow:auto;"><div id="accSummaryWrap"></div></div>
         <small style="display:block;margin:8px 0 0;opacity:.65;">Inflows = customer Payments (received = Actual, pending by Expected Date = Expected). Outflows = vendor Payments sent (Actual) + Vendor Reservation balance due by Expected Date (Expected). FIT/GIT via Division Type. Opening/Closing balance to be added later.</small>
       </div>
@@ -2567,14 +2571,13 @@ function openAccounts(){
 function wireAccExpand(){
   document.getElementById('accSummaryWrap').addEventListener('click',function(e){
     if(e.target.tagName==='A')return; // let links open
-    var row=e.target.closest?e.target.closest('tr.acc-row'):null;
-    if(!row)return;
-    var det=row.nextElementSibling;
-    if(det&&det.classList.contains('acc-detail')){
-      var show=(det.style.display==='none');
-      det.style.display=show?'table-row':'none';
-      row.classList.toggle('open',show);
-    }
+    var cell=e.target.closest?e.target.closest('td.acc-cell'):null;
+    if(!cell)return;
+    var det=document.getElementById(cell.getAttribute('data-target'));
+    if(!det)return;
+    var show=(det.style.display==='none'||det.style.display==='');
+    det.style.display=show?'table-row':'none';
+    cell.classList.toggle('open',show);
   });
 }
 function loadAccounts(){
@@ -2588,49 +2591,44 @@ function loadAccounts(){
 function accNet(o){return (o.inAct+o.inExp)-(o.outAct+o.outExp);}
 function accSummary(){
   var d=accData;
-  function sumRow(label,o,key,expandable){
+  function amtOf(o,kind,mode){ return kind==='in' ? (mode==='Actual'?o.inAct:o.inExp) : (mode==='Actual'?o.outAct:o.outExp); }
+  function cell(o,key,kind,mode){
+    var amt=amtOf(o,kind,mode);
+    if(Math.round(amt)===0) return '<td>'+fmtAmtShort(amt)+'</td>';
+    return '<td class="acc-cell" data-target="accdet-'+key+'-'+kind+'-'+mode+'"><span class="sx-caret">▸</span> '+fmtAmtShort(amt)+'</td>';
+  }
+  function sumRow(label,o,key){
     var net=accNet(o);
-    var caret=expandable?'<span class="sx-caret">▸</span> ':'';
     var cls=(key==='Combined')?' style="font-weight:700;background:var(--bg);"':'';
-    var tr='<tr'+(expandable?(' class="acc-row" data-div="'+key+'"'):'')+cls+'><td class="met">'+caret+label+'</td>'+
-      '<td>'+fmtAmtShort(o.inAct)+'</td><td>'+fmtAmtShort(o.inExp)+'</td>'+
-      '<td>'+fmtAmtShort(o.outAct)+'</td><td>'+fmtAmtShort(o.outExp)+'</td>'+
+    var tr='<tr'+cls+'><td class="met">'+label+'</td>'+
+      cell(o,key,'in','Actual')+cell(o,key,'in','Expected')+
+      cell(o,key,'out','Actual')+cell(o,key,'out','Expected')+
       '<td class="met" style="color:'+(net>=0?'#1A7A4A':'#C0392B')+';">'+(net>=0?'+':'')+fmtAmtShort(net)+'</td></tr>';
-    if(expandable) tr+='<tr class="acc-detail" style="display:none;"><td colspan="6">'+accDivDetail(key)+'</td></tr>';
-    return tr;
+    var dets='';
+    [['in','Actual'],['in','Expected'],['out','Actual'],['out','Expected']].forEach(function(b){
+      if(Math.round(amtOf(o,b[0],b[1]))===0) return;
+      dets+='<tr class="acc-detail" id="accdet-'+key+'-'+b[0]+'-'+b[1]+'" style="display:none;"><td colspan="6">'+accBucketDetail(key,b[0],b[1])+'</td></tr>';
+    });
+    return tr+dets;
   }
   var hasOther=d.other&&(d.other.inAct||d.other.inExp||d.other.outAct||d.other.outExp);
   var head='<thead><tr><th>Division</th><th>In · Actual</th><th>In · Expected</th><th>Out · Actual</th><th>Out · Expected</th><th>Net</th></tr></thead>';
-  var body=sumRow('FIT',d.fit,'FIT',true)+sumRow('GIT',d.git,'GIT',true)+(hasOther?sumRow('Other',d.other,'Other',true):'')+sumRow('Combined',d.combined,'Combined',true);
+  var body=sumRow('FIT',d.fit,'FIT')+sumRow('GIT',d.git,'GIT')+(hasOther?sumRow('Other',d.other,'Other'):'')+sumRow('Combined',d.combined,'Combined');
   return '<table class="mgmt-table">'+head+'<tbody>'+body+'</tbody></table>';
 }
-function accDivDetail(div){
+function accBucketDetail(div,kind,mode){
   var d=accData;
-  var all=(d.rows||[]).filter(function(r){return div==='Combined'?true:(r.division===div);});
-  if(!all.length)return '<div class="mgmt-msg" style="padding:12px;">No movements for '+div+' in this range.</div>';
+  var rows=(d.rows||[]).filter(function(r){return (div==='Combined'||r.division===div)&&r.kind===kind&&r.mode===mode;}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
+  var color=kind==='in'?'#1A7A4A':'#C0392B';
+  var title=(div==='Combined'?'All divisions':div)+' · '+(kind==='in'?'Inflow':'Outflow')+' · '+mode;
+  if(!rows.length)return '<div class="mgmt-msg" style="padding:12px;">No '+title+' movements in this range.</div>';
   function rowHtml(r){
     var ref=r.leadRef?(r.link?('<a href="'+r.link+'" target="_blank" rel="noopener">'+accEsc(r.leadRef)+'</a>'):accEsc(r.leadRef)):(r.link?('<a href="'+r.link+'" target="_blank" rel="noopener">open ↗</a>'):'—');
-    var typ=r.kind==='in'?'<span style="color:#1A7A4A;font-weight:700;">Inflow</span>':'<span style="color:#C0392B;font-weight:700;">Outflow</span>';
-    return '<tr><td class="met">'+ref+'</td><td>'+accEsc(r.name)+'</td><td>'+(r.date||'')+'</td><td>'+fmtAmtShort(r.amount)+'</td><td>'+typ+'</td><td>'+r.mode+'</td><td class="met">'+r.division+'</td><td>'+(r.travel||'')+'</td><td>'+(r.returnDate||'')+'</td></tr>';
+    return '<tr><td class="met">'+ref+'</td><td>'+accEsc(r.name)+'</td><td>'+(r.date||'')+'</td><td>'+fmtAmtShort(r.amount)+'</td><td class="met">'+r.division+'</td><td>'+(r.travel||'')+'</td><td>'+(r.returnDate||'')+'</td></tr>';
   }
-  function grp(label,kind,color){
-    var rs=all.filter(function(r){return r.kind===kind;});
-    if(!rs.length)return '';
-    var out='<tr><td colspan="9" style="font-weight:800;color:'+color+';background:var(--bg);padding:7px 10px;border-top:2px solid '+color+'44;">'+label+'</td></tr>';
-    var grand=0;
-    ['Actual','Expected'].forEach(function(mode){
-      var ms=rs.filter(function(r){return r.mode===mode;}).sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
-      if(!ms.length)return;
-      var tot=ms.reduce(function(s,r){return s+(r.amount||0);},0); grand+=tot;
-      out+='<tr><td colspan="9" style="font-weight:600;padding:5px 10px 5px 22px;opacity:.75;">'+mode+' · '+ms.length+' item'+(ms.length===1?'':'s')+'</td></tr>';
-      out+=ms.map(rowHtml).join('');
-      out+='<tr style="font-weight:600;background:var(--bg);"><td></td><td style="padding-left:22px;">'+mode+' subtotal</td><td></td><td style="color:'+color+';">'+fmtAmtShort(tot)+'</td><td colspan="5"></td></tr>';
-    });
-    out+='<tr style="font-weight:800;background:'+color+'14;"><td></td><td>'+label+' total</td><td></td><td style="color:'+color+';">'+fmtAmtShort(grand)+'</td><td colspan="5"></td></tr>';
-    return out;
-  }
-  var head='<thead><tr><th>Lead Ref No</th><th>LEAD / VENDOR NAME</th><th>Date</th><th>Amount</th><th>Type</th><th>Mode</th><th>Division</th><th>Travel Date</th><th>Return Date</th></tr></thead>';
-  var body=grp('Inflows','in','#1A7A4A')+grp('Outflows','out','#C0392B');
+  var tot=rows.reduce(function(s,r){return s+(r.amount||0);},0);
+  var head='<thead><tr><th colspan="7" style="color:'+color+';font-weight:800;padding:7px 10px;">'+title+' · '+rows.length+' item'+(rows.length===1?'':'s')+'</th></tr><tr><th>Lead Ref No</th><th>LEAD / VENDOR NAME</th><th>Date</th><th>Amount</th><th>Division</th><th>Travel Date</th><th>Return Date</th></tr></thead>';
+  var body=rows.map(rowHtml).join('')+'<tr style="font-weight:800;background:'+color+'14;"><td></td><td>Total</td><td></td><td style="color:'+color+';">'+fmtAmtShort(tot)+'</td><td colspan="3"></td></tr>';
   return '<table class="mgmt-table" style="margin:4px 0;">'+head+'<tbody>'+body+'</tbody></table>';
 }
 function renderAccounts(){
