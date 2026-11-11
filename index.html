@@ -879,7 +879,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
           <div class="mkx-chip" id="mkxFilterChip"><span id="mkxFilterTxt"></span><button id="mkxFilterClear">Clear filter</button></div>
           <div class="mkx-twrap"><table class="mkx-table" id="mkxCampTable">
             <thead><tr>
-              <th data-k="name">Campaign</th><th data-k="status">Status</th><th class="num" data-k="spend">Spend</th><th class="num" data-k="leads">Leads</th>
+              <th data-k="name">Campaign</th><th data-k="status">Status</th><th data-k="firstSpend" title="First day this campaign ever spent (all data, not just the selected period)">Running since</th><th class="num" data-k="spend">Spend</th><th class="num" data-k="leads">Leads</th>
               <th class="num" data-k="costPerLead">Cost / lead</th><th class="num" data-k="pax">PAX</th><th class="num" data-k="costPerPax">Cost / PAX</th><th class="num" data-k="revenue">Revenue</th><th data-k="insight">Insight</th>
             </tr></thead>
             <tbody id="mkxCampRows"></tbody>
@@ -1527,7 +1527,7 @@ function mkxBase(){
 }
 function mkxBuildRows(d,totals){
   var perf=d.campaignPerf&&d.campaignPerf.length;
-  var src=perf?d.campaignPerf:(d.campaigns||[]).map(function(c){return {key:c.key,name:c.name,spend:c.spend,leads:null,bookings:null,pax:null,revenue:null,costPerLead:null,costPerBooking:null,costPerPax:null,lastSpendDate:null};});
+  var src=perf?d.campaignPerf:(d.campaigns||[]).map(function(c){return {key:c.key,name:c.name,spend:c.spend,leads:null,bookings:null,pax:null,revenue:null,costPerLead:null,costPerBooking:null,costPerPax:null,lastSpendDate:null,firstSpendDate:null};});
   var sp=src.map(function(r){return r.spend;}).filter(function(x){return x>0;}).sort(function(a,b){return a-b;});
   var med=sp.length?sp[Math.floor(sp.length/2)]:0;
   return src.map(function(r){
@@ -1540,8 +1540,16 @@ function mkxBuildRows(d,totals){
       else if(r.leads>0&&r.costPerLead!=null&&totals.costPerLead&&r.costPerLead<=totals.costPerLead*0.6){ins='Low CPL';cls='';}
       else{ins='Monitor';cls='grey';}
     }
-    return {key:r.key,name:r.name,status:status,spend:r.spend,leads:r.leads,costPerLead:r.costPerLead,bookings:r.bookings,costPerBooking:r.costPerBooking,pax:r.pax,costPerPax:r.costPerPax,revenue:r.revenue,insight:ins,insCls:cls};
+    return {key:r.key,name:r.name,status:status,firstSpend:r.firstSpendDate||null,lastSpend:r.lastSpendDate||null,spend:r.spend,leads:r.leads,costPerLead:r.costPerLead,bookings:r.bookings,costPerBooking:r.costPerBooking,pax:r.pax,costPerPax:r.costPerPax,revenue:r.revenue,insight:ins,insCls:cls};
   });
+}
+function mkxSince(r){
+  if(!r.firstSpend)return '<span class="mk-dim">—</span>';
+  var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],p=r.firstSpend.split('-');
+  var t=parseInt(p[2],10)+' '+m[parseInt(p[1],10)-1]+' '+p[0].slice(2);
+  var early=r.firstSpend<=MK_FIRST_DAY;
+  var tip='First spend: '+r.firstSpend+(early?' (first day of stored data, so it may have started earlier)':'')+(r.lastSpend?' · Last spend: '+r.lastSpend:'');
+  return '<span title="'+mkEsc(tip)+'">'+(early?'on or before ':'')+mkEsc(t)+'</span>';
 }
 function mkxVisibleRows(){
   var q=(document.getElementById('mkxSearch').value||'').trim().toLowerCase();
@@ -1562,10 +1570,11 @@ function mkxRenderTable(){
   document.getElementById('mkxCampRows').innerHTML=rows.length?rows.map(function(r){
     return '<tr'+(r.spend>0&&r.bookings===0?' class="mkx-zero"':'')+'><td class="name" title="'+mkEsc(r.name)+'">'+mkEsc(r.name)+'</td>'+
       '<td>'+(r.status==='—'?'<span class="mk-dim">—</span>':'<span class="mkx-tag'+(r.status==='Active'?'':' grey')+'">'+r.status+'</span>')+'</td>'+
+      '<td>'+mkxSince(r)+'</td>'+
       '<td class="num">'+mkInr(r.spend)+'</td><td class="num">'+(r.leads==null?'—':mkNum(r.leads))+'</td><td class="num">'+mkInr(r.costPerLead)+'</td>'+
       '<td class="num">'+(r.pax==null?'—':mkNum(r.pax))+'</td><td class="num">'+mkInr(r.costPerPax)+'</td><td class="num'+(r.revenue>0?' mkx-pos':'')+'">'+(r.revenue==null?'—':mkBig(r.revenue))+'</td>'+
       '<td><span class="mkx-tag '+r.insCls+'">'+r.insight+'</span></td></tr>';
-  }).join(''):'<tr><td colspan="9" class="mk-dim" style="text-align:center;padding:24px;">No campaigns match.</td></tr>';
+  }).join(''):'<tr><td colspan="10" class="mk-dim" style="text-align:center;padding:24px;">No campaigns match.</td></tr>';
   var more=document.getElementById('mkxMore');
   if(all.length>LIMIT){more.style.display='block';more.textContent=mkxShowAll?'Show top '+LIMIT:'Show all '+all.length+' campaigns';}else{more.style.display='none';}
   document.querySelectorAll('#mkxCampTable th').forEach(function(th){
@@ -2085,7 +2094,7 @@ function mkxWire(){
   document.getElementById('mkxMore').addEventListener('click',function(){mkxShowAll=!mkxShowAll;mkxRenderTable();});
   document.querySelectorAll('#mkxCampTable th').forEach(function(th){th.addEventListener('click',function(){
     var k=th.getAttribute('data-k');
-    if(mkxSort.k===k)mkxSort.dir=-mkxSort.dir;else{mkxSort.k=k;mkxSort.dir=(k==='name'||k==='status'||k==='insight')?1:-1;}
+    if(mkxSort.k===k)mkxSort.dir=-mkxSort.dir;else{mkxSort.k=k;mkxSort.dir=(k==='name'||k==='status'||k==='insight'||k==='firstSpend')?1:-1;}
     mkxRenderTable();});});
   document.getElementById('mkPgSize').addEventListener('change',function(){mkPg.size=Number(this.value);mkPg.page=1;mkRenderMonthRows();});
   document.getElementById('mkPgPrev').addEventListener('click',function(){mkPg.page--;mkRenderMonthRows();});
