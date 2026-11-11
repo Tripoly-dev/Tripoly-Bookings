@@ -1953,22 +1953,29 @@ function mkxRenderModal(){
   var d=mkUnData;if(!d)return;
   document.querySelectorAll('#mkxModal .mkx-modal-tabs .mk-pill').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-m')===mkUnTab);});
   var body=document.getElementById('mkxModalBody'),note=document.getElementById('mkxModalNote');
-  if(mkUnTab==='leads'){
+  if(mkUnTab==='leads'&&d.leadRows){
+    // One row per lead, newest first, so each record can be found and corrected in the CRM. The CSV carries every row.
+    var LIMR=500,showR=d.leadRows.slice(0,LIMR);
+    body.innerHTML='<table class="mkx-table" style="cursor:default;"><thead><tr><th>Created</th><th>Lead ID</th><th>Lead source</th><th>Name stored in the CRM</th><th>Layout</th><th>Why it did not match</th></tr></thead><tbody>'+
+      (showR.length?showR.map(function(r){return '<tr><td>'+mkEsc(r.created||'—')+'</td><td>'+mkEsc(r.leadId||'—')+'</td><td>'+mkEsc(r.source||'—')+'</td><td class="name" title="'+mkEsc(r.name)+'">'+(r.name?mkEsc(r.name):'<span class="mk-dim">(blank)</span>')+'</td><td>'+(r.layout?'<span class="mkx-tag blue">'+mkEsc(r.layout)+'</span>':'<span class="mk-dim">—</span>')+'</td><td style="white-space:normal;">'+mkEsc(MKX_REASON[r.reason]||r.reason)+'</td></tr>';}).join(''):'<tr><td colspan="6" class="mk-dim" style="text-align:center;padding:22px;">No unmatched leads in this period.</td></tr>')+'</tbody></table>';
+    note.textContent=mkNum(d.summary.leads)+' leads in total'+(d.leadRows.length<d.summary.leads?'; the newest '+mkNum(d.leadRows.length)+' are listed':'')+(showR.length<d.leadRows.length?', and the table shows the newest '+mkNum(showR.length):'')+'. Download the CSV for all '+mkNum(d.leadRows.length)+'. Search the Lead ID in Zoho CRM to open the record.';
+  }else if(mkUnTab==='leads'){
     var shown=d.leadGroups.reduce(function(a,g){return a+g.leads;},0);
     body.innerHTML='<table class="mkx-table" style="cursor:default;"><thead><tr><th>Name stored in the CRM</th><th>Why it did not match</th><th class="num">Leads</th><th>Latest lead</th></tr></thead><tbody>'+
       (d.leadGroups.length?d.leadGroups.map(function(g){return '<tr><td class="name" title="'+mkEsc(g.name)+'">'+(g.name?mkEsc(g.name):'<span class="mk-dim">(blank)</span>')+'</td><td style="white-space:normal;">'+mkEsc(MKX_REASON[g.reason]||g.reason)+'</td><td class="num">'+mkNum(g.leads)+'</td><td>'+mkEsc(g.latest||'—')+'</td></tr>';}).join(''):'<tr><td colspan="4" class="mk-dim" style="text-align:center;padding:22px;">No unmatched leads in this period.</td></tr>')+'</tbody></table>';
     note.textContent=mkNum(d.summary.leads)+' leads in total, grouped by the ad name stored on the lead'+(shown<d.summary.leads?' (top '+d.leadGroups.length+' names shown, covering '+mkNum(shown)+' leads)':'')+'. A name that is not found usually means the ad was renamed or removed in Meta after the lead came in. Fixing the name in the CRM, or matching on the Facebook Lead ID, would attribute them.';
   }else{
-    body.innerHTML='<table class="mkx-table" style="cursor:default;"><thead><tr><th>Booked</th><th>Lead ID</th><th>Name stored in the CRM</th><th>Layout</th><th class="num">Revenue</th><th>Why it did not match</th></tr></thead><tbody>'+
-      (d.bookings.length?d.bookings.map(function(b){return '<tr><td>'+mkEsc(b.booked)+'</td><td>'+mkEsc(b.leadId||'—')+'</td><td class="name" title="'+mkEsc(b.name)+'">'+(b.name?mkEsc(b.name):'<span class="mk-dim">(blank)</span>')+'</td><td><span class="mkx-tag blue">'+mkEsc(b.layout)+'</span></td><td class="num">'+mkInr(b.revenue)+'</td><td style="white-space:normal;">'+mkEsc(MKX_REASON[b.reason]||b.reason)+'</td></tr>';}).join(''):'<tr><td colspan="6" class="mk-dim" style="text-align:center;padding:22px;">No unmatched bookings in this period.</td></tr>')+'</tbody></table>';
+    body.innerHTML='<table class="mkx-table" style="cursor:default;"><thead><tr><th>Booked</th><th>Lead ID</th><th>Booking source</th><th>Name stored in the CRM</th><th>Layout</th><th class="num">Revenue</th><th>Why it did not match</th></tr></thead><tbody>'+
+      (d.bookings.length?d.bookings.map(function(b){return '<tr><td>'+mkEsc(b.booked)+'</td><td>'+mkEsc(b.leadId||'—')+'</td><td>'+mkEsc(b.source||'—')+'</td><td class="name" title="'+mkEsc(b.name)+'">'+(b.name?mkEsc(b.name):'<span class="mk-dim">(blank)</span>')+'</td><td><span class="mkx-tag blue">'+mkEsc(b.layout)+'</span></td><td class="num">'+mkInr(b.revenue)+'</td><td style="white-space:normal;">'+mkEsc(MKX_REASON[b.reason]||b.reason)+'</td></tr>';}).join(''):'<tr><td colspan="7" class="mk-dim" style="text-align:center;padding:22px;">No unmatched bookings in this period.</td></tr>')+'</tbody></table>';
     note.textContent=mkNum(d.summary.bookings)+' bookings worth '+mkBig(d.summary.revenue)+' (Quote Value)'+(d.bookings.length<d.summary.bookings?'; showing the top '+d.bookings.length:'')+'. Search the Lead ID in Zoho CRM to open the record.';
   }
 }
 function mkxModalCsv(){
   var d=mkUnData;if(!d)return;
   var esc=function(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;},lines;
-  if(mkUnTab==='leads'){lines=[['Name stored in CRM','Reason','Leads','Latest lead']].concat(d.leadGroups.map(function(g){return [g.name,MKX_REASON[g.reason]||g.reason,g.leads,g.latest];}));}
-  else{lines=[['Booked','Lead ID','Confirmation ID','Name stored in CRM','Layout','Revenue','Reason']].concat(d.bookings.map(function(b){return [b.booked,b.leadId,b.id,b.name,b.layout,b.revenue,MKX_REASON[b.reason]||b.reason];}));}
+  if(mkUnTab==='leads'&&d.leadRows){lines=[['Created','Lead ID','Lead source','Name stored in CRM','Layout','Facebook lead ID','Reason']].concat(d.leadRows.map(function(r){return [r.created,r.leadId,r.source,r.name,r.layout,r.facebookLeadId,MKX_REASON[r.reason]||r.reason];}));}
+  else if(mkUnTab==='leads'){lines=[['Name stored in CRM','Reason','Leads','Latest lead']].concat(d.leadGroups.map(function(g){return [g.name,MKX_REASON[g.reason]||g.reason,g.leads,g.latest];}));}
+  else{lines=[['Booked','Lead ID','Confirmation ID','Booking source','Name stored in CRM','Layout','Revenue','Reason']].concat(d.bookings.map(function(b){return [b.booked,b.leadId,b.id,b.source,b.name,b.layout,b.revenue,MKX_REASON[b.reason]||b.reason];}));}
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.map(function(l){return l.map(esc).join(',');}).join('\n')],{type:'text/csv'}));
   a.download='tripoly-unmatched-'+mkUnTab+'-'+(d.fromDate||d.from)+'-to-'+(d.toDate||d.to)+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
