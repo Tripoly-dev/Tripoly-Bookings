@@ -1704,7 +1704,7 @@ function mkRefresh(){ mkCache={};mkUnCache={};mkAn={}; if(mkOvWired)loadMkOvervi
 
 // ── Campaign optimisation: zero-booking spend, unmatched records, campaigns requiring attention ──
 var mkxFilter=null,mkxLast=null,mkxAttnAll=false,mkUnCache={},mkUnData=null,mkUnTab='leads';
-var MKX_DEF={minSpend:5000,highCpl:1.5,minLeads:30,lowRoas:0.5,scaleRoas:1.5,minPax:4};
+var MKX_DEF={minSpend:1000,highCpl:1.5,minLeads:30,lowRoas:0.5,scaleRoas:1.5,minPax:4};
 var mkxCfg=(function(){var c={};Object.keys(MKX_DEF).forEach(function(k){c[k]=MKX_DEF[k];});
   try{var r=JSON.parse(localStorage.getItem('mkxCfg')||'{}');Object.keys(MKX_DEF).forEach(function(k){if(typeof r[k]==='number'&&isFinite(r[k])&&r[k]>=0)c[k]=r[k];});}catch(e){}
   return c;})();
