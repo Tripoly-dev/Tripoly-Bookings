@@ -1104,6 +1104,12 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
     <div id="smBody" style="display:none;"></div>
     <div class="mgmt-msg" id="smPipeLoading" style="display:none;">Loading live pipeline…</div>
     <div id="smPipeBody" style="display:none;"></div>
+    <div class="mgmt-chart-title" style="margin:22px 0 6px;">Call &amp; Quote Activity <span style="font-weight:400;font-size:12px;opacity:.6;">· its own range · calls aren't split by FIT/GIT</span></div>
+    <div class="mgmt-ret-toggle" id="smActSub" style="flex-wrap:wrap;">
+      <button data-s="today" class="on">Today</button><button data-s="yesterday">Yesterday</button><button data-s="month">This Month</button>
+    </div>
+    <div class="mgmt-msg" id="smActLoading" style="display:none;">Loading call &amp; quote activity…</div>
+    <div id="smActBody" style="display:none;"></div>
   </div>
 </div>
 
@@ -2685,7 +2691,7 @@ function renderAccounts(){
 }
 
 // ══ SALES MANAGER DASHBOARD ══
-var smRangeVal='today', smDivVal='both', smWired=false;
+var smRangeVal='today', smDivVal='both', smActSub='today', smWired=false;
 function smEsc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function smDivLabel(){return smDivVal==='both'?'FIT + GIT':smDivVal.toUpperCase();}
 function smStat(label,value,color){
@@ -2705,7 +2711,7 @@ function smItemsHtml(r){
 }
 function smGroupRow(r,max,color,kind){
   var w=Math.round(((r.count||0)/max)*100);
-  var right=(kind==='conv')?((r.count||0)+' · '+(r.pax||0)+'px · '+fmtAmtShort(r.revenue||0)):(r.count||0);
+  var right=(kind==='conv')?((r.count||0)+' · '+(r.pax||0)+'px · '+fmtAmtShort(r.revenue||0)):(kind==='call')?((r.count||0)+' · '+(r.mins||0)+'m'):(r.count||0);
   var head='<div class="sm-grp" style="display:flex;align-items:center;gap:8px;margin:4px 0;cursor:pointer;">'+
     '<span class="sm-caret" style="display:inline-block;transition:transform .15s;font-size:10px;opacity:.55;width:10px;">▸</span>'+
     '<div style="width:140px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+smEsc(r.name)+'">'+smEsc(r.name)+'</div>'+
@@ -2794,9 +2800,39 @@ function loadSalesMgrPipe(){
     })
     .catch(function(e){ ld.style.display='none'; body.innerHTML='<div class="mgmt-msg">Could not load pipeline ('+e.message+').</div>'; body.style.display='block'; });
 }
+function loadSalesMgrActivity(){
+  var body=document.getElementById('smActBody'), ld=document.getElementById('smActLoading');
+  body.style.display='none'; ld.style.display='block';
+  fetch(PROXY_BASE+'/api/sales-manager-activity?sub='+encodeURIComponent(smActSub)+'&division='+encodeURIComponent(smDivVal)+'&deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(d){
+      ld.style.display='none';
+      var cl=d.calls||{};
+      function callCard(title,obj,color){ obj=obj||{total:{},byOwner:[]}; var t=obj.total||{}; return smGroupCard(title+' — '+(t.count||0)+' · '+(t.mins||0)+'m',obj.byOwner,color,'call'); }
+      var callGrid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">'+
+        callCard('Outgoing · Answered',cl.outAns,'#1A7A4A')+
+        callCard('Outgoing · Missed',cl.outMiss,'#C0392B')+
+        callCard('Incoming · Answered',cl.inAns,'#185FA5')+
+        callCard('Incoming · Missed',cl.inMiss,'#B7791F')+
+      '</div>';
+      var q=d.quotes||{byOwner:[]};
+      var qCard='<div style="margin-top:14px;">'+smGroupCard('Quotes Created — '+(q.total||0)+' ('+smDivLabel()+')',q.byOwner,'#6B46C1','count')+'</div>';
+      body.innerHTML='<div class="mgmt-sub" style="margin:0 0 8px;">'+(d.label||'')+' · '+d.startDate+(d.startDate!==d.endDate?(' → '+d.endDate):'')+'</div>'+callGrid+qCard;
+      body.style.display='block';
+    })
+    .catch(function(e){ ld.style.display='none'; body.innerHTML='<div class="mgmt-msg">Could not load activity ('+e.message+').</div>'; body.style.display='block'; });
+}
+
 function openSalesMgr(){
   if(smWired) return;
   smWired=true;
+  var ab=document.getElementById('smActSub').querySelectorAll('button');
+  for(var a=0;a<ab.length;a++) ab[a].addEventListener('click', function(){
+    smActSub=this.getAttribute('data-s');
+    var bs=document.getElementById('smActSub').querySelectorAll('button');
+    for(var j=0;j<bs.length;j++) bs[j].classList.toggle('on', bs[j].getAttribute('data-s')===smActSub);
+    loadSalesMgrActivity();
+  });
   document.getElementById('viewSalesMgr').addEventListener('click',function(e){
     if(e.target.tagName==='A')return;
     var g=e.target.closest?e.target.closest('.sm-grp'):null;
@@ -2820,10 +2856,11 @@ function openSalesMgr(){
     smDivVal=this.getAttribute('data-div');
     var bs=document.getElementById('smDiv').querySelectorAll('button');
     for(var j=0;j<bs.length;j++) bs[j].classList.toggle('active', bs[j].getAttribute('data-div')===smDivVal);
-    loadSalesMgrPeriod(); loadSalesMgrPipe();
+    loadSalesMgrPeriod(); loadSalesMgrPipe(); loadSalesMgrActivity();
   });
   loadSalesMgrPeriod();
   loadSalesMgrPipe();
+  loadSalesMgrActivity();
 }
 
 // ── Countdown ──
