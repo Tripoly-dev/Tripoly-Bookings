@@ -2711,7 +2711,7 @@ function smItemsHtml(r){
 }
 function smGroupRow(r,max,color,kind){
   var w=Math.round(((r.count||0)/max)*100);
-  var right=(kind==='conv')?((r.count||0)+' · '+(r.pax||0)+'px · '+fmtAmtShort(r.revenue||0)):(kind==='call')?((r.count||0)+' · '+(r.mins||0)+'m'):(r.count||0);
+  var right=(kind==='conv')?((r.count||0)+' · '+(r.pax||0)+'px · '+fmtAmtShort(r.revenue||0)):(kind==='call')?((r.count||0)+' · '+(r.dur||'0:00')):(r.count||0);
   var head='<div class="sm-grp" style="display:flex;align-items:center;gap:8px;margin:4px 0;cursor:pointer;">'+
     '<span class="sm-caret" style="display:inline-block;transition:transform .15s;font-size:10px;opacity:.55;width:10px;">▸</span>'+
     '<div style="width:140px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+smEsc(r.name)+'">'+smEsc(r.name)+'</div>'+
@@ -2732,6 +2732,26 @@ function smGroupInner(rows,color){
   if(!rows.length)return '<div class="mgmt-msg" style="padding:8px;">None.</div>';
   var max=rows.reduce(function(m,r){return Math.max(m,r.count||0);},0)||1;
   return rows.slice(0,12).map(function(r){return smGroupRow(r,max,color,'count');}).join('');
+}
+// ── Activity cards (display mode C): FIT/GIT/Other sub-sections within each call/quote card ──
+function smActDivSection(g,max,color,showHead,kind){
+  var rows=(g.byOwner||[]);
+  var sub=(kind==='call')?(' — '+(g.count||0)+' · '+(g.dur||'0:00')):(' — '+(g.count||0));
+  var head=showHead?('<div style="margin:10px 0 2px;font-size:12px;font-weight:800;letter-spacing:.04em;opacity:.8;">'+smEsc(g.div)+'<span style="opacity:.6;font-weight:600;">'+sub+'</span></div>'):'';
+  if(!rows.length)return head+(showHead?'<div style="padding:4px 0 2px;font-size:12px;opacity:.5;">None.</div>':'');
+  var body=rows.slice(0,15).map(function(r){return smGroupRow(r,max,color,kind);}).join('');
+  return head+body;
+}
+function smActCard(title,obj,color,kind){
+  obj=obj||{}; var groups=(obj.groups||[]);
+  var headTotal=(kind==='call')?(((obj.total||{}).count||0)+' · '+((obj.total||{}).dur||'0:00')):(obj.total||0);
+  var max=1; groups.forEach(function(g){(g.byOwner||[]).forEach(function(r){ if((r.count||0)>max)max=r.count; });});
+  var multi=groups.length>1;
+  var show=multi?groups.filter(function(g){return (g.count||0)>0;}):groups;
+  var anyRows=show.some(function(g){return (g.byOwner||[]).length;});
+  var inner=anyRows?show.map(function(g){return smActDivSection(g,max,color,multi,kind);}).join(''):'<div class="mgmt-msg" style="padding:10px;">No data in this view.</div>';
+  return '<div class="mgmt-chart-card"><div class="mgmt-chart-title">'+smEsc(title)+' — '+headTotal+'</div>'+inner+
+    (anyRows?'<small style="display:block;margin:6px 0 0;opacity:.55;">Click a row to see the leads · each opens in Zoho CRM</small>':'')+'</div>';
 }
 
 function loadSalesMgrPeriod(){
@@ -2808,16 +2828,15 @@ function loadSalesMgrActivity(){
     .then(function(d){
       ld.style.display='none';
       var cl=d.calls||{};
-      function callCard(title,obj,color){ obj=obj||{total:{},byOwner:[]}; var t=obj.total||{}; return smGroupCard(title+' — '+(t.count||0)+' · '+(t.mins||0)+'m',obj.byOwner,color,'call'); }
       var callGrid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">'+
-        callCard('Outgoing · Answered',cl.outAns,'#1A7A4A')+
-        callCard('Outgoing · Missed',cl.outMiss,'#C0392B')+
-        callCard('Incoming · Answered',cl.inAns,'#185FA5')+
-        callCard('Incoming · Missed',cl.inMiss,'#B7791F')+
+        smActCard('Outgoing · Answered',cl.outAns,'#1A7A4A','call')+
+        smActCard('Outgoing · Missed',cl.outMiss,'#C0392B','call')+
+        smActCard('Incoming · Answered',cl.inAns,'#185FA5','call')+
+        smActCard('Incoming · Missed',cl.inMiss,'#B7791F','call')+
       '</div>';
-      var q=d.quotes||{byOwner:[]};
-      var qCard='<div style="margin-top:14px;">'+smGroupCard('Quotes Created — '+(q.total||0)+' ('+smDivLabel()+')',q.byOwner,'#6B46C1','count')+'</div>';
-      body.innerHTML='<div class="mgmt-sub" style="margin:0 0 8px;">'+(d.label||'')+' · '+d.startDate+(d.startDate!==d.endDate?(' → '+d.endDate):'')+'</div>'+callGrid+qCard;
+      var qCard='<div style="margin-top:14px;">'+smActCard('Quotes Created ('+smDivLabel()+')',d.quotes,'#6B46C1','count')+'</div>';
+      var stamp='<div class="mgmt-sub" style="margin:0 0 8px;">'+(d.label||'')+' · '+d.startDate+(d.startDate!==d.endDate?(' → '+d.endDate):'')+(d.computedAt?(' · updated '+d.computedAt+' IST'):'')+'</div>';
+      body.innerHTML=stamp+callGrid+qCard;
       body.style.display='block';
     })
     .catch(function(e){ ld.style.display='none'; body.innerHTML='<div class="mgmt-msg">Could not load activity ('+e.message+').</div>'; body.style.display='block'; });
