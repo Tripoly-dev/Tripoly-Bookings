@@ -311,6 +311,8 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 #mgmtBrChart{width:100%!important;height:280px!important;}
 #salesChart{width:100%!important;height:380px!important;}
 #viewAccounts a{color:#185FA5;text-decoration:underline;}
+#smDiv .mk-pill{border:1px solid var(--rule);background:var(--surface);border-radius:9px;padding:7px 14px;font:700 12px 'Inter',sans-serif;color:var(--ink-mid);cursor:pointer;}
+#smDiv .mk-pill.active{background:var(--orange);color:#fff;border-color:var(--orange);}
 .acc-row{cursor:pointer;}
 .acc-row:hover{background:var(--bg);}
 .acc-row.open .sx-caret{transform:rotate(90deg);}
@@ -619,6 +621,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   <button class="tab-btn" id="tabManagement" onclick="switchTab('management')" style="display:none;">Management Dashboard</button>
   <button class="tab-btn" id="tabSales" onclick="switchTab('sales')" style="display:none;">Sales Team</button>
   <button class="tab-btn" id="tabAccounts" onclick="switchTab('accounts')" style="display:none;">Accounts Data</button>
+  <button class="tab-btn" id="tabSalesMgr" onclick="switchTab('salesmgr')" style="display:none;">Sales Manager</button>
 </div>
 
 <!-- ══ CURRENT / LAST MONTH VIEW ══ -->
@@ -1084,6 +1087,26 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   </div>
 </div>
 
+<!-- ══ SALES MANAGER VIEW ══ -->
+<div class="view" id="viewSalesMgr">
+  <div class="mgmt-wrap">
+    <div class="mgmt-head">
+      <div class="mgmt-ret-toggle" id="smRange" style="flex-wrap:wrap;">
+        <button data-r="today" class="on">Today</button><button data-r="week">This Week</button><button data-r="lastWeek">Last Week</button><button data-r="month">This Month</button><button data-r="lastMonth">Last Month</button><button data-r="currentFY">Current FY</button>
+      </div>
+      <div id="smDiv" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        <button class="mk-pill active" data-div="both">Both</button><button class="mk-pill" data-div="git">GIT</button><button class="mk-pill" data-div="fit">FIT</button>
+      </div>
+      <div class="mgmt-sub" id="smSub"></div>
+    </div>
+    <div class="mgmt-msg" id="smLoading">Loading sales manager data…</div>
+    <div class="mgmt-msg" id="smError" style="display:none;"></div>
+    <div id="smBody" style="display:none;"></div>
+    <div class="mgmt-msg" id="smPipeLoading" style="display:none;">Loading live pipeline…</div>
+    <div id="smPipeBody" style="display:none;"></div>
+  </div>
+</div>
+
 <!-- ══ PERFORMANCE VIEW ══ -->
 <div class="view" id="viewPerf">
   <div class="perf-wrap" id="perfWrap">
@@ -1270,7 +1293,7 @@ function isQualifying(r){
 // ── Tab switching ──
 function switchTab(period){
   activePeriod=period;
-  ['Current','Last','FY','Perf','Marketing','Management','Sales','Accounts'].forEach(function(t){
+  ['Current','Last','FY','Perf','Marketing','Management','Sales','Accounts','SalesMgr'].forEach(function(t){
     var el=document.getElementById('tab'+t);
     if(el) el.classList.remove('active');
   });
@@ -1320,6 +1343,11 @@ function switchTab(period){
     document.getElementById('viewAccounts').classList.add('active');
     document.getElementById('headerSub').textContent='Accounts — Cash Flow';
     openAccounts();
+  } else if(period==='salesmgr'){
+    document.getElementById('tabSalesMgr').classList.add('active');
+    document.getElementById('viewSalesMgr').classList.add('active');
+    document.getElementById('headerSub').textContent='Sales Manager Dashboard';
+    openSalesMgr();
   }
 
   if(period!=='performance') stopPerfScroll();
@@ -2656,6 +2684,137 @@ function renderAccounts(){
   document.getElementById('accSummaryWrap').innerHTML=accSummary();
 }
 
+// ══ SALES MANAGER DASHBOARD ══
+var smRangeVal='today', smDivVal='both', smWired=false;
+function smEsc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function smDivLabel(){return smDivVal==='both'?'FIT + GIT':smDivVal.toUpperCase();}
+function smStat(label,value,color){
+  return '<div style="flex:1;min-width:130px;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:12px 14px;">'+
+    '<div style="font-size:12px;opacity:.65;">'+label+'</div>'+
+    '<div style="font-size:24px;font-weight:800;color:'+(color||'var(--ink)')+';margin-top:2px;">'+value+'</div></div>';
+}
+function smBarList(title,rows,color){
+  rows=(rows||[]).slice(0,12);
+  if(!rows.length)return '<div class="mgmt-chart-card"><div class="mgmt-chart-title">'+title+'</div><div class="mgmt-msg" style="padding:10px;">No data in this period.</div></div>';
+  var max=rows.reduce(function(m,r){return Math.max(m,r.count||0);},0)||1;
+  var body=rows.map(function(r){
+    var w=Math.round((r.count/max)*100);
+    return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">'+
+      '<div style="width:140px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+smEsc(r.name)+'">'+smEsc(r.name)+'</div>'+
+      '<div style="flex:1;background:var(--bg);border-radius:6px;height:16px;position:relative;"><div style="width:'+w+'%;background:'+color+';height:16px;border-radius:6px;min-width:2px;"></div></div>'+
+      '<div style="width:44px;text-align:right;font-weight:700;font-size:13px;">'+(r.count||0)+'</div></div>';
+  }).join('');
+  return '<div class="mgmt-chart-card"><div class="mgmt-chart-title">'+title+'</div>'+body+'</div>';
+}
+function smConvTable(title,rows){
+  rows=(rows||[]);
+  if(!rows.length)return '<div class="mgmt-chart-card"><div class="mgmt-chart-title">'+title+'</div><div class="mgmt-msg" style="padding:10px;">No confirmations in this period.</div></div>';
+  var body=rows.slice(0,15).map(function(r){
+    return '<tr><td class="met">'+smEsc(r.name)+'</td><td>'+(r.count||0)+'</td><td>'+(r.pax||0)+'</td><td>'+fmtAmtShort(r.revenue||0)+'</td></tr>';
+  }).join('');
+  return '<div class="mgmt-chart-card"><div class="mgmt-chart-title">'+title+'</div>'+
+    '<table class="mgmt-table"><thead><tr><th>'+(title.indexOf('Branch')>=0?'Branch':'Owner')+'</th><th>Confirmations</th><th>PAX</th><th>Revenue</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+}
+
+function loadSalesMgrPeriod(){
+  var body=document.getElementById('smBody'), ld=document.getElementById('smLoading'), er=document.getElementById('smError');
+  body.style.display='none'; er.style.display='none'; ld.style.display='block';
+  fetch(PROXY_BASE+'/api/sales-manager?period='+encodeURIComponent(smRangeVal)+'&division='+encodeURIComponent(smDivVal)+'&deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(d){
+      ld.style.display='none';
+      document.getElementById('smSub').textContent=(d.periodLabel||'')+' · '+smDivLabel()+' · '+d.startDate+' → '+d.endDate;
+      var q=d.quality||{}, c=d.conversions||{total:{}};
+      var convPct=(c.conversionPct==null)?'—':(c.conversionPct.toFixed(1)+'%');
+      var kpis='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">'+
+        smStat('Leads created',(d.leads&&d.leads.total)||0,'#185FA5')+
+        smStat('Confirmations',(c.total&&c.total.count)||0,'#1A7A4A')+
+        smStat('Conversion %',convPct,'#0E7C86')+
+        smStat('Revenue',fmtAmtShort((c.total&&c.total.revenue)||0),'#1A7A4A')+
+        smStat('Junk leads',q.junk||0,'#C0392B')+
+        smStat('Just exploring',q.justExploring||0,'#B7791F')+
+      '</div>';
+      var grid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">'+
+        smBarList('Leads by Source',(d.leads&&d.leads.bySource),'#185FA5')+
+        smBarList('Leads by Branch',(d.leads&&d.leads.byBranch),'#6B46C1')+
+        smBarList('Leads by Owner',(d.leads&&d.leads.byOwner),'#185FA5')+
+        smConvTable('Confirmations by Owner',(c.byOwner))+
+        smConvTable('Confirmations by Branch',(c.byBranch))+
+      '</div>';
+      body.innerHTML=kpis+grid;
+      body.style.display='block';
+    })
+    .catch(function(e){ ld.style.display='none'; er.textContent='Could not load sales manager data ('+e.message+').'; er.style.display='block'; });
+}
+
+function loadSalesMgrPipe(){
+  var body=document.getElementById('smPipeBody'), ld=document.getElementById('smPipeLoading');
+  body.style.display='none'; ld.style.display='block';
+  fetch(PROXY_BASE+'/api/sales-manager-pipeline?division='+encodeURIComponent(smDivVal)+'&deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(d){
+      ld.style.display='none';
+      var hw=d.hotWarm||{aging:{}}, dis=d.discipline||{stalled:{},untouched:{}};
+      var ag=hw.aging||{};
+      var agHtml=['0-3','4-7','8-14','15+'].map(function(k){
+        var c=ag[k]||0; var col=(k==='0-3')?'#1A7A4A':(k==='4-7')?'#B7791F':'#C0392B';
+        return '<div style="flex:1;min-width:90px;text-align:center;background:var(--bg);border-radius:10px;padding:8px;"><div style="font-size:20px;font-weight:800;color:'+col+';">'+c+'</div><div style="font-size:11px;opacity:.6;">'+k+' days</div></div>';
+      }).join('');
+      var funnelCard=smBarList('Pipeline Funnel — working stages (as of '+(d.asOf||'')+')',(d.funnel||[]).map(function(f){return {name:f.stage,count:f.count};}),'#6B46C1');
+      var hotCard='<div class="mgmt-chart-card"><div class="mgmt-chart-title">Open Hot/Warm — '+(hw.total||0)+' leads · aging since last stage move</div>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">'+agHtml+'</div>'+
+        smBarInner((hw.byOwner||[]),'#C0392B')+'</div>';
+      var stalled=dis.stalled||{}, unt=dis.untouched||{};
+      var disCard='<div class="mgmt-chart-card"><div class="mgmt-chart-title">Follow-up Discipline</div>'+
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'+
+          smStat('Stalled deals',stalled.total||0,'#C0392B')+
+          smStat('Untouched (last '+(unt.windowDays||7)+'d)',unt.total||0,'#B7791F')+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">'+
+          '<div><div style="font-weight:700;font-size:13px;margin-bottom:4px;">Stalled by owner</div>'+smBarInner((stalled.byOwner||[]),'#C0392B')+'</div>'+
+          '<div><div style="font-weight:700;font-size:13px;margin-bottom:4px;">Untouched by owner</div>'+smBarInner((unt.byOwner||[]),'#B7791F')+'</div>'+
+        '</div>'+
+        '<small style="display:block;margin:10px 0 0;opacity:.65;">Stalled = active deal with no stage movement in '+(dis.staleDays||3)+' working days (based on Stage Change, since follow-up dates aren\'t maintained in CRM). Untouched = New / Attempted leads from the last '+(unt.windowDays||7)+' days not yet actioned. Pipeline covers this-FY leads only.</small></div>';
+      var grid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-top:4px;">'+funnelCard+hotCard+'</div>'+disCard;
+      body.innerHTML='<div class="mgmt-chart-title" style="margin:18px 0 8px;">Live Pipeline <span style="font-weight:400;font-size:12px;opacity:.6;">· as of now, independent of the period above</span></div>'+grid;
+      body.style.display='block';
+    })
+    .catch(function(e){ ld.style.display='none'; body.innerHTML='<div class="mgmt-msg">Could not load pipeline ('+e.message+').</div>'; body.style.display='block'; });
+}
+function smBarInner(rows,color){
+  rows=(rows||[]).slice(0,12);
+  if(!rows.length)return '<div class="mgmt-msg" style="padding:8px;">None.</div>';
+  var max=rows.reduce(function(m,r){return Math.max(m,r.count||0);},0)||1;
+  return rows.map(function(r){
+    var w=Math.round((r.count/max)*100);
+    return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">'+
+      '<div style="width:130px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+smEsc(r.name)+'">'+smEsc(r.name)+'</div>'+
+      '<div style="flex:1;background:var(--bg);border-radius:6px;height:16px;"><div style="width:'+w+'%;background:'+color+';height:16px;border-radius:6px;min-width:2px;"></div></div>'+
+      '<div style="width:40px;text-align:right;font-weight:700;font-size:13px;">'+(r.count||0)+'</div></div>';
+  }).join('');
+}
+
+function openSalesMgr(){
+  if(smWired) return;
+  smWired=true;
+  var rb=document.getElementById('smRange').querySelectorAll('button');
+  for(var i=0;i<rb.length;i++) rb[i].addEventListener('click', function(){
+    smRangeVal=this.getAttribute('data-r');
+    var bs=document.getElementById('smRange').querySelectorAll('button');
+    for(var j=0;j<bs.length;j++) bs[j].classList.toggle('on', bs[j].getAttribute('data-r')===smRangeVal);
+    loadSalesMgrPeriod();
+  });
+  var db=document.getElementById('smDiv').querySelectorAll('button');
+  for(var k=0;k<db.length;k++) db[k].addEventListener('click', function(){
+    smDivVal=this.getAttribute('data-div');
+    var bs=document.getElementById('smDiv').querySelectorAll('button');
+    for(var j=0;j<bs.length;j++) bs[j].classList.toggle('active', bs[j].getAttribute('data-div')===smDivVal);
+    loadSalesMgrPeriod(); loadSalesMgrPipe();
+  });
+  loadSalesMgrPeriod();
+  loadSalesMgrPipe();
+}
+
 // ── Countdown ──
 function startCountdown(){
   clearInterval(countdownId);
@@ -3296,6 +3455,7 @@ function startDashboard(){
   applyManagementTab();
   applySalesTab();
   applyAccountsTab();
+  applySalesMgrTab();
   Promise.all([fetchUserMap(),fetchGroupDepartureMap()]).then(function(){
     buildPerfMonths();
     switchTab('current');
@@ -3310,6 +3470,7 @@ var canSeeMarketing = false;
 var canSeeManagement = false;
 var canSeeSales = false;
 var canSeeAccounts = false;
+var canSeeSalesMgr = false;
 
 function getDeviceId(){
   var id = null;
@@ -3331,18 +3492,20 @@ function cachedAccessValid(){
       canSeeManagement = (obj.management === true);
       canSeeSales = (obj.sales === true);
       canSeeAccounts = (obj.accounts === true);
+      canSeeSalesMgr = (obj.salesManager === true);
       return true;
     }
     return false;
   } catch(e){ return false; }
 }
 
-function cacheAccess(expiresAt, marketing, management, sales, accounts){
+function cacheAccess(expiresAt, marketing, management, sales, accounts, salesManager){
   canSeeMarketing = (marketing === true);
   canSeeManagement = (management === true);
   canSeeSales = (sales === true);
   canSeeAccounts = (accounts === true);
-  try { localStorage.setItem(ACCESS_LS_KEY, JSON.stringify({expiresAt:expiresAt, marketing:canSeeMarketing, management:canSeeManagement, sales:canSeeSales, accounts:canSeeAccounts})); } catch(e){}
+  canSeeSalesMgr = (salesManager === true);
+  try { localStorage.setItem(ACCESS_LS_KEY, JSON.stringify({expiresAt:expiresAt, marketing:canSeeMarketing, management:canSeeManagement, sales:canSeeSales, accounts:canSeeAccounts, salesManager:canSeeSalesMgr})); } catch(e){}
 }
 
 function applyMarketingTab(){
@@ -3365,10 +3528,15 @@ function applyAccountsTab(){
   if(t) t.style.display = canSeeAccounts ? 'inline-block' : 'none';
 }
 
+function applySalesMgrTab(){
+  var t = document.getElementById('tabSalesMgr');
+  if(t) t.style.display = canSeeSalesMgr ? 'inline-block' : 'none';
+}
+
 // After a cached fast-path start, re-check the server so access changes
 // (admin toggled someone on/off) take effect without clearing cache.
 function clearAccessCache(){
-  canSeeMarketing = false; canSeeManagement = false; canSeeSales = false;
+  canSeeMarketing = false; canSeeManagement = false; canSeeSales = false; canSeeAccounts = false; canSeeSalesMgr = false;
   try { localStorage.removeItem(ACCESS_LS_KEY); } catch(e){}
 }
 
@@ -3378,11 +3546,12 @@ function refreshAccessFlags(){
       .then(function(r){ return r.json(); })
       .then(function(d){
         if(d.status === 'approved'){
-          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts);
+          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts, d.salesManager);
           applyMarketingTab();
           applyManagementTab();
           applySalesTab();
-  applyAccountsTab();
+          applyAccountsTab();
+          applySalesMgrTab();
         } else if(d.status === 'pending'){
           // access revoked/reset on the server — re-lock and wait for re-approval
           clearAccessCache();
@@ -3415,7 +3584,7 @@ function startGatePolling(){
       .then(function(d){
         if(d.status === 'approved'){
           clearInterval(gatePollTimer);
-          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts);
+          cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts, d.salesManager);
           startDashboard();
         } else if(d.status === 'none'){
           // request was denied (removed from pending without approval)
@@ -3443,7 +3612,7 @@ function submitAccessRequest(){
   }).then(function(r){ return r.json(); }).then(function(d){
     btn.disabled = false; btn.textContent = 'Request Access';
     if(d.status === 'approved'){
-      cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts); startDashboard();
+      cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts, d.salesManager); startDashboard();
     } else if(d.status === 'pending'){
       showGateState('waiting'); startGatePolling();
     } else {
@@ -3473,7 +3642,7 @@ function initAccessGate(){
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.status === 'approved'){
-        cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts); startDashboard();
+        cacheAccess(d.expiresAt, d.marketing, d.management, d.sales, d.accounts, d.salesManager); startDashboard();
       } else if(d.status === 'pending'){
         showGateState('waiting'); startGatePolling();
       } else {
