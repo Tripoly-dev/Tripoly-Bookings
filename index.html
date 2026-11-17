@@ -2813,7 +2813,7 @@ function loadSalesMgrPipe(){
           '<div><div style="font-weight:700;font-size:13px;margin-bottom:4px;">Stalled by owner</div>'+smGroupInner((stalled.byOwner||[]),'#C0392B')+'</div>'+
           '<div><div style="font-weight:700;font-size:13px;margin-bottom:4px;">Untouched by owner</div>'+smGroupInner((unt.byOwner||[]),'#B7791F')+'</div>'+
         '</div>'+
-        '<small style="display:block;margin:10px 0 0;opacity:.65;">Stalled = active lead with no stage movement in '+(dis.staleDays||3)+' working days (based on Stage Change, since follow-up dates aren\'t maintained in CRM). Untouched = New / Attempted leads from the last '+(unt.windowDays||7)+' days not yet actioned. Pipeline covers this-FY leads only · click any row to open the leads in CRM.</small></div>';
+        '<small style="display:block;margin:10px 0 0;opacity:.65;">Stalled = active lead with no stage movement in '+(dis.staleDays||3)+' working days. Untouched = New / Attempted leads from the last '+(unt.windowDays||7)+' days not yet actioned. Pipeline covers this-FY leads only · click any row to open the leads in CRM.</small></div>';
       var grid='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-top:4px;">'+funnelCard+hotCard+'</div>'+disCard;
       body.innerHTML='<div class="mgmt-chart-title" style="margin:18px 0 8px;">Live Pipeline <span style="font-weight:400;font-size:12px;opacity:.6;">· as of now, independent of the period above</span></div>'+grid;
       body.style.display='block';
