@@ -813,6 +813,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
         <section class="mkx-kpis" id="mkOvKpis"></section>
         <section class="mkx-kpis sub" id="mkOvKpis2"></section>
         <section class="mkx-mini" id="mkxMini"></section>
+        <section class="mkx-mini" id="mkxMetaBal"></section>
         <div class="mkx-head" data-c="green" id="mkxRank"><div><h2>Campaign rankings</h2><p>Best and worst campaigns, and where ad spend is not producing bookings, for the selected period. Ignores the campaign filter.</p></div></div>
         <div class="mkx-opt" id="mkxOpt"></div>
         <section class="mkx-panel">
@@ -1509,7 +1510,7 @@ function loadMkOverview(){
   var pPrev=per.prev?mkFetchOverview(per.prev.fd,per.prev.td,dv,cp).catch(function(){return null;}):Promise.resolve(null);
   var pTrend=per.fd===MK_FIRST_DAY?pSel:mkFetchOverview(MK_FIRST_DAY,per.td,dv,cp).catch(function(){return null;});
   Promise.all([pSel,pPrev,pTrend])
-    .then(function(r){if(seq!==mkOvSeq)return;L.style.display='none';B.style.display='block';B.setAttribute('data-ready','1');B.classList.remove('mkx-busy');chip.textContent='LIVE DATA';renderMkOverview(r[0],r[1],r[2]);mkxPrefetch(seq);})
+    .then(function(r){if(seq!==mkOvSeq)return;L.style.display='none';B.style.display='block';B.setAttribute('data-ready','1');B.classList.remove('mkx-busy');chip.textContent='LIVE DATA';renderMkOverview(r[0],r[1],r[2]);mkxMetaBalLoad();mkxPrefetch(seq);})
     .catch(function(err){if(seq!==mkOvSeq)return;L.style.display='none';B.classList.remove('mkx-busy');B.style.display='none';B.setAttribute('data-ready','0');chip.textContent='LIVE DATA';E.style.display='block';E.textContent='Could not load the marketing overview ('+err.message+').';});
 }
 // After a load, quietly fetch the other two views for the same period so GIT / FIT / All switch instantly.
@@ -1524,6 +1525,33 @@ function mkxPrefetch(seq){
     if(!todo.length||seq!==mkOvSeq)return;
     var x=todo.shift();mkFetchOverview(x[0],x[1],x[2],'').then(next,next);
   })();
+}
+// Meta balance: what the GIT and FIT ad accounts owe Meta, as last saved by the nightly sync (about 12:45 AM IST), read through
+// the proxy. Loaded on its own so a proxy problem only affects this tile. Follows the GIT / FIT / All buttons.
+var mkxMetaBal={t:0,d:null,p:null,err:false};
+function mkxMetaBalRender(){
+  var el=document.getElementById('mkxMetaBal');if(!el)return;
+  var m=mkxMetaBal,dv=mkOv.division,lab={all:'Meta balance, GIT + FIT',git:'Meta balance, GIT',fit:'Meta balance, FIT'}[dv]||'Meta balance';
+  var val='…',note='Loading from Meta';
+  if(m.d){
+    var by={};(m.d.accounts||[]).forEach(function(a){by[a.key]=a.balance;});
+    var v=dv==='git'?by.git:dv==='fit'?by.fit:m.d.total;
+    val=v==null?'Unavailable':mkInr(v);
+    var at=m.d.asOf?new Date(m.d.asOf):null,tm=at&&!isNaN(at.getTime())?at.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Kolkata'}):'';
+    if(!tm){val='Not yet';note='Waiting for the first nightly update from Meta.';}
+    else note='Owed to Meta · updated nightly · GIT '+mkInr(by.git)+' · FIT '+mkInr(by.fit)+' · as of '+tm;
+  }else if(m.err){val='Unavailable';note='Could not reach Meta. The rest of this page is not affected.';}
+  el.innerHTML='<div style="border-left:3px solid #185FA5;"><span>'+mkEsc(lab)+'</span><strong>'+mkEsc(val)+'</strong><span style="margin-top:5px;font-weight:500;">'+mkEsc(note)+'</span></div>';
+}
+function mkxMetaBalLoad(){
+  var m=mkxMetaBal;
+  mkxMetaBalRender();
+  if((m.d&&Date.now()-m.t<60000)||m.p)return;
+  m.p=fetch(PROXY_BASE+'/api/marketing-meta-balance?deviceId='+encodeURIComponent(getDeviceId()))
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(function(d){m.d=d;m.t=Date.now();m.err=false;})
+    .catch(function(){if(!m.d)m.err=true;})
+    .then(function(){m.p=null;mkxMetaBalRender();});
 }
 function mkChart(id,cfg){
   var ctx=document.getElementById(id);if(!ctx||!window.Chart)return;
