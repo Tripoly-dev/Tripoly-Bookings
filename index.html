@@ -1526,8 +1526,8 @@ function mkxPrefetch(seq){
     var x=todo.shift();mkFetchOverview(x[0],x[1],x[2],'').then(next,next);
   })();
 }
-// Meta balance: what the GIT and FIT ad accounts currently owe Meta, read live through the proxy. Loaded on its own so a Meta
-// or proxy problem only affects this tile. Follows the GIT / FIT / All buttons. The last good answer is kept for one minute.
+// Meta balance: what the GIT and FIT ad accounts owe Meta, as last saved by the nightly sync (about 12:45 AM IST), read through
+// the proxy. Loaded on its own so a proxy problem only affects this tile. Follows the GIT / FIT / All buttons.
 var mkxMetaBal={t:0,d:null,p:null,err:false};
 function mkxMetaBalRender(){
   var el=document.getElementById('mkxMetaBal');if(!el)return;
@@ -1537,8 +1537,9 @@ function mkxMetaBalRender(){
     var by={};(m.d.accounts||[]).forEach(function(a){by[a.key]=a.balance;});
     var v=dv==='git'?by.git:dv==='fit'?by.fit:m.d.total;
     val=v==null?'Unavailable':mkInr(v);
-    var at=new Date(m.d.asOf),tm=isNaN(at.getTime())?'':at.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
-    note='Owed to Meta now · GIT '+mkInr(by.git)+' · FIT '+mkInr(by.fit)+(tm?' · as of '+tm:'');
+    var at=m.d.asOf?new Date(m.d.asOf):null,tm=at&&!isNaN(at.getTime())?at.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Kolkata'}):'';
+    if(!tm){val='Not yet';note='Waiting for the first nightly update from Meta.';}
+    else note='Owed to Meta · updated nightly · GIT '+mkInr(by.git)+' · FIT '+mkInr(by.fit)+' · as of '+tm;
   }else if(m.err){val='Unavailable';note='Could not reach Meta. The rest of this page is not affected.';}
   el.innerHTML='<div style="border-left:3px solid #185FA5;"><span>'+mkEsc(lab)+'</span><strong>'+mkEsc(val)+'</strong><span style="margin-top:5px;font-weight:500;">'+mkEsc(note)+'</span></div>';
 }
