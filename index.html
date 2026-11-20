@@ -3060,11 +3060,13 @@ function showNextBirthday(){
     if(BDAY.countdown<=0){ clearInterval(BDAY.timerId); stopBdaySound(); if(BDAY.queue.length){ showNextBirthday(); } else { closeBirthday(); } }
   },1000);
 }
-function playBirthdaySequence(){ var t=bdayToday(); if(!t.length){ bdayToast('No birthdays today 🎂'); return; } BDAY.queue=t.slice(); showNextBirthday(); }
-function checkBirthdaySchedule(){ var p=bdayIst(); if(p.h===11 && p.m===15 && BDAY.handledDate!==p.day){ BDAY.handledDate=p.day; try{localStorage.setItem('bdayHandled',p.day);}catch(e){} playBirthdaySequence(); } }
+function bdayDaysAgo(mmdd){ var parts=(mmdd||'').split('-'); if(parts.length<2)return 1e9; var mo=parseInt(parts[0],10)-1, da=parseInt(parts[1],10); var n=new Date(Date.now()+5.5*3600*1000); var today=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()); var thisYr=Date.UTC(n.getUTCFullYear(),mo,da); var bd=thisYr<=today?thisYr:Date.UTC(n.getUTCFullYear()-1,mo,da); return Math.round((today-bd)/86400000); }
+function lastBirthdays(){ if(!BDAY.list.length)return []; var arr=BDAY.list.map(function(p){return {p:p,ago:bdayDaysAgo(p.date)};}); var min=Math.min.apply(null,arr.map(function(x){return x.ago;})); return arr.filter(function(x){return x.ago===min;}).map(function(x){return x.p;}); }
+function playBirthdaySequence(list){ var t=(list&&list.length)?list:bdayToday(); if(!t.length){ bdayToast('No birthdays yet 🎂'); return; } BDAY.queue=t.slice(); showNextBirthday(); }
+function checkBirthdaySchedule(){ var p=bdayIst(); if(p.h===13 && p.m===0 && BDAY.handledDate!==p.day){ BDAY.handledDate=p.day; try{localStorage.setItem('bdayHandled',p.day);}catch(e){} var t=bdayToday(); if(t.length) playBirthdaySequence(t); } }
 setInterval(checkBirthdaySchedule, 20000);
 document.getElementById('bday-overlay').addEventListener('click', closeBirthday);
-document.getElementById('bdayBtn').addEventListener('click', function(){ playBirthdaySequence(); });
+document.getElementById('bdayBtn').addEventListener('click', function(){ playBirthdaySequence(lastBirthdays()); });
 document.addEventListener('click', function(){ try{ var b=document.getElementById('bdayAudio'); b.muted=true; b.play().then(function(){ b.pause(); b.currentTime=0; b.muted=false; }).catch(function(){}); }catch(e){} }, {once:true});
 document.getElementById('lastBookingBtn').addEventListener('click',function(){
   var feed=document.getElementById('feed');
