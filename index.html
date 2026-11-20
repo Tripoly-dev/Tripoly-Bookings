@@ -3033,7 +3033,7 @@ document.getElementById('testBtn').addEventListener('click',function(){celebrate
 
 // ── Birthday celebration (auto at 11:15 AM IST once/day + manual button); 1-min photo+name+song per person ──
 var BDAY = { list: [], loaded: false, queue: [], timerId: null, countdown: 60, handledDate: '' };
-try { BDAY.handledDate = localStorage.getItem('bdayHandled2') || ''; } catch(e){}
+try { BDAY.handledDate = localStorage.getItem('bdayHandled3') || ''; } catch(e){}
 function bdayIst(){ var n=new Date(Date.now()+5.5*3600*1000); return { h:n.getUTCHours(), m:n.getUTCMinutes(), mmdd:('0'+(n.getUTCMonth()+1)).slice(-2)+'-'+('0'+n.getUTCDate()).slice(-2), day:n.toISOString().slice(0,10) }; }
 function loadBirthdays(){ fetch('birthdays.json?v='+Date.now()).then(function(r){return r.json();}).then(function(d){ BDAY.list = Array.isArray(d)?d:[]; BDAY.loaded=true; checkBirthdaySchedule(); }).catch(function(){ BDAY.list=[]; BDAY.loaded=true; }); }
 loadBirthdays();
@@ -3063,7 +3063,7 @@ function showNextBirthday(){
 function bdayDaysAgo(mmdd){ var parts=(mmdd||'').split('-'); if(parts.length<2)return 1e9; var mo=parseInt(parts[0],10)-1, da=parseInt(parts[1],10); var n=new Date(Date.now()+5.5*3600*1000); var today=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()); var thisYr=Date.UTC(n.getUTCFullYear(),mo,da); var bd=thisYr<=today?thisYr:Date.UTC(n.getUTCFullYear()-1,mo,da); return Math.round((today-bd)/86400000); }
 function lastBirthdays(){ if(!BDAY.list.length)return []; var arr=BDAY.list.map(function(p){return {p:p,ago:bdayDaysAgo(p.date)};}); var min=Math.min.apply(null,arr.map(function(x){return x.ago;})); return arr.filter(function(x){return x.ago===min;}).map(function(x){return x.p;}); }
 function playBirthdaySequence(list){ var t=(list&&list.length)?list:bdayToday(); if(!t.length){ bdayToast('No birthdays yet 🎂'); return; } BDAY.queue=t.slice(); showNextBirthday(); }
-function checkBirthdaySchedule(){ if(!BDAY.loaded) return; var p=bdayIst(); if(p.h>=13 && BDAY.handledDate!==p.day){ BDAY.handledDate=p.day; try{localStorage.setItem('bdayHandled2',p.day);}catch(e){} var t=bdayToday(); if(t.length) playBirthdaySequence(t); } }
+function checkBirthdaySchedule(){ if(!BDAY.loaded) return; var p=bdayIst(); if((p.h>13||(p.h===13&&p.m>=30)) && BDAY.handledDate!==p.day){ BDAY.handledDate=p.day; try{localStorage.setItem('bdayHandled3',p.day);}catch(e){} var t=bdayToday(); if(t.length) playBirthdaySequence(t); } }
 setInterval(checkBirthdaySchedule, 20000);
 document.getElementById('bday-overlay').addEventListener('click', closeBirthday);
 document.getElementById('bdayBtn').addEventListener('click', function(){ playBirthdaySequence(lastBirthdays()); });
