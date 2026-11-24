@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operations</title>
+<meta name="description" content="Tripoly CEO dashboard — Operations (Vendor Reservations & Payments), illustrative mockup.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340;9..144,460;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F1F3F1;--raise:#E7EBE8;--ink:#15262B;--ink-2:#34494F;--muted:#5E7176;--faint:#93A2A4;
+    --hair:rgba(21,38,43,.15);--hair-soft:rgba(21,38,43,.07);--track:rgba(21,38,43,.09);
+    --ac:#2E6E93;--acd:#21567A;--good:#2E9E5B;--warn:#BE851A;--bad:#CB3B30;
+    --redwash:rgba(203,59,48,.07);--amberwash:rgba(190,133,26,.07);
+    --spot1:rgba(46,110,147,.07);--spot2:rgba(46,158,91,.05);
+    --serif:"Fraunces",Georgia,serif;--sans:"Hanken Grotesk",system-ui,sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D171C;--raise:#13242B;--ink:#ECE4D4;--ink-2:#C9D2CE;--muted:#8DA1A6;--faint:#5E747A;
+    --hair:rgba(236,228,212,.11);--hair-soft:rgba(236,228,212,.06);--track:rgba(236,228,212,.08);
+    --ac:#7FB2D1;--acd:#4E7E99;--good:#5CB97F;--warn:#E3A944;--bad:#E05C50;
+    --redwash:rgba(224,92,80,.09);--amberwash:rgba(227,169,68,.08);
+    --spot1:rgba(127,178,209,.08);--spot2:rgba(92,185,127,.045);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1100px 500px at 80% -10%,var(--spot1),transparent 60%),radial-gradient(800px 460px at 2% 108%,var(--spot2),transparent 55%),var(--bg);
+    color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:.005em;min-height:100vh;transition:background-color .3s,color .3s}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 40px 80px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:baseline;gap:12px;padding-top:4px}
+  .mark{font-family:var(--serif);font-weight:600;font-size:22px}.mark b{color:var(--ac)}
+  .brand .div{width:1px;height:16px;background:var(--hair);transform:translateY(2px)}
+  .brand .screen{color:var(--muted);font-size:13.5px;font-weight:500;align-self:center}
+  .switch{display:inline-flex;border:1px solid var(--hair);border-radius:999px;padding:3px;gap:2px}
+  .seg{border:0;background:transparent;color:var(--muted);width:32px;height:26px;border-radius:999px;cursor:pointer;display:grid;place-items:center;transition:.18s}
+  .seg.active{background:var(--raise);color:var(--ink)}.seg svg{width:15px;height:15px}
+
+  .back{display:inline-flex;gap:8px;color:var(--muted);font-size:13px;margin:24px 0 4px;text-decoration:none}.back:hover{color:var(--ink)}
+  .ph{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:6px 0 24px;border-bottom:1px solid var(--hair)}
+  .ph h1{font-family:var(--serif);font-weight:340;font-size:44px;line-height:1}
+  .ph .asof{color:var(--faint);font-size:12.5px;padding-bottom:6px}
+
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--hair)}
+  .su{padding:22px 24px;border-right:1px solid var(--hair-soft)}
+  .su:first-child{padding-left:0}.su:last-child{border-right:0;padding-right:0}
+  .su .l{color:var(--muted);font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .su .v{font-family:var(--serif);font-weight:340;font-size:30px;margin-top:10px;line-height:1}
+  .su .v small{font-size:15px;color:var(--muted)}
+  .su .v.red{color:var(--bad)}
+  .su .d{margin-top:8px;font-size:12.5px;color:var(--faint)}
+
+  .sec{padding-top:32px}
+  .sh{font-family:var(--serif);font-size:19px;font-weight:460;margin-bottom:4px}
+  .shx{color:var(--faint);font-size:12.5px;margin-bottom:16px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .dot.g{background:var(--good)}.dot.a{background:var(--warn)}.dot.r{background:var(--bad)}
+
+  table.t{width:100%;border-collapse:collapse}
+  .t thead th{text-align:right;color:var(--muted);font-size:11.5px;font-weight:500;padding:0 0 11px;border-bottom:1px solid var(--hair)}
+  .t thead th.lt{text-align:left}
+  .t td{padding:13px 0;border-bottom:1px solid var(--hair-soft);font-size:13.5px;text-align:right;vertical-align:middle}
+  .t td.lt{text-align:left}
+  .t .grp td{padding:18px 0 7px;border-bottom:0;font-size:11px;letter-spacing:.05em;font-weight:600;text-align:left}
+  .t .grp .red{color:var(--bad)}.t .grp .amber{color:var(--warn)}
+  .party{display:flex;align-items:center;gap:11px}
+  .party .nm{font-weight:600;color:var(--ink)}.party .sb{color:var(--faint);font-size:12px;margin-top:1px}
+  .bal{font-family:var(--serif);font-size:16px}
+  .paid{color:var(--faint);font-size:12px}
+  .due{color:var(--ink-2)}.due .late{color:var(--bad);font-size:12px;display:block;margin-top:2px}
+  .due .soon{color:var(--warn);font-size:12px;display:block;margin-top:2px}
+  .due .far{color:var(--faint);font-size:12px;display:block;margin-top:2px}
+
+  .tabs{display:flex;gap:28px;border-bottom:1px solid var(--hair);margin:6px 0 2px}
+  .tab{appearance:none;border:0;background:transparent;cursor:pointer;padding:0 0 12px;margin-bottom:-1px;display:flex;align-items:center;gap:8px;font-family:var(--sans);border-bottom:2px solid transparent;transition:.15s}
+  .tab .tn{font-size:13.5px;font-weight:600;color:var(--muted)}
+  .tab .tc{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .tab.on{border-bottom-color:var(--ac)}.tab.on .tn{color:var(--ink)}.tab.on .tc{color:var(--muted)}
+  .tab:hover .tn{color:var(--ink-2)}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:14px}
+  .two .l{padding:30px 40px 0 0;border-right:1px solid var(--hair)}.two .r{padding:30px 0 0 40px}
+  .pipe{display:flex;flex-direction:column;gap:15px;margin-top:4px}
+  .prow .top2{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .prow .nm{font-size:13.5px;color:var(--ink-2)}.prow .ct{font-family:var(--serif);font-size:16px}
+  .ptrack{height:10px;border-radius:2px;background:var(--track)}.pfill{height:100%;border-radius:2px;background:var(--ac)}
+  .vrow{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--hair-soft);font-size:13.5px}
+  .vrow:first-child{padding-top:0}.vrow .vn{color:var(--ink-2)}.vrow .va{font-family:var(--serif);font-size:15px}
+
+  .refunds{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:5px;overflow:hidden;margin-top:14px}
+  .rf{background:var(--bg);padding:20px 22px}
+  .rf .l{color:var(--muted);font-size:12.5px;margin-bottom:9px}
+  .rf .v{font-family:var(--serif);font-size:26px}
+  .rf .s{color:var(--faint);font-size:12px;margin-top:6px}
+
+  .foot{margin-top:44px;color:var(--faint);font-size:11.5px;display:flex;align-items:center;gap:8px}
+  .tag{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--hair);border-radius:999px;padding:5px 11px;color:var(--muted);font-size:11.5px}
+  @media (max-width:900px){
+    .wrap{padding:22px 20px 64px}.summary{grid-template-columns:repeat(2,1fr)}
+    .su{border-right:0;padding-left:0;padding-right:0;border-bottom:1px solid var(--hair-soft)}.su:nth-child(odd){padding-right:18px;border-right:1px solid var(--hair-soft)}
+    .two{grid-template-columns:1fr}.two .l{border-right:0;border-bottom:1px solid var(--hair);padding:26px 0}.two .r{padding:26px 0 0}
+    .refunds{grid-template-columns:1fr}.ph{flex-direction:column;align-items:flex-start;gap:10px}
+    .t .hide{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="mark">Tri<b>poly</b></span><span class="div"></span><span class="screen">Operations</span></div>
+    <div class="switch" role="group" aria-label="Colour theme">
+      <button class="seg" data-t="light" aria-label="Light theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4l1.4-1.4M18 6l1.4-1.4"/></svg></button>
+      <button class="seg" data-t="dark" aria-label="Dark theme"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.2A8 8 0 1 1 9.8 4 6.4 6.4 0 0 0 20 14.2Z"/></svg></button>
+    </div>
+  </header>
+
+  <a class="back" href="ceo-pulse.html">&larr; Company Pulse</a>
+  <div class="ph"><h1>Operations</h1><div class="asof tnum">Vendor reservations &amp; payments · as of 00:05 IST today</div></div>
+
+  <section class="summary">
+    <div class="su"><div class="l">Owed to vendors</div><div class="v tnum"><small>₹</small>8.4 <small>Cr</small></div><div class="d tnum">across 223 open reservations</div></div>
+    <div class="su"><div class="l"><span class="dot r"></span> Overdue to vendors</div><div class="v tnum red"><small>₹</small>92 <small>L</small></div><div class="d tnum">6 reservations past due date</div></div>
+    <div class="su"><div class="l">Owed by customers</div><div class="v tnum"><small>₹</small>6.1 <small>Cr</small></div><div class="d tnum">balance due before travel</div></div>
+    <div class="su"><div class="l">Net position</div><div class="v tnum">−<small>₹</small>2.3 <small>Cr</small></div><div class="d tnum">payables over receivables</div></div>
+  </section>
+
+  <section class="sec">
+    <div class="sh">Vendor payments at risk</div>
+    <div class="shx">An unpaid vendor can cancel a confirmed trip. Clocked against each reservation&rsquo;s payment due date.</div>
+    <div class="tabs" data-g="ven">
+      <button class="tab on" data-g="ven" data-b="od"><span class="dot r"></span><span class="tn">Overdue</span><span class="tc">6 · ₹92 L</span></button>
+      <button class="tab" data-g="ven" data-b="wk"><span class="dot a"></span><span class="tn">This week</span><span class="tc">5 · ₹81 L</span></button>
+      <button class="tab" data-g="ven" data-b="mo"><span class="dot" style="background:var(--faint)"></span><span class="tn">This month</span><span class="tc">6 · ₹88 L</span></button>
+    </div>
+    <table class="t">
+      <thead><tr><th class="lt">Vendor</th><th class="lt hide">Trip</th><th>Vendor amount</th><th>Balance due</th><th class="lt" style="padding-left:28px">Due</th></tr></thead>
+      <tbody>
+        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Emirates Holidays</div><div class="sb">hotel + land</div></div></div></td><td class="lt hide">Dubai group · Shah</td><td class="tnum">₹32 L <span class="paid">· ₹14 L paid</span></td><td class="bal tnum">₹18 L</td><td class="lt due" style="padding-left:28px">18 Nov<span class="late">5 days overdue</span></td></tr>
+        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Thomas Cook Land</div><div class="sb">land package</div></div></div></td><td class="lt hide">Europe GIT · departure</td><td class="tnum">₹40 L <span class="paid">· ₹18 L paid</span></td><td class="bal tnum">₹22 L</td><td class="lt due" style="padding-left:28px">19 Nov<span class="late">4 days overdue</span></td></tr>
+        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Sabre Air</div><div class="sb">air tickets</div></div></div></td><td class="lt hide">Multi-city · Iyer</td><td class="tnum">₹16 L <span class="paid">· ₹0 paid</span></td><td class="bal tnum">₹16 L</td><td class="lt due" style="padding-left:28px">20 Nov<span class="late">3 days overdue · ticket may auto-release</span></td></tr>
+        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Bali DMC</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Bali honeymoon · Rao</td><td class="tnum">₹24 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹14 L</td><td class="lt due" style="padding-left:28px">20 Nov<span class="late">3 days overdue</span></td></tr>
+        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Hotel Atlantis</div><div class="sb">stay</div></div></div></td><td class="lt hide">Dubai stay · Shah</td><td class="tnum">₹20 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹12 L</td><td class="lt due" style="padding-left:28px">21 Nov<span class="late">2 days overdue</span></td></tr>
+        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Singapore Land Co</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Sentosa GIT · departure</td><td class="tnum">₹18 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹10 L</td><td class="lt due" style="padding-left:28px">21 Nov<span class="late">2 days overdue</span></td></tr>
+
+        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Kuoni Land</div><div class="sb">land package</div></div></div></td><td class="lt hide">Europe GIT · Jan batch</td><td class="tnum">₹34 L <span class="paid">· ₹14 L paid</span></td><td class="bal tnum">₹20 L</td><td class="lt due" style="padding-left:28px">26 Nov<span class="soon">in 3 days</span></td></tr>
+        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Dubai Parks</div><div class="sb">tickets</div></div></div></td><td class="lt hide">Dubai group · Khanna</td><td class="tnum">₹26 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹18 L</td><td class="lt due" style="padding-left:28px">27 Nov<span class="soon">in 4 days</span></td></tr>
+        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Thai DMC</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Phuket family · Nair</td><td class="tnum">₹28 L <span class="paid">· ₹12 L paid</span></td><td class="bal tnum">₹16 L</td><td class="lt due" style="padding-left:28px">28 Nov<span class="soon">in 5 days</span></td></tr>
+        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Qatar Airways</div><div class="sb">air tickets</div></div></div></td><td class="lt hide">Multi-city · Bose</td><td class="tnum">₹15 L <span class="paid">· ₹0 paid</span></td><td class="bal tnum">₹15 L</td><td class="lt due" style="padding-left:28px">29 Nov<span class="soon">in 6 days · ticket may auto-release</span></td></tr>
+        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Maldives Resort</div><div class="sb">stay</div></div></div></td><td class="lt hide">Honeymoon · Pillai</td><td class="tnum">₹22 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹12 L</td><td class="lt due" style="padding-left:28px">30 Nov<span class="soon">in 7 days</span></td></tr>
+
+        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Europe GIT Land</div><div class="sb">land package</div></div></div></td><td class="lt hide">Europe · Dec batch</td><td class="tnum">₹30 L <span class="paid">· ₹12 L paid</span></td><td class="bal tnum">₹18 L</td><td class="lt due" style="padding-left:28px">4 Dec<span class="far">in 11 days</span></td></tr>
+        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Bali DMC</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Bali · Dec batch</td><td class="tnum">₹28 L <span class="paid">· ₹12 L paid</span></td><td class="bal tnum">₹16 L</td><td class="lt due" style="padding-left:28px">6 Dec<span class="far">in 13 days</span></td></tr>
+        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Vietnam DMC</div><div class="sb">land</div></div></div></td><td class="lt hide">Hanoi group · Das</td><td class="tnum">₹25 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹15 L</td><td class="lt due" style="padding-left:28px">9 Dec<span class="far">in 16 days</span></td></tr>
+        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Emirates Holidays</div><div class="sb">hotel + land</div></div></div></td><td class="lt hide">Dubai NYE · Shah</td><td class="tnum">₹24 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹14 L</td><td class="lt due" style="padding-left:28px">11 Dec<span class="far">in 18 days</span></td></tr>
+        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Switzerland Hotels</div><div class="sb">stay</div></div></div></td><td class="lt hide">Alpine · departure</td><td class="tnum">₹23 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹13 L</td><td class="lt due" style="padding-left:28px">14 Dec<span class="far">in 21 days</span></td></tr>
+        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Thailand Transfers</div><div class="sb">transfers</div></div></div></td><td class="lt hide">Phuket · Jan</td><td class="tnum">₹20 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹12 L</td><td class="lt due" style="padding-left:28px">16 Dec<span class="far">in 23 days</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="sec">
+    <div class="sh">Collections due before departure</div>
+    <div class="shx">Customer balance still outstanding, clocked against the departure date &mdash; when unpaid money becomes a real problem.</div>
+    <div class="tabs" data-g="col">
+      <button class="tab on" data-g="col" data-b="od"><span class="dot r"></span><span class="tn">Travelled, unpaid</span><span class="tc">2 · ₹6 L</span></button>
+      <button class="tab" data-g="col" data-b="wk"><span class="dot a"></span><span class="tn">This week</span><span class="tc">4 · ₹14 L</span></button>
+      <button class="tab" data-g="col" data-b="mo"><span class="dot" style="background:var(--faint)"></span><span class="tn">This month</span><span class="tc">5 · ₹28 L</span></button>
+    </div>
+    <table class="t">
+      <thead><tr><th class="lt">Trip</th><th>Booking value</th><th>Collected</th><th>Balance</th><th class="lt" style="padding-left:28px">Travels</th></tr></thead>
+      <tbody>
+        <tr data-g="col" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Goa weekend</div><div class="sb">Nair · 2 pax</div></div></div></td><td class="tnum">₹5.0 L</td><td class="tnum paid">₹1.5 L</td><td class="bal tnum">₹3.5 L</td><td class="lt due" style="padding-left:28px">21 Nov<span class="late">travelled 2 days ago · 70% unpaid</span></td></tr>
+        <tr data-g="col" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Dubai city break</div><div class="sb">Khan · 3 pax</div></div></div></td><td class="tnum">₹6.5 L</td><td class="tnum paid">₹4.0 L</td><td class="bal tnum">₹2.5 L</td><td class="lt due" style="padding-left:28px">22 Nov<span class="late">travelled yesterday</span></td></tr>
+
+        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Bali honeymoon</div><div class="sb">Rao · 2 pax</div></div></div></td><td class="tnum">₹4.8 L</td><td class="tnum paid">₹2.0 L</td><td class="bal tnum">₹2.8 L</td><td class="lt due" style="padding-left:28px">30 Nov<span class="soon">in 7 days · 58% unpaid</span></td></tr>
+        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Dubai group</div><div class="sb">Shah · 14 pax</div></div></div></td><td class="tnum">₹18.5 L</td><td class="tnum paid">₹14.0 L</td><td class="bal tnum">₹4.5 L</td><td class="lt due" style="padding-left:28px">28 Nov<span class="soon">in 5 days</span></td></tr>
+        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Thailand family</div><div class="sb">Kumar · 5 pax</div></div></div></td><td class="tnum">₹8.0 L</td><td class="tnum paid">₹4.5 L</td><td class="bal tnum">₹3.5 L</td><td class="lt due" style="padding-left:28px">29 Nov<span class="soon">in 6 days</span></td></tr>
+        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Singapore solo</div><div class="sb">Iyer · 1 pax</div></div></div></td><td class="tnum">₹5.2 L</td><td class="tnum paid">₹2.0 L</td><td class="bal tnum">₹3.2 L</td><td class="lt due" style="padding-left:28px">30 Nov<span class="soon">in 7 days</span></td></tr>
+
+        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Europe FIT</div><div class="sb">Mehta · 4 pax</div></div></div></td><td class="tnum">₹12.2 L</td><td class="tnum paid">₹8.0 L</td><td class="bal tnum">₹4.2 L</td><td class="lt due" style="padding-left:28px">5 Dec<span class="far">in 12 days</span></td></tr>
+        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Maldives escape</div><div class="sb">Pillai · 2 pax</div></div></div></td><td class="tnum">₹8.8 L</td><td class="tnum paid">₹3.0 L</td><td class="bal tnum">₹5.8 L</td><td class="lt due" style="padding-left:28px">8 Dec<span class="far">in 15 days</span></td></tr>
+        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Vietnam group</div><div class="sb">Das · 9 pax</div></div></div></td><td class="tnum">₹14.0 L</td><td class="tnum paid">₹8.0 L</td><td class="bal tnum">₹6.0 L</td><td class="lt due" style="padding-left:28px">12 Dec<span class="far">in 19 days</span></td></tr>
+        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Dubai NYE</div><div class="sb">Shah · 6 pax</div></div></div></td><td class="tnum">₹16.4 L</td><td class="tnum paid">₹10.0 L</td><td class="bal tnum">₹6.4 L</td><td class="lt due" style="padding-left:28px">18 Dec<span class="far">in 25 days</span></td></tr>
+        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Bali batch</div><div class="sb">Rao · 8 pax</div></div></div></td><td class="tnum">₹11.0 L</td><td class="tnum paid">₹5.4 L</td><td class="bal tnum">₹5.6 L</td><td class="lt due" style="padding-left:28px">20 Dec<span class="far">in 27 days</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="two">
+    <div class="l">
+      <div class="sh">Reservation pipeline</div><div class="shx">Where the 223 open reservations stand.</div>
+      <div class="pipe">
+        <div class="prow"><div class="top2"><span class="nm">Pending vendor confirmation</span><span class="ct tnum">24</span></div><div class="ptrack"><div class="pfill" style="width:28%"></div></div></div>
+        <div class="prow"><div class="top2"><span class="nm">Advance paid, balance open</span><span class="ct tnum">61</span></div><div class="ptrack"><div class="pfill" style="width:72%"></div></div></div>
+        <div class="prow"><div class="top2"><span class="nm">Fully paid &amp; confirmed</span><span class="ct tnum">138</span></div><div class="ptrack"><div class="pfill" style="width:100%;background:var(--good)"></div></div></div>
+      </div>
+    </div>
+    <div class="r">
+      <div class="sh">Top vendors by exposure</div><div class="shx">Outstanding balance we carry, by vendor.</div>
+      <div style="margin-top:4px">
+        <div class="vrow"><span class="vn">Emirates Holidays</span><span class="va tnum">₹1.20 Cr</span></div>
+        <div class="vrow"><span class="vn">Thomas Cook Land</span><span class="va tnum">₹88 L</span></div>
+        <div class="vrow"><span class="vn">Bali DMC</span><span class="va tnum">₹54 L</span></div>
+        <div class="vrow"><span class="vn">Switzerland Rail</span><span class="va tnum">₹41 L</span></div>
+        <div class="vrow"><span class="vn">Sabre Air</span><span class="va tnum">₹33 L</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="sec">
+    <div class="sh">Cancellations &amp; refunds pending</div>
+    <div class="shx">Money owed back — from vendors on cancelled reservations, and to customers.</div>
+    <div class="refunds">
+      <div class="rf"><div class="l">Vendor refunds due to us</div><div class="v tnum">₹22 L</div><div class="s">6 cancelled reservations · oldest 41 days</div></div>
+      <div class="rf"><div class="l">Customer refunds we owe</div><div class="v tnum">₹14 L</div><div class="s">9 bookings · 3 pending &gt; 15 days</div></div>
+    </div>
+  </section>
+
+  <div class="foot"><span class="tag"><span class="dot" style="background:var(--ac)"></span> Preview — illustrative data</span><span>Tripoly · Management Dashboard · access-restricted</span></div>
+</div>
+<script>
+(function(){var r=document.documentElement,K='tripoly-pulse-theme';
+  function ap(t){r.setAttribute('data-theme',t);document.querySelectorAll('.seg').forEach(function(b){b.classList.toggle('active',b.dataset.t===t);});try{localStorage.setItem(K,t);}catch(e){}}
+  var s;try{s=localStorage.getItem(K);}catch(e){}ap(s==='dark'?'dark':'light');
+  document.querySelectorAll('.seg').forEach(function(b){b.addEventListener('click',function(){ap(b.dataset.t);});});})();
+(function(){
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      var g=tab.dataset.g,b=tab.dataset.b;
+      document.querySelectorAll('.tab[data-g="'+g+'"]').forEach(function(t){t.classList.toggle('on',t===tab);});
+      document.querySelectorAll('tr[data-g="'+g+'"]').forEach(function(r){r.hidden=(r.dataset.b!==b);});
+    });
+  });
+})();
+</script>
+</body>
+</html>
