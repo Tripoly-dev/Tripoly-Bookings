@@ -116,108 +116,52 @@
   </header>
 
   <a class="back" href="ceo-pulse.html">&larr; Company Pulse</a>
-  <div class="ph"><h1>Operations</h1><div class="asof tnum">Vendor reservations &amp; payments · as of 00:05 IST today</div></div>
+  <div class="ph"><h1>Operations</h1><div class="asof tnum">Vendor reservations &amp; payments</div></div>
 
   <section class="summary">
-    <div class="su"><div class="l">Owed to vendors</div><div class="v tnum"><small>₹</small>8.4 <small>Cr</small></div><div class="d tnum">across 223 open reservations</div></div>
-    <div class="su"><div class="l"><span class="dot r"></span> Overdue to vendors</div><div class="v tnum red"><small>₹</small>92 <small>L</small></div><div class="d tnum">6 reservations past due date</div></div>
-    <div class="su"><div class="l">Owed by customers</div><div class="v tnum"><small>₹</small>6.1 <small>Cr</small></div><div class="d tnum">balance due before travel</div></div>
-    <div class="su"><div class="l">Net position</div><div class="v tnum">−<small>₹</small>2.3 <small>Cr</small></div><div class="d tnum">payables over receivables</div></div>
+    <div class="su"><div class="l">Owed to vendors</div><div class="v tnum" id="sOwed">—</div><div class="d tnum" id="sOwedD"></div></div>
+    <div class="su"><div class="l"><span class="dot r"></span> Overdue to vendors</div><div class="v tnum red" id="sOd">—</div><div class="d tnum" id="sOdD"></div></div>
+    <div class="su"><div class="l">Owed by customers</div><div class="v tnum">—</div><div class="d tnum">awaiting data source</div></div>
+    <div class="su"><div class="l">Net position</div><div class="v tnum">—</div><div class="d tnum">needs customer balances</div></div>
   </section>
 
   <section class="sec">
     <div class="sh">Vendor payments at risk</div>
-    <div class="shx">An unpaid vendor can cancel a confirmed trip. Clocked against each reservation&rsquo;s payment due date.</div>
+    <div class="shx">An unpaid vendor can cancel a confirmed trip. Clocked against each reservation&rsquo;s expected payment date; largest balances first.</div>
     <div class="tabs" data-g="ven">
-      <button class="tab on" data-g="ven" data-b="od"><span class="dot r"></span><span class="tn">Overdue</span><span class="tc">6 · ₹92 L</span></button>
-      <button class="tab" data-g="ven" data-b="wk"><span class="dot a"></span><span class="tn">This week</span><span class="tc">5 · ₹81 L</span></button>
-      <button class="tab" data-g="ven" data-b="mo"><span class="dot" style="background:var(--faint)"></span><span class="tn">This month</span><span class="tc">6 · ₹88 L</span></button>
+      <button class="tab on" data-g="ven" data-b="od"><span class="dot r"></span><span class="tn">Overdue</span><span class="tc" id="tcOd">—</span></button>
+      <button class="tab" data-g="ven" data-b="wk"><span class="dot a"></span><span class="tn">Next 7 days</span><span class="tc" id="tcWk">—</span></button>
+      <button class="tab" data-g="ven" data-b="mo"><span class="dot" style="background:var(--faint)"></span><span class="tn">Rest of month</span><span class="tc" id="tcMo">—</span></button>
     </div>
     <table class="t">
-      <thead><tr><th class="lt">Vendor</th><th class="lt hide">Trip</th><th>Vendor amount</th><th>Balance due</th><th class="lt" style="padding-left:28px">Due</th></tr></thead>
-      <tbody>
-        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Emirates Holidays</div><div class="sb">hotel + land</div></div></div></td><td class="lt hide">Dubai group · Shah</td><td class="tnum">₹32 L <span class="paid">· ₹14 L paid</span></td><td class="bal tnum">₹18 L</td><td class="lt due" style="padding-left:28px">18 Nov<span class="late">5 days overdue</span></td></tr>
-        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Thomas Cook Land</div><div class="sb">land package</div></div></div></td><td class="lt hide">Europe GIT · departure</td><td class="tnum">₹40 L <span class="paid">· ₹18 L paid</span></td><td class="bal tnum">₹22 L</td><td class="lt due" style="padding-left:28px">19 Nov<span class="late">4 days overdue</span></td></tr>
-        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Sabre Air</div><div class="sb">air tickets</div></div></div></td><td class="lt hide">Multi-city · Iyer</td><td class="tnum">₹16 L <span class="paid">· ₹0 paid</span></td><td class="bal tnum">₹16 L</td><td class="lt due" style="padding-left:28px">20 Nov<span class="late">3 days overdue · ticket may auto-release</span></td></tr>
-        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Bali DMC</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Bali honeymoon · Rao</td><td class="tnum">₹24 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹14 L</td><td class="lt due" style="padding-left:28px">20 Nov<span class="late">3 days overdue</span></td></tr>
-        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Hotel Atlantis</div><div class="sb">stay</div></div></div></td><td class="lt hide">Dubai stay · Shah</td><td class="tnum">₹20 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹12 L</td><td class="lt due" style="padding-left:28px">21 Nov<span class="late">2 days overdue</span></td></tr>
-        <tr data-g="ven" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Singapore Land Co</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Sentosa GIT · departure</td><td class="tnum">₹18 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹10 L</td><td class="lt due" style="padding-left:28px">21 Nov<span class="late">2 days overdue</span></td></tr>
-
-        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Kuoni Land</div><div class="sb">land package</div></div></div></td><td class="lt hide">Europe GIT · Jan batch</td><td class="tnum">₹34 L <span class="paid">· ₹14 L paid</span></td><td class="bal tnum">₹20 L</td><td class="lt due" style="padding-left:28px">26 Nov<span class="soon">in 3 days</span></td></tr>
-        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Dubai Parks</div><div class="sb">tickets</div></div></div></td><td class="lt hide">Dubai group · Khanna</td><td class="tnum">₹26 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹18 L</td><td class="lt due" style="padding-left:28px">27 Nov<span class="soon">in 4 days</span></td></tr>
-        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Thai DMC</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Phuket family · Nair</td><td class="tnum">₹28 L <span class="paid">· ₹12 L paid</span></td><td class="bal tnum">₹16 L</td><td class="lt due" style="padding-left:28px">28 Nov<span class="soon">in 5 days</span></td></tr>
-        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Qatar Airways</div><div class="sb">air tickets</div></div></div></td><td class="lt hide">Multi-city · Bose</td><td class="tnum">₹15 L <span class="paid">· ₹0 paid</span></td><td class="bal tnum">₹15 L</td><td class="lt due" style="padding-left:28px">29 Nov<span class="soon">in 6 days · ticket may auto-release</span></td></tr>
-        <tr data-g="ven" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Maldives Resort</div><div class="sb">stay</div></div></div></td><td class="lt hide">Honeymoon · Pillai</td><td class="tnum">₹22 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹12 L</td><td class="lt due" style="padding-left:28px">30 Nov<span class="soon">in 7 days</span></td></tr>
-
-        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Europe GIT Land</div><div class="sb">land package</div></div></div></td><td class="lt hide">Europe · Dec batch</td><td class="tnum">₹30 L <span class="paid">· ₹12 L paid</span></td><td class="bal tnum">₹18 L</td><td class="lt due" style="padding-left:28px">4 Dec<span class="far">in 11 days</span></td></tr>
-        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Bali DMC</div><div class="sb">land + transfers</div></div></div></td><td class="lt hide">Bali · Dec batch</td><td class="tnum">₹28 L <span class="paid">· ₹12 L paid</span></td><td class="bal tnum">₹16 L</td><td class="lt due" style="padding-left:28px">6 Dec<span class="far">in 13 days</span></td></tr>
-        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Vietnam DMC</div><div class="sb">land</div></div></div></td><td class="lt hide">Hanoi group · Das</td><td class="tnum">₹25 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹15 L</td><td class="lt due" style="padding-left:28px">9 Dec<span class="far">in 16 days</span></td></tr>
-        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Emirates Holidays</div><div class="sb">hotel + land</div></div></div></td><td class="lt hide">Dubai NYE · Shah</td><td class="tnum">₹24 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹14 L</td><td class="lt due" style="padding-left:28px">11 Dec<span class="far">in 18 days</span></td></tr>
-        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Switzerland Hotels</div><div class="sb">stay</div></div></div></td><td class="lt hide">Alpine · departure</td><td class="tnum">₹23 L <span class="paid">· ₹10 L paid</span></td><td class="bal tnum">₹13 L</td><td class="lt due" style="padding-left:28px">14 Dec<span class="far">in 21 days</span></td></tr>
-        <tr data-g="ven" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Thailand Transfers</div><div class="sb">transfers</div></div></div></td><td class="lt hide">Phuket · Jan</td><td class="tnum">₹20 L <span class="paid">· ₹8 L paid</span></td><td class="bal tnum">₹12 L</td><td class="lt due" style="padding-left:28px">16 Dec<span class="far">in 23 days</span></td></tr>
-      </tbody>
+      <thead><tr><th class="lt">Vendor</th><th class="lt hide">Trip</th><th>Paid so far</th><th>Balance due</th><th class="lt" style="padding-left:28px">Due</th></tr></thead>
+      <tbody id="venBody"><tr><td class="lt" colspan="5">Loading…</td></tr></tbody>
     </table>
+    <div class="shx" id="venNote" style="margin-top:10px"></div>
   </section>
 
   <section class="sec">
     <div class="sh">Collections due before departure</div>
-    <div class="shx">Customer balance still outstanding, clocked against the departure date &mdash; when unpaid money becomes a real problem.</div>
-    <div class="tabs" data-g="col">
-      <button class="tab on" data-g="col" data-b="od"><span class="dot r"></span><span class="tn">Travelled, unpaid</span><span class="tc">2 · ₹6 L</span></button>
-      <button class="tab" data-g="col" data-b="wk"><span class="dot a"></span><span class="tn">This week</span><span class="tc">4 · ₹14 L</span></button>
-      <button class="tab" data-g="col" data-b="mo"><span class="dot" style="background:var(--faint)"></span><span class="tn">This month</span><span class="tc">5 · ₹28 L</span></button>
-    </div>
-    <table class="t">
-      <thead><tr><th class="lt">Trip</th><th>Booking value</th><th>Collected</th><th>Balance</th><th class="lt" style="padding-left:28px">Travels</th></tr></thead>
-      <tbody>
-        <tr data-g="col" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Goa weekend</div><div class="sb">Nair · 2 pax</div></div></div></td><td class="tnum">₹5.0 L</td><td class="tnum paid">₹1.5 L</td><td class="bal tnum">₹3.5 L</td><td class="lt due" style="padding-left:28px">21 Nov<span class="late">travelled 2 days ago · 70% unpaid</span></td></tr>
-        <tr data-g="col" data-b="od"><td class="lt"><div class="party"><span class="dot r"></span><div><div class="nm">Dubai city break</div><div class="sb">Khan · 3 pax</div></div></div></td><td class="tnum">₹6.5 L</td><td class="tnum paid">₹4.0 L</td><td class="bal tnum">₹2.5 L</td><td class="lt due" style="padding-left:28px">22 Nov<span class="late">travelled yesterday</span></td></tr>
-
-        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Bali honeymoon</div><div class="sb">Rao · 2 pax</div></div></div></td><td class="tnum">₹4.8 L</td><td class="tnum paid">₹2.0 L</td><td class="bal tnum">₹2.8 L</td><td class="lt due" style="padding-left:28px">30 Nov<span class="soon">in 7 days · 58% unpaid</span></td></tr>
-        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Dubai group</div><div class="sb">Shah · 14 pax</div></div></div></td><td class="tnum">₹18.5 L</td><td class="tnum paid">₹14.0 L</td><td class="bal tnum">₹4.5 L</td><td class="lt due" style="padding-left:28px">28 Nov<span class="soon">in 5 days</span></td></tr>
-        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Thailand family</div><div class="sb">Kumar · 5 pax</div></div></div></td><td class="tnum">₹8.0 L</td><td class="tnum paid">₹4.5 L</td><td class="bal tnum">₹3.5 L</td><td class="lt due" style="padding-left:28px">29 Nov<span class="soon">in 6 days</span></td></tr>
-        <tr data-g="col" data-b="wk" hidden><td class="lt"><div class="party"><span class="dot a"></span><div><div class="nm">Singapore solo</div><div class="sb">Iyer · 1 pax</div></div></div></td><td class="tnum">₹5.2 L</td><td class="tnum paid">₹2.0 L</td><td class="bal tnum">₹3.2 L</td><td class="lt due" style="padding-left:28px">30 Nov<span class="soon">in 7 days</span></td></tr>
-
-        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Europe FIT</div><div class="sb">Mehta · 4 pax</div></div></div></td><td class="tnum">₹12.2 L</td><td class="tnum paid">₹8.0 L</td><td class="bal tnum">₹4.2 L</td><td class="lt due" style="padding-left:28px">5 Dec<span class="far">in 12 days</span></td></tr>
-        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Maldives escape</div><div class="sb">Pillai · 2 pax</div></div></div></td><td class="tnum">₹8.8 L</td><td class="tnum paid">₹3.0 L</td><td class="bal tnum">₹5.8 L</td><td class="lt due" style="padding-left:28px">8 Dec<span class="far">in 15 days</span></td></tr>
-        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Vietnam group</div><div class="sb">Das · 9 pax</div></div></div></td><td class="tnum">₹14.0 L</td><td class="tnum paid">₹8.0 L</td><td class="bal tnum">₹6.0 L</td><td class="lt due" style="padding-left:28px">12 Dec<span class="far">in 19 days</span></td></tr>
-        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Dubai NYE</div><div class="sb">Shah · 6 pax</div></div></div></td><td class="tnum">₹16.4 L</td><td class="tnum paid">₹10.0 L</td><td class="bal tnum">₹6.4 L</td><td class="lt due" style="padding-left:28px">18 Dec<span class="far">in 25 days</span></td></tr>
-        <tr data-g="col" data-b="mo" hidden><td class="lt"><div class="party"><span class="dot" style="background:var(--faint)"></span><div><div class="nm">Bali batch</div><div class="sb">Rao · 8 pax</div></div></div></td><td class="tnum">₹11.0 L</td><td class="tnum paid">₹5.4 L</td><td class="bal tnum">₹5.6 L</td><td class="lt due" style="padding-left:28px">20 Dec<span class="far">in 27 days</span></td></tr>
-      </tbody>
-    </table>
+    <div class="shx">Customer balance still outstanding, clocked against the departure date. <b>Awaiting data source</b> &mdash; the CRM carries more than one balance field and the correct one is being confirmed.</div>
   </section>
 
   <div class="two">
     <div class="l">
-      <div class="sh">Reservation pipeline</div><div class="shx">Where the 223 open reservations stand.</div>
-      <div class="pipe">
-        <div class="prow"><div class="top2"><span class="nm">Pending vendor confirmation</span><span class="ct tnum">24</span></div><div class="ptrack"><div class="pfill" style="width:28%"></div></div></div>
-        <div class="prow"><div class="top2"><span class="nm">Advance paid, balance open</span><span class="ct tnum">61</span></div><div class="ptrack"><div class="pfill" style="width:72%"></div></div></div>
-        <div class="prow"><div class="top2"><span class="nm">Fully paid &amp; confirmed</span><span class="ct tnum">138</span></div><div class="ptrack"><div class="pfill" style="width:100%;background:var(--good)"></div></div></div>
-      </div>
+      <div class="sh">Open reservations</div><div class="shx" id="pipeX">Where the open reservations stand.</div>
+      <div class="pipe" id="pipe"></div>
     </div>
     <div class="r">
       <div class="sh">Top vendors by exposure</div><div class="shx">Outstanding balance we carry, by vendor.</div>
-      <div style="margin-top:4px">
-        <div class="vrow"><span class="vn">Emirates Holidays</span><span class="va tnum">₹1.20 Cr</span></div>
-        <div class="vrow"><span class="vn">Thomas Cook Land</span><span class="va tnum">₹88 L</span></div>
-        <div class="vrow"><span class="vn">Bali DMC</span><span class="va tnum">₹54 L</span></div>
-        <div class="vrow"><span class="vn">Switzerland Rail</span><span class="va tnum">₹41 L</span></div>
-        <div class="vrow"><span class="vn">Sabre Air</span><span class="va tnum">₹33 L</span></div>
-      </div>
+      <div style="margin-top:4px" id="topV"></div>
     </div>
   </div>
 
   <section class="sec">
     <div class="sh">Cancellations &amp; refunds pending</div>
-    <div class="shx">Money owed back — from vendors on cancelled reservations, and to customers.</div>
-    <div class="refunds">
-      <div class="rf"><div class="l">Vendor refunds due to us</div><div class="v tnum">₹22 L</div><div class="s">6 cancelled reservations · oldest 41 days</div></div>
-      <div class="rf"><div class="l">Customer refunds we owe</div><div class="v tnum">₹14 L</div><div class="s">9 bookings · 3 pending &gt; 15 days</div></div>
-    </div>
+    <div class="shx">Money owed back &mdash; from vendors on cancelled reservations, and to customers. <b>Awaiting data source.</b></div>
   </section>
 
-  <div class="foot"><span class="tag"><span class="dot" style="background:var(--ac)"></span> Preview — illustrative data</span><span>CEO Dashboard · access-restricted</span></div>
+  <div class="foot"><span class="tag"><span id="liveDot" class="dot" style="background:var(--faint)"></span> <span id="liveTxt">Loading live data…</span></span><span>CEO Dashboard · access-restricted</span></div>
 </div>
 <script>
 (function(){var r=document.documentElement,K='tripoly-pulse-theme';
@@ -232,6 +176,47 @@
       document.querySelectorAll('tr[data-g="'+g+'"]').forEach(function(r){r.hidden=(r.dataset.b!==b);});
     });
   });
+})();
+(function(){
+  function inr(n){ n=Number(n)||0; var a=Math.abs(n);
+    if(a>=1e7) return '<small>₹</small>'+(n/1e7).toFixed(2)+' <small>Cr</small>';
+    if(a>=1e5) return '<small>₹</small>'+(n/1e5).toFixed(1)+' <small>L</small>';
+    return '<small>₹</small>'+Math.round(n).toLocaleString('en-IN'); }
+  function txt(n){ return inr(n).replace(/<[^>]+>/g,''); }
+  function num(n){ return (Number(n)||0).toLocaleString('en-IN'); }
+  function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function dmy(d){ var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+  var D=null, cur='od';
+  function renderRows(){
+    var b=D.buckets[cur], dot=cur==='od'?'<span class="dot r"></span>':cur==='wk'?'<span class="dot a"></span>':'<span class="dot" style="background:var(--faint)"></span>';
+    document.getElementById('venBody').innerHTML=b.rows.length?b.rows.map(function(r){
+      var due=dmy(r.due)+(r.daysOverdue!=null?' <span style="color:var(--faint)">('+num(r.daysOverdue)+'d)</span>':'');
+      return '<tr><td class="lt"><div class="party">'+dot+'<div><div class="nm">'+esc(r.vendor)+'</div><div class="sb">'+esc(r.status)+'</div></div></div></td><td class="lt hide">'+esc(r.trip)+'</td><td class="tnum">'+txt(r.paid)+'</td><td class="tnum">'+txt(r.balance)+'</td><td class="lt tnum" style="padding-left:28px">'+due+'</td></tr>';
+    }).join(''):'<tr><td class="lt" colspan="5">Nothing in this window</td></tr>';
+    document.getElementById('venNote').textContent=b.count>b.rows.length?('Showing the largest '+b.rows.length+' of '+num(b.count)+' reservations ('+txt(b.amount)+' in total).'):'';
+  }
+  function fill(d){
+    D=d;
+    document.getElementById('sOwed').innerHTML=inr(d.open.owed); document.getElementById('sOwedD').textContent='across '+num(d.open.count)+' open reservations';
+    document.getElementById('sOd').innerHTML=inr(d.buckets.od.amount); document.getElementById('sOdD').textContent=num(d.buckets.od.count)+' reservations past due date'+(d.open.oldestOverdueDays?' · oldest '+num(d.open.oldestOverdueDays)+' days':'');
+    document.getElementById('tcOd').textContent=num(d.buckets.od.count)+' · '+txt(d.buckets.od.amount);
+    document.getElementById('tcWk').textContent=num(d.buckets.wk.count)+' · '+txt(d.buckets.wk.amount);
+    document.getElementById('tcMo').textContent=num(d.buckets.mo.count)+' · '+txt(d.buckets.mo.amount);
+    var pu=d.pipeline['Pending'], pp=d.pipeline['Partially Paid'], tot=Math.max(1,pu.count+pp.count);
+    document.getElementById('pipe').innerHTML=
+      '<div class="prow"><div class="top2"><span class="nm">Nothing paid yet</span><span class="ct tnum">'+num(pu.count)+' · '+txt(pu.amount)+'</span></div><div class="ptrack"><div class="pfill" style="width:'+Math.round(pu.count/tot*100)+'%"></div></div></div>'+
+      '<div class="prow"><div class="top2"><span class="nm">Part-paid, balance open</span><span class="ct tnum">'+num(pp.count)+' · '+txt(pp.amount)+'</span></div><div class="ptrack"><div class="pfill" style="width:'+Math.round(pp.count/tot*100)+'%"></div></div></div>';
+    document.getElementById('topV').innerHTML=d.topVendors.map(function(v){ return '<div class="vrow"><span class="vn">'+esc(v.name)+'</span><span class="va tnum">'+txt(v.amount)+'</span></div>'; }).join('');
+    renderRows();
+  }
+  document.querySelectorAll('.tab[data-g="ven"]').forEach(function(t){ t.addEventListener('click',function(){ cur=t.dataset.b; if(D) renderRows(); }); });
+  function status(ok,t){ document.getElementById('liveTxt').textContent=t; document.getElementById('liveDot').style.background=ok?'var(--good)':'var(--warn)'; }
+  var id=null; try{ id=localStorage.getItem('tripoly_device_id'); }catch(e){}
+  if(!id){ status(false,'No access on this device'); return; }
+  fetch('https://tripoly-proxy.onrender.com/api/ceo/ops?deviceId='+encodeURIComponent(id))
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){ fill(d); status(true,'Live · updated '+new Date(d.asOf).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})); })
+    .catch(function(){ status(false,'Live data unavailable'); });
 })();
 </script>
 </body>
