@@ -133,69 +133,36 @@
   </div>
 
   <section class="totals">
-    <div class="tt"><div class="l">Revenue</div><div class="v tnum"><small>₹</small><span class="pv" data-mtd="3.2 Cr" data-qtd="8.6 Cr" data-ytd="24.5 Cr">3.2 Cr</span></div><div class="d">booked value, holiday packages</div></div>
-    <div class="tt"><div class="l">Gross margin</div><div class="v tnum"><small>₹</small><span class="pv" data-mtd="48 L" data-qtd="1.32 Cr" data-ytd="3.70 Cr">48 L</span></div><div class="d"><span class="pv" data-mtd="15.0% blended" data-qtd="15.3% blended" data-ytd="15.1% blended">15.0% blended</span></div></div>
-    <div class="tt"><div class="l">Pax travelled</div><div class="v tnum"><span class="pv" data-mtd="420" data-qtd="1,180" data-ytd="3,350">420</span></div><div class="d">across both segments</div></div>
-    <div class="tt"><div class="l">Bookings</div><div class="v tnum"><span class="pv" data-mtd="96" data-qtd="268" data-ytd="760">96</span></div><div class="d">confirmed holiday packages</div></div>
+    <div class="tt"><div class="l">Revenue</div><div class="v tnum"><span id="tRev" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="d">booked value, holiday packages</div></div>
+    <div class="tt"><div class="l">Profit after tax</div><div class="v tnum"><span id="tPat" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="d"><span id="tPatS" class="pv" data-mtd="" data-qtd="" data-ytd=""></span></div></div>
+    <div class="tt"><div class="l">Pax travelled</div><div class="v tnum"><span id="tPax" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="d">across both segments</div></div>
+    <div class="tt"><div class="l">Bookings</div><div class="v tnum"><span id="tBk" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="d">confirmed holiday packages</div></div>
   </section>
 
   <section class="segs">
     <!-- FIT -->
     <div class="sc fit">
-      <div class="hd"><div class="nm">Leisure <span class="tagseg">FIT · individual</span></div><div class="tgt">vs target <b class="pv" data-mtd="87%" data-qtd="90%" data-ytd="91%">87%</b></div></div>
-      <div class="rev tnum"><small>₹</small><span class="pv" data-mtd="1.3 Cr" data-qtd="3.5 Cr" data-ytd="10.0 Cr">1.3 Cr</span></div>
+      <div class="hd"><div class="nm">Leisure <span class="tagseg">FIT · individual</span></div></div>
+      <div class="rev tnum"><span id="fRev" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div>
       <div class="revl">revenue</div>
       <div class="scrow">
-        <div class="scm"><div class="k">Gross margin</div><div class="vv tnum pos"><span class="pv" data-mtd="₹24 L" data-qtd="₹64 L" data-ytd="₹1.82 Cr">₹24 L</span></div><div class="k pv" data-mtd="18.5%" data-qtd="18.3%" data-ytd="18.2%" style="margin-top:3px">18.5%</div></div>
-        <div class="scm"><div class="k">Pax</div><div class="vv tnum"><span class="pv" data-mtd="150" data-qtd="410" data-ytd="1,180">150</span></div><div class="k pv" data-mtd="62 bookings" data-qtd="170 bookings" data-ytd="480 bookings" style="margin-top:3px">62 bookings</div></div>
-        <div class="scm"><div class="k">Enquiry→booking</div><div class="vv tnum"><span class="pv" data-mtd="22%" data-qtd="21%" data-ytd="20%">22%</span></div><div class="k" style="margin-top:3px">conversion</div></div>
+        <div class="scm"><div class="k">Profit after tax</div><div class="vv tnum pos"><span id="fPat" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="fPatP" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
+        <div class="scm"><div class="k">Pax</div><div class="vv tnum"><span id="fPax" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="fBk" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
       </div>
-      <div class="tgtbar"><div class="top2"><span>vs target</span><span class="pv tnum" data-mtd="87%" data-qtd="90%" data-ytd="91%">87%</span></div><div class="ttrack"><div class="tfill pvw" data-mtd="87" data-qtd="90" data-ytd="91" style="width:87%"></div></div></div>
     </div>
     <!-- GIT -->
     <div class="sc git">
-      <div class="hd"><div class="nm">Group <span class="tagseg">GIT · departures</span></div><div class="tgt">vs target <b class="pv" data-mtd="86%" data-qtd="89%" data-ytd="91%">86%</b></div></div>
-      <div class="rev tnum"><small>₹</small><span class="pv" data-mtd="1.9 Cr" data-qtd="5.1 Cr" data-ytd="14.5 Cr">1.9 Cr</span></div>
+      <div class="hd"><div class="nm">Group <span class="tagseg">GIT · departures</span></div></div>
+      <div class="rev tnum"><span id="gRev" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div>
       <div class="revl">revenue</div>
       <div class="scrow">
-        <div class="scm"><div class="k">Gross margin</div><div class="vv tnum pos"><span class="pv" data-mtd="₹24 L" data-qtd="₹68 L" data-ytd="₹1.88 Cr">₹24 L</span></div><div class="k pv" data-mtd="12.6%" data-qtd="13.3%" data-ytd="13.0%" style="margin-top:3px">12.6%</div></div>
-        <div class="scm"><div class="k">Pax</div><div class="vv tnum"><span class="pv" data-mtd="270" data-qtd="770" data-ytd="2,170">270</span></div><div class="k pv" data-mtd="34 bookings" data-qtd="98 bookings" data-ytd="280 bookings" style="margin-top:3px">34 bookings</div></div>
-        <div class="scm"><div class="k">Enquiry→booking</div><div class="vv tnum"><span class="pv" data-mtd="14%" data-qtd="13%" data-ytd="12%">14%</span></div><div class="k" style="margin-top:3px">conversion</div></div>
-      </div>
-      <div class="tgtbar"><div class="top2"><span>vs target</span><span class="pv tnum" data-mtd="86%" data-qtd="89%" data-ytd="91%">86%</span></div><div class="ttrack"><div class="tfill pvw" data-mtd="86" data-qtd="89" data-ytd="91" style="width:86%"></div></div></div>
-    </div>
-  </section>
-
-  <section class="sec">
-    <div class="sh">Where the money comes from</div>
-    <div class="shx">Top destinations by revenue, split Leisure vs Group. Margin % shown year-round (amber = thin margin); revenue &amp; pax follow the selected period. Top 8 of 30+ destinations.</div>
-    <table class="t">
-      <thead><tr><th class="lt">Destination</th><th class="lt">Segment</th><th>Revenue</th><th>Margin %</th><th>Pax</th></tr></thead>
-      <tbody>
-        <tr><td class="lt nm">Europe</td><td class="lt"><span class="chip git">Group</span></td><td class="big tnum"><span class="pv" data-mtd="₹55 L" data-qtd="₹1.47 Cr" data-ytd="₹4.2 Cr">₹55 L</span></td><td class="tnum">13%</td><td class="tnum"><span class="pv" data-mtd="81" data-qtd="217" data-ytd="620">81</span></td></tr>
-        <tr><td class="lt nm">Dubai</td><td class="lt"><span class="chip fit">Leisure</span></td><td class="big tnum"><span class="pv" data-mtd="₹40 L" data-qtd="₹1.09 Cr" data-ytd="₹3.1 Cr">₹40 L</span></td><td class="tnum" style="color:var(--good)">19%</td><td class="tnum"><span class="pv" data-mtd="53" data-qtd="144" data-ytd="410">53</span></td></tr>
-        <tr><td class="lt nm">Bali</td><td class="lt"><span class="chip git">Group</span></td><td class="big tnum"><span class="pv" data-mtd="₹36 L" data-qtd="₹98 L" data-ytd="₹2.8 Cr">₹36 L</span></td><td class="tnum">13.5%</td><td class="tnum"><span class="pv" data-mtd="62" data-qtd="168" data-ytd="480">62</span></td></tr>
-        <tr><td class="lt nm">Thailand</td><td class="lt"><span class="chip fit">Leisure</span></td><td class="big tnum"><span class="pv" data-mtd="₹34 L" data-qtd="₹91 L" data-ytd="₹2.6 Cr">₹34 L</span></td><td class="tnum" style="color:var(--good)">18%</td><td class="tnum"><span class="pv" data-mtd="68" data-qtd="182" data-ytd="520">68</span></td></tr>
-        <tr><td class="lt nm">Vietnam</td><td class="lt"><span class="chip git">Group</span></td><td class="big tnum"><span class="pv" data-mtd="₹29 L" data-qtd="₹77 L" data-ytd="₹2.2 Cr">₹29 L</span></td><td class="tnum" style="color:var(--warn)">12.5%</td><td class="tnum"><span class="pv" data-mtd="47" data-qtd="126" data-ytd="360">47</span></td></tr>
-        <tr><td class="lt nm">Maldives</td><td class="lt"><span class="chip fit">Leisure</span></td><td class="big tnum"><span class="pv" data-mtd="₹25 L" data-qtd="₹67 L" data-ytd="₹1.9 Cr">₹25 L</span></td><td class="tnum" style="color:var(--good)">21%</td><td class="tnum"><span class="pv" data-mtd="23" data-qtd="63" data-ytd="180">23</span></td></tr>
-        <tr><td class="lt nm">Azerbaijan</td><td class="lt"><span class="chip git">Group</span></td><td class="big tnum"><span class="pv" data-mtd="₹22 L" data-qtd="₹60 L" data-ytd="₹1.7 Cr">₹22 L</span></td><td class="tnum" style="color:var(--warn)">12%</td><td class="tnum"><span class="pv" data-mtd="38" data-qtd="102" data-ytd="290">38</span></td></tr>
-        <tr><td class="lt nm">Singapore</td><td class="lt"><span class="chip fit">Leisure</span></td><td class="big tnum"><span class="pv" data-mtd="₹20 L" data-qtd="₹53 L" data-ytd="₹1.5 Cr">₹20 L</span></td><td class="tnum" style="color:var(--good)">18%</td><td class="tnum"><span class="pv" data-mtd="31" data-qtd="84" data-ytd="240">31</span></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section>
-    <div class="leak">
-      <div class="lh"><div class="t1">Margin at risk <span style="color:var(--faint);font-size:12px;font-weight:400">· bookings below 10% margin · year to date</span></div><div class="t2 tnum">₹30 L gap</div></div>
-      <div class="leakrow">
-        <div class="lk"><div class="k">Bookings below 10%</div><div class="v tnum">68</div><div class="s">of 760 confirmed · 9% of volume</div></div>
-        <div class="lk"><div class="k">Revenue tied up</div><div class="v tnum">₹3.9 Cr</div><div class="s">concentrated in GIT — Vietnam, Azerbaijan, early-bird Europe</div></div>
-        <div class="lk"><div class="k">Margin earned vs 15% target</div><div class="v tnum">₹28 L</div><div class="s">would be ₹58 L at a 15% blend — a ₹30 L gap</div></div>
+        <div class="scm"><div class="k">Profit after tax</div><div class="vv tnum pos"><span id="gPat" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="gPatP" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
+        <div class="scm"><div class="k">Pax</div><div class="vv tnum"><span id="gPax" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="gBk" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
       </div>
     </div>
   </section>
 
-  <div class="foot"><span class="tag"><span style="width:8px;height:8px;border-radius:50%;background:var(--ac);display:inline-block"></span> Preview — illustrative data</span><span>CEO Dashboard · access-restricted</span></div>
+  <div class="foot"><span class="tag"><span id="liveDot" style="width:8px;height:8px;border-radius:50%;background:var(--faint);display:inline-block"></span> <span id="liveTxt">Loading live data…</span></span><span>CEO Dashboard · access-restricted</span></div>
 </div>
 <script>
 (function(){var r=document.documentElement,K='tripoly-pulse-theme';
@@ -210,6 +177,35 @@
   }
   document.querySelectorAll('.perb').forEach(function(b){ b.addEventListener('click',function(){ setPeriod(b.dataset.p); }); });
   setPeriod('mtd');
+})();
+(function(){
+  function inr(n){ n=Number(n)||0; var a=Math.abs(n);
+    if(a>=1e7) return '₹'+(n/1e7).toFixed(2)+' Cr';
+    if(a>=1e5) return '₹'+(n/1e5).toFixed(1)+' L';
+    return '₹'+Math.round(n).toLocaleString('en-IN'); }
+  function num(n){ return (Number(n)||0).toLocaleString('en-IN'); }
+  function put(id,k,v){ var el=document.getElementById(id); if(!el) return; el.setAttribute('data-'+k,v); }
+  function fill(d){
+    ['mtd','qtd','ytd'].forEach(function(k){
+      var f=d[k].fit, g=d[k].git;
+      put('tRev',k,inr(f.revenue+g.revenue)); put('tPax',k,num(f.pax+g.pax)); put('tBk',k,num(f.bookings+g.bookings));
+      var pat=f.pat+g.pat, has=(f.patCount+g.patCount)>0;
+      put('tPat',k,has?inr(pat):'—');
+      put('tPatS',k,has?(g.patCount===0?'Leisure only · Group pending':''):'Pending');
+      put('fRev',k,inr(f.revenue)); put('fPax',k,num(f.pax)); put('fBk',k,num(f.bookings)+' bookings');
+      put('gRev',k,inr(g.revenue)); put('gPax',k,num(g.pax)); put('gBk',k,num(g.bookings)+' bookings');
+      put('fPat',k,f.patCount?inr(f.pat):'—'); put('fPatP',k,f.patBase?((f.pat/f.patBase*100).toFixed(1)+'% margin'):'Pending');
+      put('gPat',k,g.patCount?inr(g.pat):'—'); put('gPatP',k,g.patBase?((g.pat/g.patBase*100).toFixed(1)+'% margin'):'Pending');
+    });
+    var on=document.querySelector('.perb.on'); if(on) on.click();
+  }
+  function status(ok,t){ document.getElementById('liveTxt').textContent=t; document.getElementById('liveDot').style.background=ok?'var(--good)':'var(--warn)'; }
+  var id=null; try{ id=localStorage.getItem('tripoly_device_id'); }catch(e){}
+  if(!id){ status(false,'No access on this device'); return; }
+  fetch('https://tripoly-proxy.onrender.com/api/ceo/sales?deviceId='+encodeURIComponent(id))
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){ fill(d); status(true,'Live · updated '+new Date(d.asOf).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})); })
+    .catch(function(e){ status(false,'Live data unavailable'); });
 })();
 </script>
 </body>
