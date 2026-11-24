@@ -148,6 +148,7 @@
       <div class="scrow">
         <div class="scm"><div class="k">Profit after tax</div><div class="vv tnum pos"><span id="fPat" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="fPatP" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
         <div class="scm"><div class="k">Pax</div><div class="vv tnum"><span id="fPax" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="fBk" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
+        <div class="scm"><div class="k">Enquiry→booking</div><div class="vv tnum"><span id="fConv" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="fConvS" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px">conversion</div></div>
       </div>
     </div>
     <!-- GIT -->
@@ -158,6 +159,26 @@
       <div class="scrow">
         <div class="scm"><div class="k">Profit after tax</div><div class="vv tnum pos"><span id="gPat" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="gPatP" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
         <div class="scm"><div class="k">Pax</div><div class="vv tnum"><span id="gPax" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="gBk" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px"></div></div>
+        <div class="scm"><div class="k">Enquiry→booking</div><div class="vv tnum"><span id="gConv" class="pv" data-mtd="—" data-qtd="—" data-ytd="—">—</span></div><div class="k pv" id="gConvS" data-mtd="" data-qtd="" data-ytd="" style="margin-top:3px">conversion</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sh">Where the money comes from</div>
+    <div class="shx">Top destinations by revenue, split Leisure vs Group. Revenue &amp; pax follow the selected period; margin % is Profit after tax over revenue where available.</div>
+    <table class="t">
+      <thead><tr><th class="lt">Destination</th><th class="lt">Segment</th><th>Revenue</th><th>Margin %</th><th>Pax</th></tr></thead>
+      <tbody id="destBody"><tr><td class="lt nm" colspan="5">Loading…</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="leak">
+      <div class="lh"><div class="t1">Margin at risk <span style="color:var(--faint);font-size:12px;font-weight:400">· bookings below 10% margin</span></div><div class="t2 tnum" id="lkHead"></div></div>
+      <div class="leakrow" style="grid-template-columns:repeat(2,1fr)">
+        <div class="lk"><div class="k">Bookings below 10%</div><div class="v tnum pv" id="lkN" data-mtd="—" data-qtd="—" data-ytd="—">—</div><div class="s pv" id="lkNs" data-mtd="" data-qtd="" data-ytd=""></div></div>
+        <div class="lk"><div class="k">Revenue tied up</div><div class="v tnum pv" id="lkR" data-mtd="—" data-qtd="—" data-ytd="—">—</div><div class="s">bookings with Profit after tax recorded</div></div>
       </div>
     </div>
   </section>
@@ -195,10 +216,26 @@
       put('fRev',k,inr(f.revenue)); put('fPax',k,num(f.pax)); put('fBk',k,num(f.bookings)+' bookings');
       put('gRev',k,inr(g.revenue)); put('gPax',k,num(g.pax)); put('gBk',k,num(g.bookings)+' bookings');
       put('fPat',k,f.patCount?inr(f.pat):'—'); put('fPatP',k,f.patBase?((f.pat/f.patBase*100).toFixed(1)+'% margin'):'Pending');
+      var lf=(d.leads[k].fit||{}), lg=(d.leads[k].git||{});
+      put('fConv',k,lf.leads?((lf.booked||0)/lf.leads*100).toFixed(1)+'%':'—'); put('fConvS',k,num(lf.booked||0)+' of '+num(lf.leads||0)+' leads');
+      put('gConv',k,lg.leads?((lg.booked||0)/lg.leads*100).toFixed(1)+'%':'—'); put('gConvS',k,num(lg.booked||0)+' of '+num(lg.leads||0)+' leads');
+      var ln=f.lowCount+g.lowCount, lr=f.lowRev+g.lowRev, pc=f.patCount+g.patCount;
+      put('lkN',k,pc?num(ln):'—'); put('lkNs',k,pc?('of '+num(pc)+' bookings with margin data'):''); put('lkR',k,pc?inr(lr):'—');
       put('gPat',k,g.patCount?inr(g.pat):'—'); put('gPatP',k,g.patBase?((g.pat/g.patBase*100).toFixed(1)+'% margin'):'Pending');
     });
-    var on=document.querySelector('.perb.on'); if(on) on.click();
+    DATA=d; renderDest(); var on=document.querySelector('.perb.on'); if(on) on.click();
   }
+  var DATA=null;
+  function curP(){ var on=document.querySelector('.perb.on'); return on?on.dataset.p:'mtd'; }
+  function renderDest(){
+    if(!DATA) return; var rows=(DATA.destinations||{})[curP()]||[]; var tb=document.getElementById('destBody');
+    tb.innerHTML=rows.length?rows.map(function(r){
+      var chip=r.seg==='git'?'<span class="chip git">Group</span>':'<span class="chip fit">Leisure</span>';
+      var m=r.marginPct===null?'—':r.marginPct+'%'; var col=r.marginPct!==null&&r.marginPct<10?' style="color:var(--warn)"':'';
+      return '<tr><td class="lt nm">'+r.name+'</td><td class="lt">'+chip+'</td><td class="big tnum">'+inr(r.revenue)+'</td><td class="tnum"'+col+'>'+m+'</td><td class="tnum">'+num(r.pax)+'</td></tr>';
+    }).join(''):'<tr><td class="lt nm" colspan="5">No bookings in this period</td></tr>';
+  }
+  document.querySelectorAll('.perb').forEach(function(b){ b.addEventListener('click',function(){ setTimeout(renderDest,0); }); });
   function status(ok,t){ document.getElementById('liveTxt').textContent=t; document.getElementById('liveDot').style.background=ok?'var(--good)':'var(--warn)'; }
   var id=null; try{ id=localStorage.getItem('tripoly_device_id'); }catch(e){}
   if(!id){ status(false,'No access on this device'); return; }
