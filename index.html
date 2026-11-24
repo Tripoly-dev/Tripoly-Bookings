@@ -241,6 +241,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
 /* Birthday celebration */
 #bday-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:205;overflow:hidden;background:radial-gradient(circle at 50% 30%, #C94B9B 0%, #7B3FA0 46%, #2B1055 100%);}
 #bday-overlay.show{display:flex;align-items:center;justify-content:center;}
+#bday-overlay.anni{background:radial-gradient(circle at 50% 28%, #E7B84C 0%, #C2772B 42%, #15314F 100%);}
 .bday-floats{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;}
 .bday-emoji{position:absolute;opacity:.92;filter:drop-shadow(0 4px 10px rgba(0,0,0,.28));animation:bdayFloat ease-in-out infinite;will-change:transform;}
 @keyframes bdayFloat{0%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-28px) rotate(6deg);}100%{transform:translateY(0) rotate(-6deg);}}
@@ -1172,6 +1173,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',
   <button class="test-btn" id="testBtn">🎉 Test Celebration</button>
   <button class="test-btn" id="lastBookingBtn" style="margin-left:8px;">🏆 Last Booking</button>
   <button class="test-btn" id="bdayBtn" style="margin-left:8px;">🎂 Birthday</button>
+  <button class="test-btn" id="anniBtn" style="margin-left:8px;">🎉 Anniversary</button>
 </div>
 
 <!-- ── CELEBRATION OVERLAY ── -->
@@ -3031,42 +3033,77 @@ document.getElementById('refreshBtn').addEventListener('click',function(){
 });
 document.getElementById('testBtn').addEventListener('click',function(){celebrate('Shailesh Joshi','SPARKLING EUROPE',520000,AV_COLOURS[0]);});
 
-// ── Birthday celebration (auto at 11:15 AM IST once/day + manual button); 1-min photo+name+song per person ──
-var BDAY = { list: [], loaded: false, queue: [], timerId: null, countdown: 60, handledDate: '' };
-try { BDAY.handledDate = localStorage.getItem('bdayHandled3') || ''; } catch(e){}
-function bdayIst(){ var n=new Date(Date.now()+5.5*3600*1000); return { h:n.getUTCHours(), m:n.getUTCMinutes(), mmdd:('0'+(n.getUTCMonth()+1)).slice(-2)+'-'+('0'+n.getUTCDate()).slice(-2), day:n.toISOString().slice(0,10) }; }
-function loadBirthdays(){ fetch('birthdays.json?v='+Date.now()).then(function(r){return r.json();}).then(function(d){ BDAY.list = Array.isArray(d)?d:[]; BDAY.loaded=true; checkBirthdaySchedule(); }).catch(function(){ BDAY.list=[]; BDAY.loaded=true; }); }
-loadBirthdays();
-function bdayToday(){ var t=bdayIst().mmdd; return BDAY.list.filter(function(p){ return (p.date||'').trim()===t; }); }
-function playBdaySound(){ try{ var a=document.getElementById('bdayAudio'); a.muted=false; a.currentTime=0; a.volume=1; a.play(); }catch(e){} }
-function stopBdaySound(){ try{ var a=document.getElementById('bdayAudio'); a.pause(); a.currentTime=0; }catch(e){} }
-function closeBirthday(){ document.getElementById('bday-overlay').classList.remove('show'); stopBdaySound(); if(BDAY.timerId)clearInterval(BDAY.timerId); BDAY.queue=[]; }
-function bdayToast(msg){ var el=document.getElementById('bdayToast'); if(!el)return; el.textContent=msg; el.classList.add('show'); setTimeout(function(){el.classList.remove('show');},2600); }
-function showNextBirthday(){
-  if(!BDAY.queue.length){ closeBirthday(); return; }
-  var p=BDAY.queue.shift();
-  var img=document.getElementById('bdayPhoto');
-  img.src=p.photo||''; img.style.display=p.photo?'block':'none';
-  document.getElementById('bdayName').textContent=p.name||'';
-  document.getElementById('bday-overlay').classList.add('show');
-  playBdaySound();
+// ── Birthday + Work-Anniversary celebrations ──
+// Auto-fires twice daily at 11:30 & 16:00 IST (once per slot/day; a late page-load catches up once).
+// Same day: all birthdays first, then a 5-min gap, then anniversaries. 60s photo+name+song per person.
+var BDAY = { list: [], loaded: false };
+var ANNI = { list: [], loaded: false };
+var REEL = { queue: [], timerId: null, pauseId: null, countdown: 60 };
+var CELEB_SLOTS = [ {h:11,m:30}, {h:16,m:0} ];
+var SLOTST = { day:'', done:[] };
+try { var _s=JSON.parse(localStorage.getItem('celebSlots3')||'null'); if(_s&&_s.day){ SLOTST=_s; } } catch(e){}
+var BDAY_EMOJI = ['🎂','🧁','🌸','🍫','🎈','✨','🎉','🎁','🌷','🎊','🍬','🌼'];
+var ANNI_EMOJI = ['🎉','🏆','🎊','⭐','🥂','✨','🎈','🎇','🌟','🎖️','🥳','🎆'];
+function istNow(){ var n=new Date(Date.now()+5.5*3600*1000); return { h:n.getUTCHours(), m:n.getUTCMinutes(), mmdd:('0'+(n.getUTCMonth()+1)).slice(-2)+'-'+('0'+n.getUTCDate()).slice(-2), day:n.toISOString().slice(0,10), yr:n.getUTCFullYear() }; }
+function loadBirthdays(){ fetch('birthdays.json?v='+Date.now()).then(function(r){return r.json();}).then(function(d){ BDAY.list=Array.isArray(d)?d:[]; BDAY.loaded=true; checkCelebSchedule(); }).catch(function(){ BDAY.list=[]; BDAY.loaded=true; }); }
+function loadAnniversaries(){ fetch('anniversaries.json?v='+Date.now()).then(function(r){return r.json();}).then(function(d){ ANNI.list=Array.isArray(d)?d:[]; ANNI.loaded=true; checkCelebSchedule(); }).catch(function(){ ANNI.list=[]; ANNI.loaded=true; }); }
+loadBirthdays(); loadAnniversaries();
+function bdayToday(){ var t=istNow().mmdd; return BDAY.list.filter(function(p){ return (p.date||'').trim()===t; }); }
+function anniToday(){ var n=istNow(); return ANNI.list.filter(function(p){ return (p.date||'').trim()===n.mmdd; }).map(function(p){ var dy=parseInt((p.doj||'').slice(0,4),10); return { name:p.name, photo:p.photo, years:(n.yr-dy) }; }).filter(function(p){ return p.years>=1; }); }
+function daysAgo(mmdd){ var pp=(mmdd||'').split('-'); if(pp.length<2)return 1e9; var mo=parseInt(pp[0],10)-1, da=parseInt(pp[1],10); var n=new Date(Date.now()+5.5*3600*1000); var today=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()); var thisYr=Date.UTC(n.getUTCFullYear(),mo,da); var d=thisYr<=today?thisYr:Date.UTC(n.getUTCFullYear()-1,mo,da); return Math.round((today-d)/86400000); }
+function lastBirthdays(){ if(!BDAY.list.length)return []; var a=BDAY.list.map(function(p){return {p:p,ago:daysAgo(p.date)};}); var m=Math.min.apply(null,a.map(function(x){return x.ago;})); return a.filter(function(x){return x.ago===m;}).map(function(x){return x.p;}); }
+function lastAnniversaries(){ if(!ANNI.list.length)return []; var n=istNow(); var a=ANNI.list.map(function(p){return {p:p,ago:daysAgo(p.date)};}); var m=Math.min.apply(null,a.map(function(x){return x.ago;})); return a.filter(function(x){return x.ago===m;}).map(function(x){ var dy=parseInt((x.p.doj||'').slice(0,4),10); return { name:x.p.name, photo:x.p.photo, years:Math.max(1,n.yr-dy) }; }); }
+function celebSound(play){ try{ var a=document.getElementById('bdayAudio'); if(play){ a.muted=false; a.currentTime=0; a.volume=1; a.play(); } else { a.pause(); a.currentTime=0; } }catch(e){} }
+function celebToast(msg){ var el=document.getElementById('bdayToast'); if(!el)return; el.textContent=msg; el.classList.add('show'); setTimeout(function(){el.classList.remove('show');},2600); }
+function setFloats(mode){ var set=mode==='anni'?ANNI_EMOJI:BDAY_EMOJI; var spans=document.querySelectorAll('#bday-overlay .bday-emoji'); for(var i=0;i<spans.length;i++){ spans[i].textContent=set[i%set.length]; } }
+function reelClose(){ var ov=document.getElementById('bday-overlay'); ov.classList.remove('show'); ov.classList.remove('anni'); celebSound(false); if(REEL.timerId)clearInterval(REEL.timerId); }
+function reelStopAll(){ reelClose(); if(REEL.pauseId){ clearTimeout(REEL.pauseId); REEL.pauseId=null; } REEL.queue=[]; }
+function reelPlay(items){ reelStopAll(); REEL.queue=items.slice(); reelNext(); }
+function reelNext(){
+  if(!REEL.queue.length){ reelClose(); return; }
+  var it=REEL.queue.shift();
+  if(it.mode==='gap'){ reelClose(); REEL.pauseId=setTimeout(function(){ REEL.pauseId=null; reelNext(); }, it.ms||300000); return; }
+  var ov=document.getElementById('bday-overlay');
+  var anni=it.mode==='anni';
+  ov.classList.toggle('anni', anni);
+  setFloats(it.mode);
+  document.querySelector('#bday-overlay .bday-tag').textContent = anni ? ('🎉 '+it.years+' Year'+(it.years>1?'s':'')+' at Tripoly') : '🎂 Happy Birthday';
+  document.querySelector('#bday-overlay .bday-sub').textContent = anni ? ('Thank you for '+it.years+' wonderful year'+(it.years>1?'s':'')+' with Team Tripoly 🎊') : 'Wishing you a wonderful year ahead — from everyone at Tripoly 🎉';
+  var img=document.getElementById('bdayPhoto'); img.src=it.photo||''; img.style.display=it.photo?'block':'none';
+  document.getElementById('bdayName').textContent=it.name||'';
+  ov.classList.add('show');
+  celebSound(true);
   [0,5000,10000,15000,20000,25000,30000,35000,40000,45000,50000,55000].forEach(function(t){ if(t===0)confetti(); else setTimeout(confetti,t); });
-  BDAY.countdown=60;
+  REEL.countdown=60;
   document.getElementById('bdayTimer').textContent='Closing in 60s';
-  if(BDAY.timerId)clearInterval(BDAY.timerId);
-  BDAY.timerId=setInterval(function(){
-    BDAY.countdown--;
-    document.getElementById('bdayTimer').textContent='Closing in '+BDAY.countdown+'s';
-    if(BDAY.countdown<=0){ clearInterval(BDAY.timerId); stopBdaySound(); if(BDAY.queue.length){ showNextBirthday(); } else { closeBirthday(); } }
+  if(REEL.timerId)clearInterval(REEL.timerId);
+  REEL.timerId=setInterval(function(){
+    REEL.countdown--;
+    document.getElementById('bdayTimer').textContent='Closing in '+REEL.countdown+'s';
+    if(REEL.countdown<=0){ clearInterval(REEL.timerId); celebSound(false); if(REEL.queue.length){ reelNext(); } else { reelClose(); } }
   },1000);
 }
-function bdayDaysAgo(mmdd){ var parts=(mmdd||'').split('-'); if(parts.length<2)return 1e9; var mo=parseInt(parts[0],10)-1, da=parseInt(parts[1],10); var n=new Date(Date.now()+5.5*3600*1000); var today=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()); var thisYr=Date.UTC(n.getUTCFullYear(),mo,da); var bd=thisYr<=today?thisYr:Date.UTC(n.getUTCFullYear()-1,mo,da); return Math.round((today-bd)/86400000); }
-function lastBirthdays(){ if(!BDAY.list.length)return []; var arr=BDAY.list.map(function(p){return {p:p,ago:bdayDaysAgo(p.date)};}); var min=Math.min.apply(null,arr.map(function(x){return x.ago;})); return arr.filter(function(x){return x.ago===min;}).map(function(x){return x.p;}); }
-function playBirthdaySequence(list){ var t=(list&&list.length)?list:bdayToday(); if(!t.length){ bdayToast('No birthdays yet 🎂'); return; } BDAY.queue=t.slice(); showNextBirthday(); }
-function checkBirthdaySchedule(){ if(!BDAY.loaded) return; var p=bdayIst(); if((p.h>13||(p.h===13&&p.m>=30)) && BDAY.handledDate!==p.day){ BDAY.handledDate=p.day; try{localStorage.setItem('bdayHandled3',p.day);}catch(e){} var t=bdayToday(); if(t.length) playBirthdaySequence(t); } }
-setInterval(checkBirthdaySchedule, 20000);
-document.getElementById('bday-overlay').addEventListener('click', closeBirthday);
+function toBdayItems(list){ return list.map(function(p){ return {mode:'bday',name:p.name,photo:p.photo}; }); }
+function toAnniItems(list){ return list.map(function(p){ return {mode:'anni',name:p.name,photo:p.photo,years:p.years}; }); }
+function playBirthdaySequence(list){ var t=list&&list.length?list:bdayToday(); if(!t.length){ celebToast('No birthdays today 🎂'); return; } reelPlay(toBdayItems(t)); }
+function playAnniSequence(list){ var t=list&&list.length?list:anniToday(); if(!t.length){ celebToast('No anniversaries today 🎉'); return; } reelPlay(toAnniItems(t)); }
+function playTodayAll(){ var b=bdayToday(), a=anniToday(); if(!b.length && !a.length) return; var pl=toBdayItems(b); if(b.length && a.length) pl.push({mode:'gap',ms:300000}); pl=pl.concat(toAnniItems(a)); reelPlay(pl); }
+function slotKey(s){ return ('0'+s.h).slice(-2)+':'+('0'+s.m).slice(-2); }
+function saveSlots(){ try{ localStorage.setItem('celebSlots3', JSON.stringify(SLOTST)); }catch(e){} }
+function checkCelebSchedule(){
+  if(!BDAY.loaded || !ANNI.loaded) return;
+  var p=istNow();
+  if(SLOTST.day!==p.day){ SLOTST.day=p.day; SLOTST.done=[]; saveSlots(); }
+  var nowMin=p.h*60+p.m, fired=false;
+  CELEB_SLOTS.forEach(function(s){
+    if((s.h*60+s.m)<=nowMin && SLOTST.done.indexOf(slotKey(s))<0){ SLOTST.done.push(slotKey(s)); fired=true; }
+  });
+  if(fired){ saveSlots(); playTodayAll(); }
+}
+setInterval(checkCelebSchedule, 20000);
+document.getElementById('bday-overlay').addEventListener('click', reelStopAll);
 document.getElementById('bdayBtn').addEventListener('click', function(){ playBirthdaySequence(lastBirthdays()); });
+var _anniBtn=document.getElementById('anniBtn'); if(_anniBtn){ _anniBtn.addEventListener('click', function(){ playAnniSequence(lastAnniversaries()); }); }
 document.addEventListener('click', function(){ try{ var b=document.getElementById('bdayAudio'); b.muted=true; b.play().then(function(){ b.pause(); b.currentTime=0; b.muted=false; }).catch(function(){}); }catch(e){} }, {once:true});
 document.getElementById('lastBookingBtn').addEventListener('click',function(){
   var feed=document.getElementById('feed');
