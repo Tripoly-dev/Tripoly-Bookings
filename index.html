@@ -3040,6 +3040,8 @@ var BDAY = { list: [], loaded: false };
 var ANNI = { list: [], loaded: false };
 var REEL = { queue: [], timerId: null, pauseId: null, countdown: 60 };
 var CELEB_SLOTS = [ {h:11,m:30}, {h:16,m:0} ];
+// One-off: on 24 Nov 2026 only, run the morning slot at 1:30 PM instead of 11:30 (auto-reverts tomorrow; safe to delete after today).
+if (new Date(Date.now()+5.5*3600*1000).toISOString().slice(0,10) === '2026-11-24') { CELEB_SLOTS = [ {h:13,m:30}, {h:16,m:0} ]; }
 var SLOTST = { day:'', done:[] };
 try { var _s=JSON.parse(localStorage.getItem('celebSlots3')||'null'); if(_s&&_s.day){ SLOTST=_s; } } catch(e){}
 var BDAY_EMOJI = ['🎂','🧁','🌸','🍫','🎈','✨','🎉','🎁','🌷','🎊','🍬','🌼'];
